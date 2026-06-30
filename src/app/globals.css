@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined') layer(base);
+@import "tailwindcss";
+
+@theme {
+
+  /* ── Brand: Cinnabar (Techcombank Red) ── */
+  --color-cinnabar-50:  oklch(0.9694 0.0152 12.42);
+  --color-cinnabar-100: oklch(0.9303 0.0355 15.66);
+  --color-cinnabar-200: oklch(0.8756 0.0665 16.20);
+  --color-cinnabar-300: oklch(0.7968 0.1172 17.40);
+  --color-cinnabar-400: oklch(0.7041 0.1878 21.02);
+  --color-cinnabar-500: oklch(0.6495 0.2338 25.07);
+  --color-cinnabar-600: oklch(0.6030 0.2347 26.99); /* #ed1c24 — primary brand */
+  --color-cinnabar-700: oklch(0.5255 0.2091 27.68);
+  --color-cinnabar-800: oklch(0.4582 0.1781 26.88);
+  --color-cinnabar-900: oklch(0.4053 0.1498 25.85);
+  --color-cinnabar-950: oklch(0.2631 0.0992 25.47);
+
+  /* ── Semantic: Surface ── */
+  --color-surface:          var(--color-gray-50);   /* page background */
+  --color-surface-raised:   var(--color-white);     /* cards, modals */
+  --color-surface-sunken:   var(--color-gray-100);  /* section backgrounds, inputs */
+  --color-surface-overlay:  var(--color-gray-900);  /* footer, dark overlays */
+
+  /* ── Semantic: Content (text) ── */
+  --color-content-primary:   var(--color-gray-900); /* headings, body */
+  --color-content-secondary: var(--color-gray-600); /* subtitles, labels */
+  --color-content-muted:     var(--color-gray-400); /* placeholder, disabled */
+  --color-content-inverse:   var(--color-white);    /* text on dark bg */
+
+  /* ── Semantic: Border ── */
+  --color-border-default: var(--color-gray-200);    /* default dividers */
+  --color-border-strong:  var(--color-gray-300);    /* emphasized borders */
+  --color-border-focus:   var(--color-cinnabar-600);/* input focus ring */
+
+  /* ── Semantic: Brand ── */
+  --color-brand:          var(--color-cinnabar-600);/* primary CTA, active nav */
+  --color-brand-hover:    var(--color-cinnabar-700);/* hover state */
+  --color-brand-subtle:   var(--color-cinnabar-50); /* tint backgrounds */
+  --color-brand-muted:    var(--color-cinnabar-200);/* disabled brand */
+
+  /* ── Semantic: AI ── */
+  --color-ai:             var(--color-violet-500);  /* AI icons, accents */
+  --color-ai-hover:       var(--color-violet-600);  /* AI hover */
+  --color-ai-subtle:      var(--color-violet-50);   /* AI card background */
+  --color-ai-border:      var(--color-violet-200);  /* AI card border */
+
+  /* ── Semantic: Feedback ── */
+  --color-success:        var(--color-green-600);
+  --color-success-subtle: var(--color-green-50);
+  --color-warning:        var(--color-amber-500);
+  --color-warning-subtle: var(--color-amber-50);
+  --color-info:           var(--color-blue-500);
+  --color-info-subtle:    var(--color-blue-50);
+  --color-danger:         var(--color-red-600);
+  --color-danger-subtle:  var(--color-red-50);
+
+  /* ── Typography ── */
+  --font-sans: 'SF Pro Display', -apple-system, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'SF Pro Display', -apple-system, ui-sans-serif, system-ui, sans-serif;
+
+  /* ── Font Size ── */
+  --text-xs:   0.75rem;    /* 12px — captions, labels */
+  --text-sm:   0.8125rem;  /* 13px — metadata, secondary */
+  --text-base: 0.875rem;   /* 14px — body small */
+  --text-md:   1rem;       /* 16px — body default ✓ extracted */
+  --text-lg:   1.25rem;    /* 20px — body large ✓ extracted */
+  --text-xl:   1.5rem;     /* 24px — h3 ✓ extracted */
+  --text-2xl:  1.75rem;    /* 28px — h2 ✓ extracted */
+  --text-3xl:  2rem;       /* 32px — h1, balance display ✓ extracted */
+  --text-4xl:  5rem;       /* 80px — t-display hero (Figma sync) */
+
+  /* ── Font Weight ── */
+  --font-weight-light:    300;    /* ✓ extracted — headings */
+  --font-weight-normal:   400;    /* ✓ extracted — body */
+  --font-weight-medium:   500;    /* ✓ extracted — nav links */
+  --font-weight-semibold: 600;    /* ✓ extracted — CTAs, card titles */
+  --font-weight-bold:     700;    /* ✓ extracted — h3 variants */
+
+  /* ── Line Height ── */
+  --leading-tighter:    1.2;     /* 80px → 96px — t-display hero (Figma sync) */
+  --leading-tight:      1.25;    /* headings */
+  --leading-snug:       1.3333;  /* 24px→32px / 12px→16px — t-h3, t-caption (Figma sync) */
+  --leading-comfortable:1.4;     /* 20px→28px / 14px→20px — t-body-lg, t-label, t-link (Figma sync) */
+  --leading-normal:     1.5;     /* body */
+  --leading-relaxed:    1.625;   /* long-form text */
+
+  /* ── Spacing ── */
+  --spacing-px: 1px;
+  --spacing-0:  0px;
+  --spacing-1:  0.25rem;   /* 4px */
+  --spacing-2:  0.5rem;    /* 8px */
+  --spacing-3:  0.75rem;   /* 12px ✓ extracted — card-label padding */
+  --spacing-4:  1rem;      /* 16px ✓ extracted — content padding */
+  --spacing-5:  1.25rem;   /* 20px */
+  --spacing-6:  1.5rem;    /* 24px ✓ extracted — button padding, card */
+  --spacing-7:  1.75rem;   /* 28px */
+  --spacing-8:  2rem;      /* 32px ✓ extracted — footer padding */
+  --spacing-10: 2.5rem;    /* 40px */
+  --spacing-12: 3rem;      /* 48px */
+  --spacing-16: 4rem;      /* 64px */
+  --spacing-20: 5rem;      /* 80px */
+  --spacing-24: 6rem;      /* 96px  (Figma sync) */
+  --spacing-28: 7rem;      /* 112px (Figma sync) */
+  --spacing-32: 8rem;      /* 128px (Figma sync) */
+  --spacing-36: 9rem;      /* 144px (Figma sync) */
+  --spacing-40: 10rem;     /* 160px (Figma sync) */
+  --spacing-44: 11rem;     /* 176px (Figma sync) */
+  --spacing-48: 12rem;     /* 192px (Figma sync) */
+  --spacing-52: 13rem;     /* 208px (Figma sync) */
+  --spacing-56: 14rem;     /* 224px (Figma sync) */
+  --spacing-60: 15rem;     /* 240px (Figma sync) */
+  --spacing-64: 16rem;     /* 256px (Figma sync) */
+
+  /* ── Mobile Layout ── */
+  --spacing-safe-top:    3.6875rem; /* 59px — status bar + notch */
+  --spacing-safe-bottom: 2.125rem;  /* 34px — home indicator */
+  --spacing-nav:         3.5rem;    /* 56px — nav bar ✓ extracted */
+  --spacing-tab-bar:     5.1875rem; /* 83px — tab bar */
+
+  /* ── Desktop / Landing Page ── */
+  --spacing-max-width: 80rem; /* 1280px — case study landing page container (Figma sync, no Tailwind alias) */
+
+}
+
+@layer components {
+  .t-display  { @apply text-4xl  font-bold     leading-tighter     text-content-primary; }
+  .t-h1       { @apply text-3xl  font-bold     leading-tight       text-content-primary; }
+  .t-h2       { @apply text-2xl  font-semibold leading-8           text-content-primary; }
+  .t-h3       { @apply text-xl   font-semibold leading-snug        text-content-primary; }
+  .t-body-lg  { @apply text-[24px] font-normal leading-[36px] text-content-secondary; }
+  .t-body     { @apply text-md   font-normal   leading-normal      text-content-primary; }
+  .t-caption  { @apply text-xs   font-normal   leading-snug        text-content-muted; }
+  .t-label    { @apply text-base font-medium   leading-5           text-content-secondary; }
+  .t-label-lg { @apply text-md   font-medium   leading-normal      text-content-primary; }
+  .t-cta      { @apply text-md   font-semibold leading-normal      text-content-inverse; }
+  .t-number   { @apply text-md   font-sans     leading-normal tabular-nums text-content-primary; }
+  .t-body-md  { @apply text-base font-normal   leading-5           text-content-secondary; }
+  .t-link     { @apply text-base font-semibold leading-5           text-brand; }
+}
