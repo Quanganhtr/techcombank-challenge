@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -630,28 +630,40 @@ export default function HomeScreen({
   onOverlayClose: extClose,
   transactionOpen: extTransaction,
   onTransactionClose: extTransactionClose,
+  triOpen: extTri,
+  onTriClose: extTriClose,
 } = {}) {
   const [activeFilter, setActiveFilter] = useState('All')
   const [internalOverlay, setInternalOverlay] = useState(false)
   const [internalTransaction, setInternalTransaction] = useState(false)
-  const [showTriScreen, setShowTriScreen] = useState(false)
+  const [internalTri, setInternalTri] = useState(false)
   const [navHidden, setNavHidden] = useState(false)
 
+  const showOverlay     = extOverlay     !== undefined ? extOverlay     : internalOverlay
+  const showTransaction = extTransaction !== undefined ? extTransaction : internalTransaction
+  const showTriScreen   = extTri         !== undefined ? extTri         : internalTri
+
+  const openOverlay      = () => { if (extOverlay === undefined) setInternalOverlay(true) }
+  const closeOverlay     = () => { extClose            ? extClose()            : setInternalOverlay(false) }
+  const closeTransaction = () => { extTransactionClose ? extTransactionClose() : setInternalTransaction(false) }
+
   function openTri() {
-    setShowTriScreen(true)
-    // Hide home nav only after the circle finishes expanding (0.75s)
+    setInternalTri(true)
     setTimeout(() => setNavHidden(true), 750)
   }
   function closeTri() {
-    setNavHidden(false) // nav reappears as circle shrinks back
-    setShowTriScreen(false)
+    setNavHidden(false)
+    extTriClose ? extTriClose() : setInternalTri(false)
   }
 
-  const showOverlay     = extOverlay      !== undefined ? extOverlay      : internalOverlay
-  const showTransaction = extTransaction  !== undefined ? extTransaction  : internalTransaction
-  const openOverlay     = () => { if (extOverlay === undefined) setInternalOverlay(true) }
-  const closeOverlay    = () => { extClose ? extClose() : setInternalOverlay(false) }
-  const closeTransaction = () => { extTransactionClose ? extTransactionClose() : setInternalTransaction(false) }
+  // When triOpen is externally controlled, sync navHidden to it
+  const prevExtTri = useRef(extTri)
+  useEffect(() => {
+    if (extTri !== undefined && extTri !== prevExtTri.current) {
+      setNavHidden(!!extTri)
+      prevExtTri.current = extTri
+    }
+  }, [extTri])
 
   return (
     <div className="w-[440px] h-[956px] overflow-hidden relative bg-surface-overlay rounded-[56px]">
@@ -717,7 +729,7 @@ export default function HomeScreen({
         {showTransaction && <TransactionOverlay onClose={closeTransaction} />}
       </AnimatePresence>
 
-      {/* TRÍ screen — circle-expand from AI button, z-20 so it grows under the nav button */}
+      {/* TRÍ screen */}
       <AnimatePresence>
         {showTriScreen && <TriScreen onClose={closeTri} />}
       </AnimatePresence>

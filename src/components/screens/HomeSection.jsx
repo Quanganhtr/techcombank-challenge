@@ -10,29 +10,29 @@ const TEXT_GAP  = 64
 const PHONE_H   = 956
 const PHONE_W   = 440
 
-// Scroll phase checkpoints (all as fractions of total scroll 0→1)
-// Section is 500vh so each 0.1 ≈ 50vh of scrolling
-const ANIM_END   = 0.40  // phone fully settled at final scale
+// Scroll phase checkpoints (fractions of total scroll 0→1, section is 700vh)
+const ANIM_END   = 0.35  // phone fully settled at final scale
 
-const BAL_IN     = 0.48  // balance overlay + left panel start entering
-const BAL_FULL   = 0.54  // balance fully visible
-const BAL_OUT    = 0.60  // balance starts exiting
-const BAL_GONE   = 0.65  // balance fully gone
+const BAL_IN     = 0.42  // balance overlay + left panel entering
+const BAL_FULL   = 0.47  // balance fully visible
+const BAL_OUT    = 0.52  // balance starts exiting
+const BAL_GONE   = 0.56  // balance fully gone
 
-const TXN_IN     = 0.72  // transaction + right panel start entering
-const TXN_FULL   = 0.78  // transaction fully visible
-const TXN_OUT    = 0.83  // transaction starts exiting
-const TXN_GONE   = 0.87  // transaction fully gone
+const TXN_IN     = 0.62  // transaction + right panel entering
+const TXN_FULL   = 0.67  // transaction fully visible
+const TXN_OUT    = 0.72  // transaction starts exiting
+const TXN_GONE   = 0.76  // transaction fully gone
 
-const SEARCH_IN   = 0.90  // search screen + right panel start entering
-const SEARCH_FULL = 0.95  // search fully visible
+const TRI_IN     = 0.82  // TRÍ screen + left panel entering
+const TRI_FULL   = 0.87  // TRÍ fully visible
 
 export function HomeSection() {
   const pinRef  = useRef(null)
   const textRef = useRef(null)
   const [viewport,   setViewport]   = useState({ width: 1920, height: 1080 })
   const [textHeight, setTextHeight] = useState(250)
-  const [activeOverlay, setActiveOverlay] = useState(null) // null | 'balance' | 'transaction'
+  const [activeOverlay, setActiveOverlay] = useState(null)
+  // null | 'balance' | 'transaction' | 'tri'
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -76,36 +76,36 @@ export function HomeSection() {
   )
 
   /* ── Left panel (Balance): in → hold → out ──────────────────────── */
-  const leftOpacity = useTransform(progress,
+  const leftBalOpacity = useTransform(progress,
     [BAL_IN, BAL_FULL, BAL_OUT, BAL_GONE],
     [0,      1,        1,       0]
   )
-  const leftX = useTransform(progress,
+  const leftBalX = useTransform(progress,
     [BAL_IN, BAL_FULL, BAL_OUT, BAL_GONE],
     [-32,    0,        0,       -32]
   )
 
-  /* ── Right panel (Transaction): in → hold → out ────────────────── */
-  const txnOpacity = useTransform(progress,
+  /* ── Right panel (Transaction): in → hold → out ─────────────────── */
+  const rightTxnOpacity = useTransform(progress,
     [TXN_IN, TXN_FULL, TXN_OUT, TXN_GONE],
     [0,      1,        1,       0]
   )
-  const txnX = useTransform(progress,
+  const rightTxnX = useTransform(progress,
     [TXN_IN, TXN_FULL, TXN_OUT, TXN_GONE],
     [32,     0,        0,       32]
   )
 
-  /* ── Right panel (Search): in → hold ────────────────────────────── */
-  const searchOpacity = useTransform(progress, [SEARCH_IN, SEARCH_FULL], [0, 1])
-  const searchX       = useTransform(progress, [SEARCH_IN, SEARCH_FULL], [32, 0])
+  /* ── Left panel (TRÍ): in → hold ────────────────────────────────── */
+  const leftTriOpacity = useTransform(progress, [TRI_IN, TRI_FULL], [0, 1])
+  const leftTriX       = useTransform(progress, [TRI_IN, TRI_FULL], [-32, 0])
 
   /* ── Active overlay state (drives HomeScreen) ───────────────────── */
   useEffect(() => {
     return scrollYProgress.on('change', v => {
-      if (v >= SEARCH_IN)                          setActiveOverlay('search')
-      else if (v >= TXN_IN && v < TXN_GONE)       setActiveOverlay('transaction')
-      else if (v >= BAL_IN && v < BAL_GONE)        setActiveOverlay('balance')
-      else                                         setActiveOverlay(null)
+      if (v >= TRI_IN)                             setActiveOverlay('tri')
+      else if (v >= TXN_IN && v < TXN_GONE)        setActiveOverlay('transaction')
+      else if (v >= BAL_IN && v < BAL_GONE)         setActiveOverlay('balance')
+      else                                          setActiveOverlay(null)
     })
   }, [scrollYProgress])
 
@@ -113,7 +113,7 @@ export function HomeSection() {
   const panelWidth = `calc(50vw - ${PHONE_W / 2}px)`
 
   return (
-    <section ref={pinRef} className="relative h-[500vh]">
+    <section ref={pinRef} className="relative h-[700vh]">
       <div className="bg-black sticky top-0 h-screen w-full overflow-hidden">
 
         {/* Intro text */}
@@ -132,7 +132,7 @@ export function HomeSection() {
 
         {/* Left panel — Balance AI layer */}
         <motion.div
-          style={{ opacity: leftOpacity, x: leftX, width: panelWidth }}
+          style={{ opacity: leftBalOpacity, x: leftBalX, width: panelWidth }}
           className={`left-0 ${panelStyle}`}
         >
           <div className="w-full max-w-120 flex flex-col gap-3">
@@ -145,13 +145,26 @@ export function HomeSection() {
 
         {/* Right panel — Transaction AI layer */}
         <motion.div
-          style={{ opacity: rightOpacity, x: rightX, width: panelWidth }}
+          style={{ opacity: rightTxnOpacity, x: rightTxnX, width: panelWidth }}
           className={`right-0 ${panelStyle}`}
         >
           <div className="w-full max-w-120 flex flex-col gap-3">
             <h1 className="t-h1 text-content-inverse">Transaction AI layer</h1>
             <p className="t-body-lg text-neutral-500">
               Hệ thống UI sinh tạo tự động nhóm và diễn giải các giao dịch theo ngữ cảnh — giúp người dùng hiểu ngay mình đang chi tiêu vào đâu mà không cần lọc thủ công.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Left panel — TRÍ screen */}
+        <motion.div
+          style={{ opacity: leftTriOpacity, x: leftTriX, width: panelWidth }}
+          className={`left-0 ${panelStyle}`}
+        >
+          <div className="w-full max-w-120 flex flex-col gap-3">
+            <h1 className="t-h1 text-content-inverse">TRÍ AI screen</h1>
+            <p className="t-body-lg text-neutral-500">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
             </p>
           </div>
         </motion.div>
@@ -176,6 +189,8 @@ export function HomeSection() {
                 onOverlayClose={() => {}}
                 transactionOpen={activeOverlay === 'transaction'}
                 onTransactionClose={() => {}}
+                triOpen={activeOverlay === 'tri'}
+                onTriClose={() => {}}
               />
             </div>
           </motion.div>
