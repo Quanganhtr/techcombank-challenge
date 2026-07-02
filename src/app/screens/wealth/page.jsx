@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 /* ─── Image sequence player ─────────────────────────────────────────── */
 
 const TOTAL_FRAMES = 104
-const FRAME_INTERVAL_MS = 33 // ~30 fps
+const FPS = 30
 
 function frameSrc(n) {
   const name = n < 100 ? String(n).padStart(5, '0') : String(n).padStart(6, '0')
@@ -15,18 +15,49 @@ function frameSrc(n) {
 }
 
 function ImageSequencePlayer() {
-  const [frame, setFrame] = useState(1)
+  const canvasRef = useRef(null)
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setFrame(f => (f >= TOTAL_FRAMES ? 1 : f + 1))
-    }, FRAME_INTERVAL_MS)
-    return () => clearInterval(id)
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+
+    // Preload all frames
+    const images = []
+    let loaded = 0
+    let rafId = null
+    let frameIdx = 0
+    let lastTime = 0
+    const interval = 1000 / FPS
+
+    function tick(now) {
+      rafId = requestAnimationFrame(tick)
+      if (now - lastTime < interval) return
+      lastTime = now
+      const img = images[frameIdx]
+      if (img?.complete && img.naturalWidth) {
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        ctx.drawImage(img, 0, 0)
+      }
+      frameIdx = (frameIdx + 1) % TOTAL_FRAMES
+    }
+
+    for (let i = 1; i <= TOTAL_FRAMES; i++) {
+      const img = new window.Image()
+      img.src = frameSrc(i)
+      img.onload = () => {
+        loaded++
+        if (loaded === TOTAL_FRAMES) rafId = requestAnimationFrame(tick)
+      }
+      images.push(img)
+    }
+
+    return () => { if (rafId) cancelAnimationFrame(rafId) }
   }, [])
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={frameSrc(frame)} alt="" className="absolute inset-0 size-full object-cover pointer-events-none" />
+    <canvas ref={canvasRef} className="absolute inset-0 size-full object-cover pointer-events-none" />
   )
 }
 
