@@ -13,18 +13,18 @@ const SEGMENTS = [
       icon: 'boy',
       title: 'Học sinh / Sinh viên',
       items: [
-        { bold: 'Chân dung tài chính:', text: ' Thu nhập thấp, phụ thuộc gia đình; số dư nhỏ.' },
-        { bold: 'Vấn đề (Pain point):', text: ' Tần suất mua sắm/đặt đồ ăn cao, dễ mất kiểm soát với các khoản chi lặt vặt. App hiện tại chỉ là "trạm trung chuyển".' },
-        { bold: 'Giải pháp từ Tech AI:', text: ' Phân tích giao dịch để cảnh báo trực quan (VD: "Bạn đã chi 40% ngân sách cho trà sữa") và đề xuất cách quản lý chi tiêu.' },
+        { bold: 'Chân dung:', text: ' Thu nhập thấp, phụ thuộc gia đình; số dư nhỏ.' },
+        { bold: 'Vấn đề:', text: ' Tần suất chi tiêu cao, dễ mất kiểm soát với các khoản lặt vặt.' },
+        { bold: 'Giải pháp:', text: ' Phân tích giao dịch để cảnh báo trực quan (VD: "Bạn đã chi 40% ngân sách cho trà sữa") và đề xuất cách quản lý chi tiêu.' },
       ],
     },
     {
       icon: 'work',
       title: 'Người mới đi làm',
       items: [
-        { bold: 'Chân dung tài chính:', text: ' Thu nhập ổn định (khởi điểm/tầm trung), bắt đầu có tư duy tích lũy và có khoản dư nhỏ mỗi tháng.' },
-        { bold: 'Vấn đề (Pain point):', text: ' Muốn đầu tư nhưng bị "tê liệt phân tích" (analysis paralysis), e ngại thị trường tài chính là phức tạp và chỉ dành cho người giàu.' },
-        { bold: 'Giải pháp từ Tech AI', text: ': Chủ động gọi tên khoản tiền nhàn rỗi (VD: "Bạn đang có 3-5M sẵn sàng tích lũy tháng này") và đề xuất các kênh đầu tư/tích lũy có rủi ro thấp.' },
+        { bold: 'Chân dung:', text: ' Thu nhập tầm trung, bắt đầu có tư duy tích lũy và có khoản dư nhỏ mỗi tháng.' },
+        { bold: 'Vấn đề:', text: ' Muốn đầu tư nhưng không biết bắt đầu từ đâu.' },
+        { bold: 'Giải pháp:', text: ': Chủ động gọi tên khoản tiền nhàn rỗi và đề xuất các kênh đầu tư/tích lũy có rủi ro thấp.' },
       ],
     },
   ],
@@ -33,18 +33,18 @@ const SEGMENTS = [
       icon: 'work_history',
       title: 'Người đi làm lâu năm',
       items: [
-        { bold: 'Chân dung tài chính:', text: ' Thu nhập cao, ổn định. Sở hữu tài sản lớn và thường xuyên để dư nhiều tiền mặt trong tài khoản thanh toán.' },
-        { bold: 'Ngữ cảnh & Rào cản (Friction):', text: ' Rất am hiểu về đầu tư nhưng quá bận rộn, không có thời gian theo dõi và tối ưu hóa dòng tiền liên tục.' },
-        { bold: 'Giải pháp từ Tech AI', text: ': Bóc tách trực diện chi phí cơ hội của khoản tiền để không và đưa ra các đề xuất tối ưu tài sản nhanh chóng.' },
+        { bold: 'Chân dung:', text: ' Thu nhập cao, ổn định. Sở hữu tài sản lớn. Nhưng đầu tư sinh lợi nhuận thật là không nhiều.' },
+        { bold: 'Vấn đề:', text: ' Có hiểu biết về đầu tư nhưng chưa đủ chuyên sâu để tối ưu hóa dòng tiền liên tục.' },
+        { bold: 'Giải pháp:', text: ': Bóc tách chi phí cơ hội của khoản tiền để không và đưa ra các đề xuất tối ưu tài sản nhanh chóng.' },
       ],
     },
     {
       icon: 'elderly',
       title: 'Người ngoài độ tuổi lao động',
       items: [
-        { bold: 'Chân dung tài chính:', text: ' Thu nhập cố định (lương hưu, nguồn thụ động); khẩu vị rủi ro bằng 0, ưu tiên tuyệt đối sự an toàn.' },
-        { bold: 'Vấn đề (Pain point):', text: ' Mục tiêu cốt lõi là bảo toàn vốn và nhận lãi đều đặn; rất ngại và bối rối trước các thao tác app phức tạp.' },
-        { bold: 'Giải pháp từ Tech AI', text: ': Đơn giản hóa trạng thái tài sản để mang lại sự an tâm (VD: "Kỳ trả lãi tiếp theo đang đến gần. Toàn bộ tài sản an toàn 100% tại Trái phiếu Quốc gia Techcombank").' },
+        { bold: 'Chân dung:', text: ' Thu nhập cố định (lương hưu, nguồn thụ động); khẩu vị rủi ro thấp, ưu tiên sự an toàn.' },
+        { bold: 'Vấn đề:', text: ' Mục tiêu là bảo toàn vốn và nhận lãi đều đặn; rất ngại và bối rối trước các thao tác app phức tạp.' },
+        { bold: 'Giải pháp:', text: ': Đơn giản hóa trạng thái tài sản để mang lại sự an tâm.' },
       ],
     },
   ],
@@ -77,7 +77,7 @@ function SegmentCard({ icon, title, items, hasBorder }) {
 
 export function UserSegments() {
   return (
-    <section className="bg-black px-8 py-16 md:px-16 md:py-32">
+    <section className="bg-black px-8 py-16 md:px-16 md:py-32 min-h-dvh flex flex-col justify-center">
       <div className="flex flex-col md:flex-row gap-16 md:gap-24 max-w-(--spacing-max-width) mx-auto items-start">
 
         {/* LEFT: Sticky sidebar header — pins 128px from top on desktop */}
