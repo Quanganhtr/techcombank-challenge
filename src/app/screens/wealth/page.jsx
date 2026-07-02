@@ -11,7 +11,7 @@ const FRAME_INTERVAL_MS = 33 // ~30 fps
 
 function frameSrc(n) {
   const name = n < 100 ? String(n).padStart(5, '0') : String(n).padStart(6, '0')
-  return `/image-sequences/${name}.png`
+  return `/image-sequences/${name}.webp`
 }
 
 function ImageSequencePlayer() {
