@@ -46,17 +46,17 @@ const PANELS = {
   balance: {
     side: 'left',
     title: 'Balance AI layer',
-    body: 'Hệ thống có kiến trúc Generative UI Framework — một thư viện component chuẩn giúp AI hiển thị giao diện phân tích tài chính ngay trên màn hình Home chỉ với một điểm chạm.',
+    body: 'Balance không còn chỉ là một con số. AI bổ sung một lớp Intelligence Layer giúp giải thích tình hình tài chính và chuyển dữ liệu thành những hành động có thể thực hiện được.',
   },
   transaction: {
     side: 'right',
     title: 'Transaction AI layer',
-    body: 'Hệ thống UI sinh tạo tự động nhóm và diễn giải các giao dịch theo ngữ cảnh — giúp người dùng hiểu ngay mình đang chi tiêu vào đâu mà không cần lọc thủ công.',
+    body: 'TRÍ tự động filter giao dịch và tạo group - giúp người dùng hiểu ngay mình đang chi tiêu vào đâu mà không cần lọc thủ công.',
   },
   tri: {
     side: 'right',
     title: 'TRÍ AI screen',
-    body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+    body: 'TRÍ là nơi người dùng có thể chủ động bắt đầu những cuộc hội thoại tài chính chuyên sâu khi cần phân tích, lập kế hoạch hoặc nhận tư vấn cá nhân hóa.',
   },
 }
 

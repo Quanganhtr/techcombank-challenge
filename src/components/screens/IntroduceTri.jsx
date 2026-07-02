@@ -30,7 +30,7 @@ export function IntroduceTri() {
       >
         <h2 className="t-display text-content-primary w-full">Introduce TRÍ</h2>
         <p className="t-body-lg text-neutral-500 max-w-[768px]">
-          TRÍ (Techcombank Reliable Intelligence) vượt xa khỏi khái niệm chatbot thông thường. Cốt lõi của TRÍ là năng lực biến dữ liệu thô trên app thành những thông tin dễ hiểu và được cá nhân hoá 1:1. Dựa trên insight này, TRÍ đưa ra các hành động cụ thể để người dùng tối ưu hóa dòng tiền và gia tăng tài sản theo đúng khẩu vị đầu tư của họ.
+          TRÍ (Techcombank Reliable Intelligence) được tích hợp trực tiếp trên app, có năng lực biến dữ liệu thô thành những thông tin dễ hiểu và được cá nhân hoá 1:1. Dựa trên insight này, TRÍ đưa ra các hành động, gợi ý cụ thể để người dùng tối ưu hóa dòng tiền và gia tăng tài sản theo đúng khẩu vị đầu tư của họ.
         </p>
       </motion.div>
 

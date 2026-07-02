@@ -13,8 +13,8 @@ const PANELS = [
     body: 'Search không chỉ trả lời câu hỏi “ở đâu?”, mà còn trả lời câu hỏi “muốn làm gì?”. AI sẽ phân tích ý định để điều hướng đến tính năng hoặc khởi tạo cuộc hội thoại phù hợp.',
   },
   {
-    title: 'How it works',
-    body: 'Mỗi kết quả tìm kiếm được chia thành hai nhóm: kết quả điều hướng (Features) và gợi ý AI (Sense). Điều này giúp người dùng vừa truy cập nhanh tính năng, vừa khám phá thông tin sâu hơn mà không cần mở chatbot từ đầu.',
+    title: 'How the Search works',
+    body: 'Mỗi kết quả tìm kiếm được chia thành hai nhóm: kết quả điều hướng (Features) và gợi ý AI. Điều này giúp người dùng vừa truy cập nhanh tính năng, vừa khám phá thông tin sâu hơn mà không cần mở chatbot từ đầu.',
   },
 ]
 

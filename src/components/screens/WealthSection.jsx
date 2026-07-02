@@ -42,7 +42,7 @@ const PANELS = {
   portfolio: {
     side: 'left',
     title: 'Total Investment',
-    body: 'Không chỉ hiển thị số liệu, My Wealth đưa ra các gợi ý đầu tư được cá nhân hoá — TRÍ phân tích danh mục thực tế của người dùng và chủ động đề xuất hành động tối ưu hoá tài sản.',
+    body: 'Không chỉ hiển thị số liệu, My Wealth đưa ra các gợi ý đầu tư được cá nhân hoá - TRÍ phân tích danh mục thực tế của người dùng và chủ động đề xuất hành động tối ưu tài sản.',
   },
   advisor: {
     side: 'right',
@@ -143,7 +143,7 @@ export function WealthSection() {
             What does TRÍ help in wealth?
           </h2>
           <p className="t-body-lg text-neutral-500 max-w-3xl">
-            Trên màn hình Wealth, TRÍ không chỉ hiển thị số liệu — TRÍ phân tích danh mục đầu tư thực tế của bạn, chủ động đề xuất sản phẩm phù hợp và cá nhân hoá mọi thứ theo mục tiêu tài chính riêng.
+            TRÍ tổng hợp lịch sử đầu tư, phân tích hiệu suất thực tế của từng tài sản và đánh giá mức độ phù hợp của danh mục với mục tiêu tài chính hiện tại.
           </p>
         </motion.div>
 
