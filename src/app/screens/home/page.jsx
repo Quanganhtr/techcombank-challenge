@@ -407,7 +407,7 @@ function TransactionOverlay({ onClose, showCard = true }) {
               {/* AI insight */}
               <div className="bg-amber-50 rounded-3xl p-4 flex flex-col gap-1">
                 <p className="text-[13px] font-medium text-content-secondary leading-5">You overspent</p>
-                <p className="text-[28px] font-bold text-amber-500 leading-9">2Md on coffee</p>
+                <p className="text-[28px] font-bold text-amber-500 leading-9">2Mvnđ on coffee</p>
                 <p className="text-[13px] text-content-secondary leading-5">
                   Your coffee spending has increased 18% this month, mainly after payday.
                 </p>
