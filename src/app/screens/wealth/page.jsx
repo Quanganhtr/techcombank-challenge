@@ -1011,7 +1011,7 @@ const FAB_ACTIONS = [
   { label: 'Top up',   icon: 'add_box' },
 ]
 
-export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, menuOpen = false, onOpenMenu, light = false, onTesterNoteChange } = {}) {
+export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, onAskChatOpen, onAskChatClose, menuOpen = false, onOpenMenu, light = false, onTesterNoteChange } = {}) {
   const [hidden, setHidden] = useState(false)
   const [navTab, setNavTab] = useState(defaultTab) // 'wealth' | 'explore'
   const [showAnalyze, setShowAnalyze] = useState(false)
@@ -1032,6 +1032,11 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
   const [askChatOpen, setAskChatOpen] = useState(false) // expanded compose overlay
   const rootRef = useRef(null)
   const askRef = useRef(null)
+
+  useEffect(() => {
+    if (askChatOpen) onAskChatOpen?.()
+    else onAskChatClose?.()
+  }, [askChatOpen, onAskChatClose, onAskChatOpen])
 
   useEffect(() => {
     if (!onTesterNoteChange) return

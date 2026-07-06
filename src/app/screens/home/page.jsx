@@ -1675,6 +1675,7 @@ export default function HomeScreen({
   const [navActive,           setNavActive]           = useState(defaultTab)
   const [wealthAnalyzeOpen,   setWealthAnalyzeOpen]   = useState(false)
   const [wealthInvestOpen,    setWealthInvestOpen]    = useState(false)
+  const [wealthAskChatOpen,   setWealthAskChatOpen]   = useState(false)
   const [menuOpen,            setMenuOpen]            = useState(false)
   const [showInsightChat,     setShowInsightChat]     = useState(false)
   const [insightAdded,        setInsightAdded]        = useState(false)
@@ -1887,7 +1888,7 @@ export default function HomeScreen({
       {/* Menu dots — single element that tracks the pill icon slot when closed
           (pill at x16 + px-8 pad = 48) and the sheet footer slot when open
           (sheet at x4 + px-8 pad = 36) */}
-      {!showTri && !showSearch && !showOverlay && !showInsightChat && !wealthInvestOpen && (
+      {!showTri && !showSearch && !showOverlay && !showInsightChat && !wealthInvestOpen && !wealthAskChatOpen && (
         <motion.button
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           onClick={() => setMenuOpen(v => !v)}
@@ -1925,7 +1926,7 @@ export default function HomeScreen({
       {/* Wealth screen */}
       <AnimatePresence>
         {navActive === 'investment' && (
-          <div className="absolute inset-0 overflow-hidden" style={{ zIndex: (wealthAnalyzeOpen || wealthInvestOpen) ? 40 : 20 }}>
+          <div className="absolute inset-0 overflow-hidden" style={{ zIndex: (wealthAnalyzeOpen || wealthInvestOpen || wealthAskChatOpen) ? 80 : 20 }}>
             <WealthScreen
               onNavigate={(tab) => setNavActive(tab)}
               embedded={true}
@@ -1934,6 +1935,8 @@ export default function HomeScreen({
               onAnalyzeClose={() => setWealthAnalyzeOpen(false)}
               onInvestOpen={() => setWealthInvestOpen(true)}
               onInvestClose={() => setWealthInvestOpen(false)}
+              onAskChatOpen={() => setWealthAskChatOpen(true)}
+              onAskChatClose={() => setWealthAskChatOpen(false)}
               menuOpen={menuOpen}
               onOpenMenu={() => setMenuOpen(true)}
               light={light}
