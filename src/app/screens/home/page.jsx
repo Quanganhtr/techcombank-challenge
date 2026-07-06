@@ -27,6 +27,46 @@ function BlinkingCursor() {
   return <div className="w-1 h-5 bg-info rounded-full shrink-0" style={{ opacity: on ? 1 : 0 }} />
 }
 
+function InlineBlinkingCursor() {
+  return (
+    <motion.span
+      aria-hidden="true"
+      animate={{ opacity: [1, 1, 0, 0] }}
+      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      className="ml-1 inline-block h-5 w-1 rounded-full bg-info align-[-4px]"
+    />
+  )
+}
+
+function TypewriterInputText({ text }) {
+  const [displayText, setDisplayText] = useState('')
+
+  useEffect(() => {
+    if (!text) {
+      setDisplayText('')
+      return undefined
+    }
+
+    const chars = Array.from(text)
+    setDisplayText('')
+    let index = 0
+    const id = setInterval(() => {
+      index += 1
+      setDisplayText(chars.slice(0, index).join(''))
+      if (index >= chars.length) clearInterval(id)
+    }, 18)
+
+    return () => clearInterval(id)
+  }, [text])
+
+  return (
+    <>
+      {displayText}
+      <InlineBlinkingCursor />
+    </>
+  )
+}
+
 function Icon({ name, size = 24, className = '' }) {
   return (
     <span
@@ -1060,7 +1100,7 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
         >
           <Icon name="add" size={24} className="text-black shrink-0" />
           <div className="flex-1 flex items-center gap-1 min-w-0">
-            <div className="bg-info h-5 w-1 rounded-full shrink-0" />
+            <BlinkingCursor />
             <span className="flex-1 t-body text-[#a1a1a1] text-left">Ask anything</span>
           </div>
           <div className="bg-info rounded-full p-2 flex items-center justify-center shrink-0">
@@ -1226,10 +1266,16 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
             light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
           }`}>
             <Icon name="add" size={24} className="text-black shrink-0" />
-            <div className="flex-1 flex items-center gap-1 min-w-0">
-              <div className="bg-info h-5 w-1 rounded-full shrink-0" />
-              <span className="flex-1 t-body text-[#0a0a0a] text-left truncate">
-                {inputText || <span className="text-[#a1a1a1]">Ask anything</span>}
+            <div className="flex-1 flex items-center min-w-0">
+              <span className="flex-1 t-body text-[#0a0a0a] text-left min-w-0 break-words">
+                {inputText ? (
+                  <TypewriterInputText text={inputText} />
+                ) : (
+                  <span className="flex items-center gap-1 text-[#a1a1a1]">
+                    <BlinkingCursor />
+                    <span>Ask anything</span>
+                  </span>
+                )}
               </span>
             </div>
             <button

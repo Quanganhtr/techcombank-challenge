@@ -86,6 +86,46 @@ function Icon({ name, size = 24, className = '' }) {
   )
 }
 
+function InlineBlinkingCursor() {
+  return (
+    <motion.span
+      aria-hidden="true"
+      animate={{ opacity: [1, 1, 0, 0] }}
+      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      className="ml-1 inline-block h-5 w-1 rounded-full bg-info align-[-4px]"
+    />
+  )
+}
+
+function TypewriterInputText({ text }) {
+  const [displayText, setDisplayText] = useState('')
+
+  useEffect(() => {
+    if (!text) {
+      setDisplayText('')
+      return undefined
+    }
+
+    const chars = Array.from(text)
+    setDisplayText('')
+    let index = 0
+    const id = setInterval(() => {
+      index += 1
+      setDisplayText(chars.slice(0, index).join(''))
+      if (index >= chars.length) clearInterval(id)
+    }, 18)
+
+    return () => clearInterval(id)
+  }, [text])
+
+  return (
+    <>
+      {displayText}
+      <InlineBlinkingCursor />
+    </>
+  )
+}
+
 function StatusBar({ dark = false }) {
   const imgStyle = dark ? { filter: 'invert(1)' } : {}
   return (
@@ -885,9 +925,9 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                       {m.kind === 'user-text' && m.chips && (
                         <div className="flex gap-2 items-center pb-2">
                           {m.chips.map(chip => (
-                            <div key={chip.ticker} className="bg-[#262626] flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
+                            <div key={chip.ticker} className="bg-neutral-200 flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
                               <ChipAvatar avatar={chip.avatar} size={24} />
-                              <span className="flex h-4 items-center text-[12px] font-medium leading-4 text-white whitespace-nowrap">{chip.ticker}</span>
+                              <span className="flex h-4 items-center text-[12px] font-medium leading-4 text-neutral-950 whitespace-nowrap">{chip.ticker}</span>
                             </div>
                           ))}
                         </div>
@@ -967,11 +1007,11 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
           {chatChips.length > 0 && (
             <div className="flex gap-1 items-start pt-2 w-full flex-wrap">
               {chatChips.map(chip => (
-                <div key={chip.ticker} className="bg-[#262626] flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
+                <div key={chip.ticker} className="bg-neutral-200 flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
                   <ChipAvatar avatar={chip.avatar} size={24} />
-                  <span className="flex h-4 items-center text-[12px] font-medium leading-4 text-white whitespace-nowrap">{chip.ticker}</span>
+                  <span className="flex h-4 items-center text-[12px] font-medium leading-4 text-neutral-950 whitespace-nowrap">{chip.ticker}</span>
                   <button onClick={() => onRemoveChip(chip.ticker)} className="flex items-center justify-center size-4 shrink-0">
-                    <Icon name="close" size={16} className="text-white" />
+                    <Icon name="close" size={16} className="text-neutral-950" />
                   </button>
                 </div>
               ))}
@@ -979,10 +1019,16 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
           )}
           <div className="flex gap-2 items-center justify-center w-full">
             <Icon name="add" size={24} className="text-black shrink-0" />
-            <div className="flex-1 flex items-center gap-1 min-w-0">
-              <div className="bg-info h-5 w-1 rounded-full shrink-0" />
-              <span className="flex-1 text-[16px] leading-6 text-[#0a0a0a] text-left truncate">
-                {inputText || <span className="text-[#a1a1a1]">Ask anything</span>}
+            <div className="flex-1 flex items-center min-w-0">
+              <span className="flex-1 text-[16px] leading-6 text-[#0a0a0a] text-left min-w-0 break-words">
+                {inputText ? (
+                  <TypewriterInputText text={inputText} />
+                ) : (
+                  <span className="flex items-center gap-1 text-[#a1a1a1]">
+                    <InlineBlinkingCursor />
+                    <span>Ask anything</span>
+                  </span>
+                )}
               </span>
             </div>
             <button
