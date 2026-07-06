@@ -604,7 +604,7 @@ function CountUp({ to, format = (v) => Math.round(v).toLocaleString('en-US'), du
 
 function InsightStatCard({ icon, label, value, description, dark = false }) {
   return (
-    <div className={`flex-1 border rounded-[48px] p-6 flex flex-col items-end justify-center gap-1 min-w-0 ${
+    <div className={`flex-1 border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 ${
       dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
     }`}>
       <div className={`rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
@@ -652,7 +652,7 @@ function InsightStarBurst() {
 
 function CoffeeInsightCard({ dark = false }) {
   return (
-    <div className={`relative flex-1 border rounded-[48px] p-6 flex flex-col items-end justify-center gap-1 min-w-0 overflow-hidden ${
+    <div className={`relative flex-1 border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 overflow-hidden ${
       dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
     }`}>
       {/* Diagonal shine — sweeps from outside the top-left corner to outside the bottom-right, once, to draw the eye to the new card */}
@@ -1180,7 +1180,7 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
                       {m.content?.view && (
                         <button
                           onClick={onViewInsight}
-                          className={`border rounded-[60px] px-6 py-4 backdrop-blur-sm shrink-0 ${
+                          className={`border rounded-[60px] px-6 py-3 backdrop-blur-sm shrink-0 ${
                             light ? 'bg-[#0a0a0a] border-black text-white' : 'bg-white border-black text-black'
                           }`}
                         >
