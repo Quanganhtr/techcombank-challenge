@@ -232,6 +232,7 @@ const TX_FILTERS = ['All', 'Income', 'Transfer', 'Card Payment', 'Withdrawal']
 
 function TransactionSection({ menuOpen = false, light = false }) {
   const [activeFilter, setActiveFilter] = useState('All')
+  const [scrolled, setScrolled] = useState(false)
   const cardBg = light ? '#ffffff' : '#0a0a0a'
 
   return (
@@ -270,10 +271,19 @@ function TransactionSection({ menuOpen = false, light = false }) {
             className="absolute bottom-0 right-0 h-9 pointer-events-none"
             style={{ width: 64, background: `linear-gradient(to left, ${cardBg}, ${light ? 'rgba(255,255,255,0)' : 'rgba(10,10,10,0)'})` }}
           />
+          {scrolled && (
+            <div
+              className="absolute top-full inset-x-0 h-14 pointer-events-none z-10"
+              style={{ background: `linear-gradient(to bottom, ${cardBg}, ${light ? 'rgba(255,255,255,0)' : 'rgba(10,10,10,0)'})` }}
+            />
+          )}
         </div>
 
         {/* Transaction list */}
-        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden pt-3">
+        <div
+          onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}
+          className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden pt-3"
+        >
           {TRANSACTIONS.map((item, i) => (
             <TransactionItem key={item.id} item={item} isLast={i === TRANSACTIONS.length - 1} light={light} />
           ))}
@@ -544,7 +554,7 @@ function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, ac
               <p className="text-[12px] leading-4 text-[#737373]">For a smoother branch visit</p>
             </div>
             <div className="relative h-[79px] shrink-0">
-              <Image src="/menu-map.png" alt="" fill className="object-cover" />
+              <Image src={light ? '/menu-map-dark.png' : '/menu-map.png'} alt="" fill className="object-cover" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-info rounded-full p-1 flex items-center justify-center shadow-lg">
                   <Icon name="location_on" size={20} className="text-white" />
@@ -727,11 +737,10 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
             initial={{ width: 24, height: 24, y: 120, opacity: 1, backgroundColor: panelBg }}
             animate={{ width: 424, height: insightAdded ? 868 : 768, y: 0, opacity: 1, backgroundColor: panelBg }}
             exit={{
-              width: 24, height: 24, y: 120, opacity: 0, backgroundColor: panelExitBg,
+              width: 160, height: 160, y: 96, opacity: 0, backgroundColor: panelBg,
               transition: {
-                type: 'spring', stiffness: 300, damping: 32,
-                backgroundColor: { duration: 0.1, delay: 0.26, ease: 'easeIn' },
-                opacity: { duration: 0.08, delay: 0.36, ease: 'easeIn' },
+                type: 'spring', stiffness: 360, damping: 38,
+                opacity: { duration: 0.12, ease: 'easeOut' },
               },
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
@@ -764,7 +773,12 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
                       icon="wallet"
                       label="You already spent"
                       dark={dark}
-                      value={<p className={`text-[24px] font-bold leading-8 tracking-[0.48px] tabular-nums ${dark ? 'text-white' : 'text-black'}`}>2,4m / 20m</p>}
+                      value={
+                        <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] tabular-nums ${dark ? 'text-white' : 'text-black'}`}>
+                          <CountUp to={2.4} format={(v) => `${v.toFixed(1).replace('.', ',')}m`} duration={1.1} />
+                          {' / 20m'}
+                        </p>
+                      }
                       description="of your monthly budget"
                     />
                   </motion.div>
@@ -1199,28 +1213,36 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
           </div>
         </div>
 
-        {/* Ask anything input */}
-        <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 mx-3 w-[calc(100%-24px)] ${
-          light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
-        }`}>
-          <Icon name="add" size={24} className="text-black shrink-0" />
-          <div className="flex-1 flex items-center gap-1 min-w-0">
-            <div className="bg-info h-5 w-1 rounded-full shrink-0" />
-            <span className="flex-1 t-body text-[#0a0a0a] text-left truncate">
-              {inputText || <span className="text-[#a1a1a1]">Ask anything</span>}
-            </span>
+        {/* Footer + keyboard — slide up after screen lands */}
+        <motion.div
+          initial={{ y: 480 }}
+          animate={{ y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 32, delay: 0.28 }}
+          className="absolute left-0 right-0 bottom-0 z-20 flex flex-col gap-2"
+        >
+          {/* Ask anything input */}
+          <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 w-full ${
+            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
+          }`}>
+            <Icon name="add" size={24} className="text-black shrink-0" />
+            <div className="flex-1 flex items-center gap-1 min-w-0">
+              <div className="bg-info h-5 w-1 rounded-full shrink-0" />
+              <span className="flex-1 t-body text-[#0a0a0a] text-left truncate">
+                {inputText || <span className="text-[#a1a1a1]">Ask anything</span>}
+              </span>
+            </div>
+            <button
+              onClick={handleSend}
+              disabled={!canSend}
+              className="bg-info rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40"
+            >
+              <Icon name="arrow_upward" size={24} className="text-white" />
+            </button>
           </div>
-          <button
-            onClick={handleSend}
-            disabled={!canSend}
-            className="bg-info rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40"
-          >
-            <Icon name="arrow_upward" size={24} className="text-white" />
-          </button>
-        </div>
 
-        {/* Dark keyboard — in flow */}
-        <DarkKeyboardMock />
+          {/* Dark keyboard — in flow */}
+          <DarkKeyboardMock />
+        </motion.div>
       </div>
     </motion.div>
   )
@@ -1584,13 +1606,13 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
               role="button"
               onClick={startTyping}
               className={`flex-1 backdrop-blur-[4px] border rounded-[60px] pl-6 pr-4 py-4 flex items-center gap-4 min-w-0 cursor-text ${
-                light ? 'bg-[#0a0a0a] border-[#0a0a0a]' : 'bg-[#fafafa] border-[#fafafa]'
+                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
               }`}
             >
               <div className="flex-1 flex items-center gap-1 min-w-0">
                 {typing ? (
                   <>
-                    <span className={`text-[16px] leading-6 whitespace-nowrap ${light ? 'text-white' : 'text-[#0a0a0a]'}`}>{typedText}</span>
+                    <span className="text-[16px] leading-6 whitespace-nowrap text-[#0a0a0a]">{typedText}</span>
                     <BlinkingCursor />
                   </>
                 ) : (
@@ -1612,7 +1634,7 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                   </motion.button>
                 )}
               </AnimatePresence>
-              <Icon name="search" size={24} className={light ? 'text-white shrink-0' : 'text-black shrink-0'} />
+              <Icon name="search" size={24} className="text-[#0a0a0a] shrink-0" />
             </div>
             <button
               onClick={onClose}

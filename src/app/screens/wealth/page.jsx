@@ -153,7 +153,7 @@ function YieldBadge({ value, up = true, light = false }) {
 
 function SectionHeader({ title }) {
   return (
-    <div className="flex items-center justify-between px-6 pt-3 w-full shrink-0">
+    <div className="flex items-center justify-between pl-6 pr-4 pt-5 pb-3 w-full shrink-0">
       <p className="text-[14px] font-medium text-[#737373] leading-5">{title}</p>
       <p className="text-[14px] font-medium text-info leading-5">See all</p>
     </div>
@@ -178,7 +178,7 @@ function IndexCard({ name, time, date, value, change, positive, onDragStart, lig
           onPointerDown={(e) => onDragStart?.(e, { ticker: name, avatar: { type: 'icon', icon: 'trending_up' } })}
           className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
         >
-          <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+          <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
         </button>
       </div>
     </div>
@@ -222,6 +222,7 @@ const EXPLORE_FILTERS = [
 
 function ExploreContent({ onDragStart, light = false }) {
   const [activeFilter, setActiveFilter] = useState('equities')
+  const [scrolled, setScrolled] = useState(false)
   const scrollRef = useRef(null)
   const chipsRef = useRef(null)
   const chipRefs = useRef({})
@@ -254,6 +255,7 @@ function ExploreContent({ onDragStart, light = false }) {
     const container = scrollRef.current
     if (!container) return
     const onScroll = () => {
+      setScrolled(container.scrollTop > 0)
       if (isProgrammaticScroll.current) return
       const containerTop = container.getBoundingClientRect().top
       let current = 'equities'
@@ -318,9 +320,14 @@ function ExploreContent({ onDragStart, light = false }) {
               </button>
             ))}
           </div>
+          {scrolled && (
+            <div className={`absolute top-full inset-x-0 h-14 pointer-events-none z-10 ${
+              light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#0a0a0a] to-transparent'
+            }`} />
+          )}
           <div
-            className="absolute bottom-0 right-0 h-10 pointer-events-none"
-            style={{ width: 64, background: light ? 'linear-gradient(to left, #ffffff, rgba(255,255,255,0))' : 'linear-gradient(to left, #0a0a0a, rgba(10,10,10,0))' }}
+            className="absolute bottom-0 right-0 h-11 pointer-events-none"
+            style={{ width: 44, background: light ? 'linear-gradient(to left, #ffffff, rgba(255,255,255,0))' : 'linear-gradient(to left, #0a0a0a, rgba(10,10,10,0))' }}
           />
         </div>
 
@@ -332,19 +339,19 @@ function ExploreContent({ onDragStart, light = false }) {
           <SectionHeader title="Top equities" />
           {EQUITIES.map((eq, i) => (
             <div key={eq.ticker}>
-              <div className="flex gap-1 items-center pl-1 pr-6 py-3 w-full">
+              <div className="flex gap-1 items-center pl-1 pr-4 py-3 w-full">
                 <button
                   onPointerDown={(e) => onDragStart?.(e, { ticker: eq.ticker, avatar: { type: 'image', src: eq.logo, bg: eq.logoBg } })}
                   className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
                 >
-                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
                 </button>
                 <div className="flex-1 flex items-start justify-between min-w-0">
                   <div className="flex-1 flex gap-4 items-center min-w-0">
                     <div className="size-11 rounded-full overflow-hidden shrink-0 relative" style={{ background: eq.logoBg }}>
                       <Image src={eq.logo} alt={eq.ticker} fill className="object-cover" />
                     </div>
-                    <div className="flex flex-col gap-1 min-w-0 flex-1 pr-2">
+                    <div className="flex flex-col gap-1 min-w-0 flex-1 pr-10">
                       <p className={`text-[14px] font-medium leading-5 ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{eq.ticker}</p>
                       <p className="text-[12px] font-medium text-[#737373] leading-4 truncate">{eq.name}</p>
                     </div>
@@ -364,12 +371,12 @@ function ExploreContent({ onDragStart, light = false }) {
           <SectionHeader title="Top bonds" />
           {EXPLORE_BONDS.map((bond, i) => (
             <div key={bond.id}>
-              <div className="flex gap-1 items-center pl-1 pr-6 py-3 w-full">
+              <div className="flex gap-1 items-center pl-1 pr-4 py-3 w-full">
                 <button
                   onPointerDown={(e) => onDragStart?.(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
                   className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
                 >
-                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
                 </button>
                 <div className="flex-1 flex items-center justify-between min-w-0">
                   <div className="flex gap-4 items-center min-w-0">
@@ -393,12 +400,12 @@ function ExploreContent({ onDragStart, light = false }) {
           <SectionHeader title="Top fund" />
           {FUNDS.map((fund, i) => (
             <div key={fund.ticker}>
-              <div className="flex gap-1 items-center pl-1 pr-6 py-3 w-full">
+              <div className="flex gap-1 items-center pl-1 pr-4 py-3 w-full">
                 <button
                   onPointerDown={(e) => onDragStart?.(e, { ticker: fund.ticker, avatar: { type: 'image', src: fund.logo, bg: '#f3f4f6' } })}
                   className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
                 >
-                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
                 </button>
                 <div className="flex-1 flex items-center justify-between min-w-0">
                   <div className="flex gap-4 items-center min-w-0">
@@ -1010,6 +1017,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
   const [showAnalyze, setShowAnalyze] = useState(false)
   const [timeFilter, setTimeFilter] = useState('1D')
   const [chartCollapsed, setChartCollapsed] = useState(false)
+  const [assetsScrolled, setAssetsScrolled] = useState(false)
   const [fabOpen, setFabOpen] = useState(false)       // invest panel mounted
   const [bodyPushed, setBodyPushed] = useState(false)  // body compressed + dimmed
 
@@ -1071,10 +1079,13 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
       embedded ? 'w-full h-full' : 'w-[440px] h-[956px] rounded-[64px]'
     }`}>
 
-      {/* Dotted pattern background — dark theme only */}
-      {!light && (
-        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover" />
-      )}
+      <Image
+        src={light ? '/background-my-wealth-light.png' : '/background-my-wealth-dark.png'}
+        alt=""
+        fill
+        unoptimized
+        className="object-cover"
+      />
 
       {/* Status bar — standalone only */}
       {!embedded && (
@@ -1234,21 +1245,29 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                 <div className={`relative flex-1 backdrop-blur-lg border rounded-[48px] overflow-hidden flex flex-col min-h-0 ${
                   light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
                 }`}>
-                  <div className="px-6 pt-6 shrink-0">
+                  <div className="relative px-6 pt-6 shrink-0">
                     <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>My Assets (3)</p>
+                    {assetsScrolled && (
+                      <div className={`absolute top-full inset-x-0 h-14 pointer-events-none z-10 ${
+                        light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#0a0a0a] to-transparent'
+                      }`} />
+                    )}
                   </div>
 
-                  <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0">
+                  <div
+                    onScroll={(e) => setAssetsScrolled(e.currentTarget.scrollTop > 0)}
+                    className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0"
+                  >
                     {/* Equities */}
                     <div className="px-6 pt-3">
                       <p className="text-[14px] font-medium text-[#737373] leading-5">Equities</p>
                     </div>
-                    <div className="pl-1 pr-6 py-3 flex gap-1 items-center">
+                    <div className="pl-1 pr-4 py-3 flex gap-1 items-center">
                       <button
                         onPointerDown={(e) => startDrag(e, { ticker: 'TCB', avatar: { type: 'image', src: '/tcb-logo.png', bg: '#f3f4f6' } })}
                         className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
                       >
-                        <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                        <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
                       </button>
                       <div className="flex-1 flex items-start justify-between min-w-0">
                         <div className="flex gap-4 items-center">
@@ -1276,12 +1295,12 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                     </div>
                     {BONDS.map((bond, i) => (
                       <div key={bond.id}>
-                        <div className="pl-1 pr-6 py-3 flex gap-1 items-center">
+                        <div className="pl-1 pr-4 py-3 flex gap-1 items-center">
                           <button
                             onPointerDown={(e) => startDrag(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
                             className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
                           >
-                            <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                            <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
                           </button>
                           <div className="flex-1 flex items-start justify-between min-w-0">
                             <div className="flex gap-4 items-center">
