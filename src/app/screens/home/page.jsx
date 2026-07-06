@@ -522,7 +522,7 @@ function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, ac
 
         {/* Quick links + branch/map card */}
         <motion.div {...rise(2)} className="flex items-stretch gap-2.5 shrink-0">
-          <div className={`shrink-0 rounded-[32px] flex flex-col ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
+          <div className={`flex-1 min-w-0 rounded-[32px] flex flex-col ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
             {MENU_QUICK_LINKS.map(({ label, icon }, i) => (
               <button
                 key={label}
@@ -536,14 +536,14 @@ function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, ac
             ))}
           </div>
 
-          <div className={`flex-1 border border-info rounded-[32px] overflow-hidden flex flex-col min-w-0 ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
+          <div className={`flex-1 min-w-0 border border-info rounded-[32px] overflow-hidden flex flex-col ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
             <p className={`t-label px-6 pt-6 pb-3 ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Find branches &amp; ATMs on map</p>
             <div className="px-6"><div className="h-px bg-[#737373] opacity-10 rounded-full w-full" /></div>
             <div className="flex flex-col gap-2 px-6 py-3">
               <p className={`t-label ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Book an appointment</p>
               <p className="text-[12px] leading-4 text-[#737373]">For a smoother branch visit</p>
             </div>
-            <div className="relative flex-1 min-h-24">
+            <div className="relative h-[79px] shrink-0">
               <Image src="/menu-map.png" alt="" fill className="object-cover" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-info rounded-full p-1 flex items-center justify-center shadow-lg">
@@ -1039,7 +1039,7 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
         {/* Ask anything input */}
         <button
           onClick={() => onOpenChat?.('Freeze my card')}
-          className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 w-full ${
+          className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 mx-3 w-[calc(100%-24px)] ${
             light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
           }`}
         >
@@ -1200,7 +1200,7 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
         </div>
 
         {/* Ask anything input */}
-        <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 w-full ${
+        <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 mx-3 w-[calc(100%-24px)] ${
           light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
         }`}>
           <Icon name="add" size={24} className="text-black shrink-0" />
@@ -1761,6 +1761,13 @@ export default function HomeScreen({
             light={light}
           />
         </div>
+
+        <motion.div
+          initial={false}
+          animate={{ opacity: menuOpen ? 1 : 0 }}
+          transition={{ duration: 0.18 }}
+          className="absolute inset-0 bg-black/60 rounded-[64px] pointer-events-none z-30"
+        />
       </div>
 
       {/* Menu tap-to-close area — sits on the compressed card */}

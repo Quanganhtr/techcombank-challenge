@@ -721,6 +721,7 @@ function ChipAvatar({ avatar, size = 24 }) {
 const WEALTH_ASK_SUGGESTIONS = [
   { id: 1, rotate: -8, icon: '/icons-home/tri-suggestion-house.svg', label: 'Make a plan to buy house',                    message: 'Make a plan to buy house' },
   { id: 2, rotate: 8,  icon: '/icons-home/tri-suggestion-plane.svg', label: 'Summarize my total spending on Bangkok Trip', message: 'Summarize my total spending on Bangkok Trip' },
+  { id: 3, rotate: -8, icon: 'freeze',                               label: 'Freeze my Credit card',                       message: 'Freeze my card' },
 ]
 
 /* Scripted "compare & buy" demo — pre-fills each step when TCB + VIC are both
@@ -854,7 +855,13 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                       }`}
                       style={{ width: 117, height: 140, transform: `rotate(${rotate}deg)` }}
                     >
-                      <img src={icon} alt="" className="size-6" />
+                      {icon === 'freeze' ? (
+                        <div className="bg-cinnabar-400 rounded-lg size-6 flex items-center justify-center shrink-0">
+                          <div className="bg-cinnabar-200 rounded-full size-4" />
+                        </div>
+                      ) : (
+                        <img src={icon} alt="" className="size-6" />
+                      )}
                       <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{label}</p>
                     </div>
                   </button>
@@ -947,7 +954,7 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
         </div>
 
         {/* Ask anything input — chips row above, input row below */}
-        <div className={`border rounded-[32px] flex flex-col gap-2 pl-4 pr-2 pt-2 pb-2 shrink-0 w-full ${
+        <div className={`border rounded-[32px] flex flex-col gap-2 pl-4 pr-2 pt-2 pb-2 shrink-0 mx-3 w-[calc(100%-24px)] ${
           light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
         }`}>
           {chatChips.length > 0 && (
@@ -1002,6 +1009,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
   const [navTab, setNavTab] = useState(defaultTab) // 'wealth' | 'explore'
   const [showAnalyze, setShowAnalyze] = useState(false)
   const [timeFilter, setTimeFilter] = useState('1D')
+  const [chartCollapsed, setChartCollapsed] = useState(false)
   const [fabOpen, setFabOpen] = useState(false)       // invest panel mounted
   const [bodyPushed, setBodyPushed] = useState(false)  // body compressed + dimmed
 
@@ -1114,7 +1122,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                   onClick={() => setNavTab(tab.id)}
                   className="flex flex-col gap-1 items-center pb-1"
                 >
-                  <span className={`text-[24px] font-bold leading-8 tracking-[0.48px] ${navTab === tab.id ? (light ? 'text-[#0a0a0a]' : 'text-white') : (light ? 'text-[#a1a1a1]' : 'text-[#737373]')}`}>
+                  <span className={`text-[24px] leading-8 tracking-[0.48px] ${navTab === tab.id ? `font-bold ${light ? 'text-[#0a0a0a]' : 'text-white'}` : `font-semibold ${light ? 'text-[#a1a1a1]' : 'text-[#737373]'}`}`}>
                     {tab.label}
                   </span>
                 </button>
@@ -1142,7 +1150,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           {navTab === 'wealth' && (
             <>
               {/* Balance */}
-              <div className="flex flex-col gap-2 px-6 py-3 shrink-0">
+              <div className="relative flex flex-col gap-2 px-6 py-3 shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] text-[#737373] leading-5">Total Investment</span>
                   <button onClick={() => setHidden(v => !v)} className="flex items-center">
@@ -1159,9 +1167,20 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                   <span className="text-success">+2,993,009đ (9,78%)</span>
                   <span className="text-[#737373]">Today</span>
                 </div>
+                {chartCollapsed && (
+                  <button
+                    onClick={() => setChartCollapsed(false)}
+                    className={`absolute right-6 bottom-3 rounded-full px-5 py-2 flex items-center justify-center border ${
+                      light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+                    }`}
+                  >
+                    <Icon name="keyboard_arrow_down" size={20} className={light ? 'text-[#0a0a0a]' : 'text-white'} />
+                  </button>
+                )}
               </div>
 
               {/* Summary + chart card */}
+              {!chartCollapsed && (
               <div className="px-3 pb-3 shrink-0">
                 <div className={`border rounded-[48px] overflow-hidden ${light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'}`}>
                   {/* 3-column summary */}
@@ -1196,13 +1215,19 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                         ))}
                       </div>
                       {/* Collapse */}
-                      <button className={`rounded-full px-5 py-2 flex items-center justify-center border ${light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'}`}>
+                      <button
+                        onClick={() => setChartCollapsed(true)}
+                        className={`rounded-full px-5 py-2 flex items-center justify-center border ${
+                          light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+                        }`}
+                      >
                         <Icon name="keyboard_arrow_up" size={20} className={light ? 'text-[#0a0a0a]' : 'text-white'} />
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
+              )}
 
               {/* My Assets card */}
               <div className="flex-1 px-3 pb-3 min-h-0 flex">
@@ -1445,7 +1470,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         {fabOpen && (
           <motion.div
             initial={{ width: 24, height: 24, right: 24, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#ffffff' }}
-            animate={{ width: 432, height: 244, right: 4, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#fafafa' }}
+            animate={{ width: 432, height: 256, right: 4, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#fafafa' }}
             exit={{
               x: 448, opacity: 1,
               transition: { type: 'spring', stiffness: 300, damping: 32 },
@@ -1457,7 +1482,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           >
             {/* Content layer — fixed width so text doesn't reflow while scaling */}
             <motion.div
-              className="flex flex-col h-full"
+              className="flex flex-col h-full px-3"
               style={{ width: 432 }}
             >
               {/* Header */}
@@ -1477,7 +1502,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
               </div>
 
               {/* Products */}
-              <div className="flex gap-2 items-center justify-center px-3 pt-3 w-full">
+              <div className="flex gap-2 items-center justify-center px-3 pt-3 pb-3 w-full">
                 {[
                   { label: 'Equities', icon: 'candlestick_chart', bg: '#d5d4f7', iconLight: false },
                   { label: 'Bonds',    icon: 'analytics',         bg: '#ccf5ff', iconLight: false },
