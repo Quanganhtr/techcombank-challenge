@@ -528,7 +528,7 @@ function BottomNav({ onNavigate }) {
           })}
         </div>
         <button className="size-14 rounded-full bg-surface-raised border border-border-strong flex items-center justify-center shrink-0 shadow-xl">
-          <Image src="/tri.png" alt="TRÍ" width={24} height={24} />
+          <Image src="/tri.png" alt="AI" width={24} height={24} />
         </button>
       </div>
     </div>
@@ -645,7 +645,7 @@ function AnalyzeOverlay({ onClose, showCard = true, light = false }) {
             <div className="size-5 relative overflow-hidden shrink-0">
               <Image src="/tri.png" alt="" fill className="object-contain" />
             </div>
-            <span className={`text-[14px] font-medium ${dark ? 'text-[#0a0a0a]' : 'text-content-inverse'}`}>Ask TRÍ</span>
+            <span className={`text-[14px] font-medium ${dark ? 'text-[#0a0a0a]' : 'text-content-inverse'}`}>Ask AI</span>
           </button>
         </div>
       </motion.div>
@@ -721,7 +721,7 @@ function ChipAvatar({ avatar, size = 24 }) {
   )
 }
 
-/* ─── Expanded Ask TRÍ compose screen — slides in from the right, same
+/* ─── Expanded Ask AI compose screen — slides in from the right, same
        pattern as Home's TriScreen; shows attached chips as avatar + ticker ── */
 
 // Entry-screen suggestion tiles — same visual language as Home's TRI_ENTRY_SUGGESTIONS
@@ -1011,7 +1011,7 @@ const FAB_ACTIONS = [
   { label: 'Top up',   icon: 'add_box' },
 ]
 
-export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, menuOpen = false, onOpenMenu, light = false } = {}) {
+export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, menuOpen = false, onOpenMenu, light = false, onTesterNoteChange } = {}) {
   const [hidden, setHidden] = useState(false)
   const [navTab, setNavTab] = useState(defaultTab) // 'wealth' | 'explore'
   const [showAnalyze, setShowAnalyze] = useState(false)
@@ -1022,9 +1022,9 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
   const [bodyPushed, setBodyPushed] = useState(false)  // body compressed + dimmed
 
   const openInvest  = () => { setFabOpen(true); setBodyPushed(true); onInvestOpen?.() }
-  const closeInvest = () => { setFabOpen(false); onInvestClose?.() } // body drops back via onExitComplete
+  const closeInvest = () => { setFabOpen(false); setBodyPushed(false); onInvestClose?.() }
 
-  /* ── Drag-to-chat: drag an item's handle onto the Ask TRÍ field to add a chip ──
+  /* ── Drag-to-chat: drag an item's handle onto the Ask AI field to add a chip ──
      chip shape: { ticker, avatar: { type: 'image', src, bg } | { type: 'icon', icon } } */
   const [chatChips, setChatChips] = useState([])
   const [ghost, setGhost] = useState(null)        // { ticker, x, y } — floating pill following the pointer
@@ -1032,6 +1032,39 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
   const [askChatOpen, setAskChatOpen] = useState(false) // expanded compose overlay
   const rootRef = useRef(null)
   const askRef = useRef(null)
+
+  useEffect(() => {
+    if (!onTesterNoteChange) return
+
+    if (askChatOpen) {
+      onTesterNoteChange({
+        title: 'Wealth AI Chat',
+        items: ['Tap the send arrow to submit the drafted question.'],
+      })
+      return
+    }
+
+    if (fabOpen) {
+      onTesterNoteChange({
+        title: 'Invest Panel',
+        items: ['Tap Close to dismiss the panel.', 'Tap product circles to explore investment actions.'],
+      })
+      return
+    }
+
+    if (navTab === 'explore') {
+      onTesterNoteChange({
+        title: 'Explore',
+        items: ['Tap filter chips to jump between sections.', 'Drag TCB and VIC into Ask anything to continue.', 'Tap My wealth to return to the portfolio view.', 'Tap Buy to open the invest panel.'],
+      })
+      return
+    }
+
+    onTesterNoteChange({
+      title: 'My Wealth',
+      items: ['Tap Explore to switch tabs.', 'Tap the chart arrow to collapse or expand the chart.', 'Drag asset handles into Ask AI (For full context, let visit the Explore first.)', 'Tap Buy to open the invest panel.'],
+    })
+  }, [askChatOpen, fabOpen, navTab, onTesterNoteChange])
 
   const startDrag = (e, chip) => {
     e.preventDefault()
@@ -1179,20 +1212,35 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                   <span className="text-[#737373]">Today</span>
                 </div>
                 {chartCollapsed && (
-                  <button
+                  <motion.button
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.18, delay: 0.12, ease: 'easeOut' }}
                     onClick={() => setChartCollapsed(false)}
                     className={`absolute right-6 bottom-3 rounded-full px-5 py-2 flex items-center justify-center border ${
                       light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
                     }`}
                   >
                     <Icon name="keyboard_arrow_down" size={20} className={light ? 'text-[#0a0a0a]' : 'text-white'} />
-                  </button>
+                  </motion.button>
                 )}
               </div>
 
               {/* Summary + chart card */}
+              <AnimatePresence initial={false}>
               {!chartCollapsed && (
-              <div className="px-3 pb-3 shrink-0">
+              <motion.div
+                initial={{ height: 0, opacity: 0, y: -8 }}
+                animate={{ height: 'auto', opacity: 1, y: 0 }}
+                exit={{ height: 0, opacity: 0, y: -8 }}
+                transition={{
+                  height: { duration: 0.28, ease: [0.4, 0, 0.2, 1] },
+                  opacity: { duration: 0.16, ease: 'easeOut' },
+                  y: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
+                }}
+                className="px-3 pb-3 shrink-0 overflow-hidden"
+              >
                 <div className={`border rounded-[48px] overflow-hidden ${light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'}`}>
                   {/* 3-column summary */}
                   <div className="flex items-center justify-between p-6">
@@ -1237,8 +1285,9 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
               )}
+              </AnimatePresence>
 
               {/* My Assets card */}
               <div className="flex-1 px-3 pb-3 min-h-0 flex">
@@ -1370,7 +1419,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           className="shrink-0 -mt-2"
         />
 
-        {/* Footer — dots menu + Ask TRÍ; stays put, dims while invest panel is open */}
+        {/* Footer — dots menu + Ask AI; stays put, dims while invest panel is open */}
         <motion.div
           initial={false}
           animate={{ opacity: bodyPushed ? 0.5 : 1 }}
@@ -1454,7 +1503,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         )}
       </AnimatePresence>
 
-      {/* Expanded Ask TRÍ compose screen — slides in from the right when the ask bar is tapped */}
+      {/* Expanded Ask AI compose screen — slides in from the right when the ask bar is tapped */}
       <AnimatePresence>
         {askChatOpen && (
           <AskExpandScreen
@@ -1474,7 +1523,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { duration: 0.3 } }}
-            exit={{ opacity: 0, transition: { duration: 0.15, delay: 0.3 } }}
+            exit={{ opacity: 0, transition: { duration: 0.16 } }}
             className="absolute inset-0 z-40"
             onClick={closeInvest}
           >
@@ -1483,16 +1532,15 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         )}
       </AnimatePresence>
 
-      {/* Invest panel — scales up from a 24px dot on the right (like Home's balance overlay);
-          on close it slides fully out to the right, THEN the body drops back */}
-      <AnimatePresence onExitComplete={() => setBodyPushed(false)}>
+      {/* Invest panel — scales up from a 24px dot on the right (like Home's balance overlay) */}
+      <AnimatePresence>
         {fabOpen && (
           <motion.div
             initial={{ width: 24, height: 24, right: 24, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#ffffff' }}
             animate={{ width: 432, height: 256, right: 4, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#fafafa' }}
             exit={{
               x: 448, opacity: 1,
-              transition: { type: 'spring', stiffness: 300, damping: 32 },
+              transition: { type: 'spring', stiffness: 420, damping: 38 },
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
             className={`absolute z-50 overflow-hidden rounded-[60px] backdrop-blur-lg border ${light ? 'border-[#262626]' : 'border-[#171717]'}`}

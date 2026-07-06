@@ -359,7 +359,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
         {/* Spacer holds the pill's slot while the sheet is open */}
         {menuOpen && <div className="shrink-0" style={{ width: 88, height: 64 }} />}
 
-        {/* Ask TRÍ input — physically shoved off the right edge when menu opens */}
+        {/* Ask AI input — physically shoved off the right edge when menu opens */}
         <motion.button
           initial={false}
           animate={{
@@ -399,7 +399,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
           onClick={onOpenKeyboard}
           className="flex-1 flex items-center justify-between bg-[#0a0a0a] backdrop-blur-sm border border-[#fafafa] rounded-[36px] pl-8 pr-5 py-5"
         >
-          <span className="t-caption text-white whitespace-nowrap">Ask TRÍ anything...</span>
+          <span className="t-caption text-white whitespace-nowrap">Ask AI anything...</span>
           <div className="size-6 flex items-center justify-center shrink-0">
             <Image src="/tri.png" alt="" width={24} height={24} />
           </div>
@@ -936,7 +936,7 @@ function TransactionOverlay({ onClose, showCard = true, light = false }) {
                 <div className="bg-info-subtle rounded-2xl p-3 flex items-start gap-2 mt-1">
                   <Icon name="info" size={18} className="text-info shrink-0 mt-px" />
                   <p className="text-[12px] text-info leading-4">
-                    The categories is being created by TRÍ. You can add TRÍ to add more or remove the wrong one.
+                    The categories is being created by AI. You can add AI to add more or remove the wrong one.
                   </p>
                 </div>
               </div>
@@ -1218,10 +1218,10 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
           initial={{ y: 480 }}
           animate={{ y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 32, delay: 0.28 }}
-          className="absolute left-0 right-0 bottom-0 z-20 flex flex-col gap-2"
+          className="flex flex-col gap-2 shrink-0"
         >
           {/* Ask anything input */}
-          <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 w-full ${
+          <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 mx-3 w-[calc(100%-24px)] ${
             light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
           }`}>
             <Icon name="add" size={24} className="text-black shrink-0" />
@@ -1494,13 +1494,13 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                   </div>
                 ))}
 
-                {/* Talk to Trí header */}
+                {/* Talk to AI header */}
                 <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 text-[14px] font-medium leading-5">
-                  <span className="text-[#737373]">Talk to Trí</span>
+                  <span className="text-[#737373]">Talk to AI</span>
                   <span className={primaryText}>Open conversation</span>
                 </div>
 
-                {/* Trí suggestions */}
+                {/* AI suggestions */}
                 {TRI_SUGGESTIONS.map((item, i) => (
                   <div key={item.id}>
                     <button
@@ -1664,6 +1664,7 @@ export default function HomeScreen({
   triHovered = false,
   defaultTab = 'home',
   defaultTheme = 'dark',
+  onTesterNoteChange,
 } = {}) {
   const [theme,               setTheme]               = useState(defaultTheme)
   const [internalOverlay,     setInternalOverlay]     = useState(false)
@@ -1677,7 +1678,7 @@ export default function HomeScreen({
   const [showInsightChat,     setShowInsightChat]     = useState(false)
   const [insightAdded,        setInsightAdded]        = useState(false)
 
-  // Suggestion taps / Ask TRÍ send used to open a scripted demo chat (TriChatScreen);
+  // Suggestion taps / Ask AI send used to open a scripted demo chat (TriChatScreen);
   // that screen has been removed, so these now just close back to the current screen.
   const closeTriFlow = () => {
     setShowSearch(false)
@@ -1691,6 +1692,70 @@ export default function HomeScreen({
 
   const openOverlay      = () => { if (extOverlay === undefined) setInternalOverlay(true) }
   const closeOverlay     = () => { extClose            ? extClose()            : setInternalOverlay(false) }
+
+  useEffect(() => {
+    if (!onTesterNoteChange) return
+
+    if (showSearch) {
+      onTesterNoteChange({
+        title: 'Search',
+        items: ['Tap the search field to type “Card”.', 'Tap Close to return home.'],
+      })
+      return
+    }
+
+    if (showInsightChat) {
+      onTesterNoteChange({
+        title: 'AI Chat',
+        items: ['Tap the arrow button to send the drafted message.', 'Tap View on the AI reply to reopen the insight overlay.', 'Tap Search or Close in the header.'],
+      })
+      return
+    }
+
+    if (showTri) {
+      onTesterNoteChange({
+        title: 'AI',
+        items: ['Visit My Wealth to see check case study.'],
+      })
+      return
+    }
+
+    if (showOverlay) {
+      onTesterNoteChange({
+        title: 'Balance Insight',
+        items: ['Tap Edit to show remove controls.', 'Tap Add insight to open the AI chat.', 'Tap Done or the backdrop to close.'],
+      })
+      return
+    }
+
+    if (menuOpen) {
+      onTesterNoteChange({
+        title: 'Menu',
+        items: ['Tap Home or My Wealth to switch sections.', 'Tap the theme icon to toggle light/dark.', 'Tap the top compressed area or X dots to close.'],
+      })
+      return
+    }
+
+    if (navActive === 'investment') {
+      if (wealthInvestOpen) {
+        onTesterNoteChange({
+          title: 'Invest Panel',
+          items: ['Tap Close to dismiss the panel.', 'Investment product circles are selectable visual targets.'],
+        })
+        return
+      }
+      onTesterNoteChange({
+        title: 'My Wealth',
+        items: ['Tap My wealth / Explore tabs.', 'Tap the chart arrow to collapse or expand the chart.', 'Drag asset handles into Ask AI (For full context, let visit the Explore first.)', 'Tap Buy to open the invest panel.'],
+      })
+      return
+    }
+
+    onTesterNoteChange({
+      title: 'Home',
+      items: ['Tap Current Balance to open the insight overlay.', 'Tap Search in the top bar.', 'Tap Ask anything in the bottom bar.', 'Tap the four-dot menu button.'],
+    })
+  }, [menuOpen, navActive, onTesterNoteChange, showInsightChat, showOverlay, showSearch, showTri, wealthInvestOpen])
 
   return (
     <div className={`w-[440px] h-[956px] overflow-hidden relative rounded-[64px] ${light ? 'bg-white' : 'bg-black'}`}>
@@ -1867,6 +1932,7 @@ export default function HomeScreen({
               menuOpen={menuOpen}
               onOpenMenu={() => setMenuOpen(true)}
               light={light}
+              onTesterNoteChange={onTesterNoteChange}
             />
           </div>
         )}
