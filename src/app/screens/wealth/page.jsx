@@ -143,10 +143,10 @@ function YieldBadge({ value, up = true, light = false }) {
     <div className={`flex items-center gap-1 pl-1 pr-3 py-1 rounded-full shrink-0 ${
       up ? (light ? 'bg-[#DCFCE7]' : 'bg-[#052e16]') : 'bg-[#460809]'
     }`}>
-      <span className="material-symbols-outlined leading-none select-none text-[20px]" style={{ transform: up ? 'rotate(180deg)' : 'none', color: up ? '#00a63e' : '#e7000b' }}>
+      <span className="material-symbols-outlined leading-none select-none text-[20px]" style={{ transform: up ? 'rotate(180deg)' : 'none', color: up ? (light ? '#00a63e' : '#4ade80') : '#e7000b' }}>
         arrow_drop_down
       </span>
-      <span className={`text-[14px] font-medium whitespace-nowrap ${up ? 'text-success' : 'text-danger'}`}>{value}</span>
+      <span className={`text-[14px] font-medium whitespace-nowrap ${up ? (light ? 'text-success' : 'text-green-400') : 'text-danger'}`}>{value}</span>
     </div>
   )
 }
@@ -172,7 +172,7 @@ function IndexCard({ name, time, date, value, change, positive, onDragStart, lig
       <div className="flex items-end justify-between w-full">
         <div className="flex flex-col gap-1">
           <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{value}</p>
-          <p className={`text-[14px] font-medium leading-5 ${positive ? 'text-success' : 'text-danger'}`}>{change}</p>
+          <p className={`text-[14px] font-medium leading-5 ${positive ? (light ? 'text-success' : 'text-green-400') : 'text-danger'}`}>{change}</p>
         </div>
         <button
           onPointerDown={(e) => onDragStart?.(e, { ticker: name, avatar: { type: 'icon', icon: 'trending_up' } })}
@@ -358,7 +358,7 @@ function ExploreContent({ onDragStart, light = false }) {
                   </div>
                   <div className="flex flex-col gap-1 items-end text-right shrink-0">
                     <p className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{eq.price}</p>
-                    <p className="text-[12px] font-medium text-success leading-4">{eq.change}</p>
+                    <p className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>{eq.change}</p>
                   </div>
                 </div>
               </div>
@@ -579,7 +579,7 @@ function AnalyzeOverlay({ onClose, showCard = true, light = false }) {
         {/* Health score */}
         <div className={`rounded-3xl p-4 flex flex-col gap-1 ${dark ? 'bg-[#171717]' : 'bg-[#f0fdf4]'}`}>
           <p className={`text-[16px] font-medium leading-6 ${dark ? 'text-white' : 'text-content-primary'}`}>Health score</p>
-          <p className="text-[32px] font-bold text-success leading-10">32/100</p>
+          <p className={`text-[32px] font-bold leading-10 ${dark ? 'text-green-400' : 'text-success'}`}>32/100</p>
           <p className={`text-[14px] leading-5 ${dark ? 'text-[#a1a1a1]' : 'text-content-secondary'}`}>Your 4.8% closer to your goal of buying a home. Keep going.</p>
         </div>
 
@@ -595,7 +595,7 @@ function AnalyzeOverlay({ onClose, showCard = true, light = false }) {
             </div>
             <div className="flex flex-col gap-1 flex-1 min-w-0">
               <p className={`text-[16px] font-medium leading-6 ${dark ? 'text-white' : 'text-content-primary'}`}>
-                <span className="text-success">+8,000,000đ</span>{' in realized PnL'}
+                <span className={dark ? 'text-green-400' : 'text-success'}>+8,000,000đ</span>{' in realized PnL'}
               </p>
               <p className={`text-[14px] leading-5 ${dark ? 'text-[#737373]' : 'text-content-muted'}`}>You started buying on 12 Apr 2024, Average buy price is 28,250đ. You bought 5 times, sold 2 times in total</p>
             </div>
@@ -630,7 +630,7 @@ function AnalyzeOverlay({ onClose, showCard = true, light = false }) {
               </div>
               <div className="flex items-center justify-between text-[14px] leading-5">
                 <span className={`truncate pr-2 ${dark ? 'text-white' : 'text-content-primary'}`}>Masan Group Corporation</span>
-                <span className="text-success shrink-0">+0.41%</span>
+                <span className={`shrink-0 ${dark ? 'text-green-400' : 'text-success'}`}>+0.41%</span>
               </div>
             </div>
           </div>
@@ -887,7 +887,7 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                           {m.chips.map(chip => (
                             <div key={chip.ticker} className="bg-[#262626] flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
                               <ChipAvatar avatar={chip.avatar} size={24} />
-                              <span className="flex items-center text-[12px] font-medium leading-none text-white whitespace-nowrap">{chip.ticker}</span>
+                              <span className="flex h-4 items-center text-[12px] font-medium leading-4 text-white whitespace-nowrap">{chip.ticker}</span>
                             </div>
                           ))}
                         </div>
@@ -969,7 +969,7 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
               {chatChips.map(chip => (
                 <div key={chip.ticker} className="bg-[#262626] flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
                   <ChipAvatar avatar={chip.avatar} size={24} />
-                  <span className="flex items-center text-[12px] font-medium leading-none text-white whitespace-nowrap">{chip.ticker}</span>
+                  <span className="flex h-4 items-center text-[12px] font-medium leading-4 text-white whitespace-nowrap">{chip.ticker}</span>
                   <button onClick={() => onRemoveChip(chip.ticker)} className="flex items-center justify-center size-4 shrink-0">
                     <Icon name="close" size={16} className="text-white" />
                   </button>
@@ -1208,7 +1208,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                   <span className="text-[24px] font-bold text-[#737373] leading-8 tracking-[0.48px]">đ</span>
                 </div>
                 <div className="flex gap-1 text-[14px] font-medium leading-5">
-                  <span className="text-success">+2,993,009đ (9,78%)</span>
+                  <span className={light ? 'text-success' : 'text-green-400'}>+2,993,009đ (9,78%)</span>
                   <span className="text-[#737373]">Today</span>
                 </div>
                 {chartCollapsed && (
@@ -1330,7 +1330,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                         </div>
                         <div className="flex flex-col gap-1 items-end text-right">
                           <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>12,008,897đ</span>
-                          <span className="text-[12px] font-medium text-success leading-4">+149,000đ (+1.29%)</span>
+                          <span className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>+149,000đ (+1.29%)</span>
                         </div>
                       </div>
                     </div>
@@ -1363,7 +1363,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                             </div>
                             <div className="flex flex-col gap-1 items-end text-right">
                               <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{bond.amount}</span>
-                              <span className="text-[12px] font-medium text-success leading-4">{bond.yieldStr}</span>
+                              <span className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>{bond.yieldStr}</span>
                             </div>
                           </div>
                         </div>
@@ -1455,7 +1455,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                     transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                     className={`flex items-center h-6 gap-1 rounded-full pl-2 pr-1 shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}
                   >
-                    <span className={`flex items-center text-[12px] font-medium leading-none whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+                    <span className={`flex h-4 items-center text-[12px] font-medium leading-4 whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
                       {chatChips.length} attached
                     </span>
                     <button

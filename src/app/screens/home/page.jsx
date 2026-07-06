@@ -108,7 +108,7 @@ function BalanceSection({ onOpenOverlay, light = false }) {
           onClick={onOpenOverlay}
           className="relative bg-cinnabar-500 rounded-full px-4 py-2 flex items-center gap-2 overflow-hidden shrink-0"
         >
-          <img src="/insight-decor.svg" alt="" className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 107, height: 41 }} />
+          <img src="/insight-decor.svg" alt="" className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 107, height: 40.9785 }} />
           <span className="relative t-body-md text-white whitespace-nowrap">Insight</span>
         </button>
       </div>
@@ -203,7 +203,7 @@ function TransactionItem({ item, isLast, light = false }) {
             <Icon
               name={isIncome ? 'arrow_downward' : 'arrow_upward'}
               size={24}
-              className={light ? (isIncome ? 'text-success' : 'text-[#737373]') : 'text-[#d4d4d4]'}
+              className={isIncome ? (light ? 'text-success' : 'text-green-400') : (light ? 'text-[#737373]' : 'text-[#d4d4d4]')}
             />
           </div>
           <div className="flex flex-col gap-0.5 pb-0.5">
@@ -215,7 +215,7 @@ function TransactionItem({ item, isLast, light = false }) {
             </div>
           </div>
         </div>
-        <p className={`t-number whitespace-nowrap ${isIncome ? 'text-success' : light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>
+        <p className={`t-number whitespace-nowrap ${isIncome ? (light ? 'text-success' : 'text-green-400') : light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>
           {item.amount}
         </p>
       </div>
@@ -374,7 +374,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
             light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#404040]'
           } ${triHovered ? 'shadow-[0_0_0_4px_rgba(237,28,36,0.25)]' : ''}`}
         >
-          <span className={`t-caption whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Ask anything...</span>
+          <span className={`t-body-md whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Ask anything...</span>
           <div className="size-6 flex items-center justify-center shrink-0">
             <Image src="/tri.png" alt="" width={24} height={24} />
           </div>
@@ -1575,9 +1575,9 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                         {stock.price
                           ? <>
                               <p className={`text-[14px] font-medium leading-5 tabular-nums ${primaryText}`}>{stock.price}</p>
-                              <p className="text-[12px] font-medium text-success leading-4 tabular-nums">{stock.change}</p>
+                              <p className={`text-[12px] font-medium leading-4 tabular-nums ${light ? 'text-success' : 'text-green-400'}`}>{stock.change}</p>
                             </>
-                          : <p className="text-[14px] font-medium text-success leading-5 tabular-nums">{stock.change}</p>
+                          : <p className={`text-[14px] font-medium leading-5 tabular-nums ${light ? 'text-success' : 'text-green-400'}`}>{stock.change}</p>
                         }
                       </div>
                     </div>
@@ -1663,7 +1663,7 @@ export default function HomeScreen({
   onTriClose: extTriClose,
   triHovered = false,
   defaultTab = 'home',
-  defaultTheme = 'dark',
+  defaultTheme = 'light',
   onTesterNoteChange,
 } = {}) {
   const [theme,               setTheme]               = useState(defaultTheme)
