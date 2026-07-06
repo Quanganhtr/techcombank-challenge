@@ -1761,10 +1761,14 @@ export default function HomeScreen({
   return (
     <div className={`w-[440px] h-[956px] overflow-hidden relative rounded-[64px] ${light ? 'bg-white' : 'bg-black'}`}>
 
-      {/* Dotted pattern background — dark theme only */}
-      {!light && (
-        <Image src="/background-dark.png" alt="" fill priority unoptimized className="object-cover rounded-[64px]" />
-      )}
+      <Image
+        src={light ? '/background-light.png' : '/background-dark2.png'}
+        alt=""
+        fill
+        priority
+        unoptimized
+        className="object-cover rounded-[64px]"
+      />
 
       {/* Slideable home content — exits left when search opens */}
       <motion.div
