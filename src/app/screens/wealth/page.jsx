@@ -86,14 +86,15 @@ function Icon({ name, size = 24, className = '' }) {
   )
 }
 
-function StatusBar() {
+function StatusBar({ dark = false }) {
+  const imgStyle = dark ? { filter: 'invert(1)' } : {}
   return (
-    <div className="flex items-center justify-between px-14 pt-3.5 pb-1 shrink-0">
-      <span className="text-[15px] font-semibold text-content-primary">9:41</span>
+    <div className="flex items-center justify-between px-14 pt-6 pb-1 shrink-0">
+      <span className={`text-[15px] font-semibold ${dark ? 'text-content-primary' : 'text-white'}`}>9:41</span>
       <div className="flex items-center gap-1">
-        <Image src="/cellular.svg" alt="" width={16} height={16} />
-        <Image src="/wifi.svg"     alt="" width={16} height={16} />
-        <Image src="/battery.svg"  alt="" width={16} height={16} />
+        <Image src="/cellular.svg" alt="" width={16} height={16} style={imgStyle} />
+        <Image src="/wifi.svg"     alt="" width={16} height={16} style={imgStyle} />
+        <Image src="/battery.svg"  alt="" width={16} height={16} style={imgStyle} />
       </div>
     </div>
   )
@@ -137,9 +138,11 @@ function AssetDivider() {
 
 /* ── Explore tab sub-components ─────────────────────────────────────── */
 
-function YieldBadge({ value, up = true }) {
+function YieldBadge({ value, up = true, light = false }) {
   return (
-    <div className={`flex items-center gap-1 pl-1 pr-3 py-1 rounded-full shrink-0 ${up ? 'bg-[#dcfce7]' : 'bg-[#ffe2e2]'}`}>
+    <div className={`flex items-center gap-1 pl-1 pr-3 py-1 rounded-full shrink-0 ${
+      up ? (light ? 'bg-[#DCFCE7]' : 'bg-[#052e16]') : 'bg-[#460809]'
+    }`}>
       <span className="material-symbols-outlined leading-none select-none text-[20px]" style={{ transform: up ? 'rotate(180deg)' : 'none', color: up ? '#00a63e' : '#e7000b' }}>
         arrow_drop_down
       </span>
@@ -150,26 +153,42 @@ function YieldBadge({ value, up = true }) {
 
 function SectionHeader({ title }) {
   return (
-    <div className="flex items-center justify-between w-full">
-      <p className="text-[16px] font-semibold text-content-primary leading-6">{title}</p>
+    <div className="flex items-center justify-between px-6 pt-3 w-full shrink-0">
+      <p className="text-[14px] font-medium text-[#737373] leading-5">{title}</p>
       <p className="text-[14px] font-medium text-info leading-5">See all</p>
     </div>
   )
 }
 
-function IndexCard({ name, time, date, value, change, positive }) {
+function IndexCard({ name, time, date, value, change, positive, onDragStart, light = false }) {
   return (
-    <div className="flex flex-col h-40 w-[156px] shrink-0 items-start justify-between overflow-hidden p-4 rounded-2xl bg-surface">
+    <div className={`flex flex-col h-40 w-[156px] shrink-0 items-start justify-between overflow-hidden p-4 rounded-3xl ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
       <div className="flex flex-col gap-1 w-full">
-        <p className="text-[14px] font-medium text-content-primary leading-5">{name}</p>
-        <div className="flex gap-1 text-[12px] text-content-secondary leading-4">
+        <p className={`text-[14px] font-medium leading-5 ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{name}</p>
+        <div className="flex gap-1 text-[12px] font-medium text-[#737373] leading-4">
           <span>{time}</span><span>·</span><span>{date}</span>
         </div>
       </div>
-      <div className="flex flex-col gap-1">
-        <p className="text-[24px] font-semibold text-content-primary leading-8 whitespace-nowrap">{value}</p>
-        <p className={`text-[14px] font-medium leading-5 ${positive ? 'text-success' : 'text-danger'}`}>{change}</p>
+      <div className="flex items-end justify-between w-full">
+        <div className="flex flex-col gap-1">
+          <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{value}</p>
+          <p className={`text-[14px] font-medium leading-5 ${positive ? 'text-success' : 'text-danger'}`}>{change}</p>
+        </div>
+        <button
+          onPointerDown={(e) => onDragStart?.(e, { ticker: name, avatar: { type: 'icon', icon: 'trending_up' } })}
+          className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+        >
+          <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+        </button>
       </div>
+    </div>
+  )
+}
+
+function ExploreDivider() {
+  return (
+    <div className="pl-[83px] pr-4 w-full shrink-0">
+      <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
     </div>
   )
 }
@@ -201,9 +220,11 @@ const EXPLORE_FILTERS = [
   { id: 'global',      label: 'Global stock'  },
 ]
 
-function ExploreContent() {
+function ExploreContent({ onDragStart, light = false }) {
   const [activeFilter, setActiveFilter] = useState('equities')
   const scrollRef = useRef(null)
+  const chipsRef = useRef(null)
+  const chipRefs = useRef({})
   const isProgrammaticScroll = useRef(false)
   const sectionRefs = {
     equities:    useRef(null),
@@ -247,159 +268,181 @@ function ExploreContent() {
     return () => container.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Keep the active chip at the left edge (inside the 24px padding inset)
+  useEffect(() => {
+    const chips = chipsRef.current
+    const chip = chipRefs.current[activeFilter]
+    if (!chips || !chip) return
+    chips.scrollTo({ left: chip.offsetLeft - 24, behavior: 'smooth' })
+  }, [activeFilter])
+
+  const EQUITIES = [
+    { ticker: 'TCB', name: 'Vietnam Technological And Commercial Joint Stock Bank', logo: '/tcb-logo.png', logoBg: '#f3f4f6', price: '34.30',  change: '+1.29%' },
+    { ticker: 'VIC', name: 'VinGroup Joint Stock Company',                          logo: '/vic-logo.png', logoBg: '#f3f4f6', price: '217.10', change: '+0.98%' },
+    { ticker: 'MSN', name: 'Masan Group Corporation',                               logo: '/msn-logo.png', logoBg: '#101828', price: '72.80',  change: '+0.41%' },
+  ]
+
+  const EXPLORE_BONDS = [
+    { id: 1, ticker: 'VHM12605', maturity: 'Maturity: 30th July 2026', yield: '11.18%' },
+    { id: 2, ticker: 'VHM12605', maturity: 'Maturity: 30th July 2026', yield: '10.69%' },
+    { id: 3, ticker: 'VHM12605', maturity: 'Maturity: 30th July 2026', yield: '10.69%' },
+  ]
+
+  const FUNDS = [
+    { ticker: 'TCEF',  name: 'Techcom Equity Fund',            logo: '/tcb-logo.png',  yield: '11.18%' },
+    { ticker: 'TCRES', name: 'Techcom Real Estate Equity Fund', logo: '/tcb-logo.png',  yield: '10.69%' },
+    { ticker: 'DCDS',  name: 'DC Dynamic Securities',           logo: '/dcds-logo.png', yield: '10.69%' },
+  ]
+
   return (
-    /* Outer: flex col so chips stay above scroll area */
-    <div
-      className="flex-1 min-h-0 flex flex-col rounded-tl-4xl rounded-tr-4xl border-t-[0.5px] border-l-[0.5px] border-r-[0.5px] border-border-default bg-surface"
-      style={{ backdropFilter: 'blur(20px)' }}
-    >
-      {/* Filter chips — pinned above scroll */}
-      <div className="flex gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden shrink-0 px-4 pt-4 pb-3">
-        {EXPLORE_FILTERS.map(f => (
-          <button
-            key={f.id}
-            onClick={() => handleChipClick(f.id)}
-            className={`px-3 py-2 rounded-full text-[14px] font-medium whitespace-nowrap shrink-0 ${
-              activeFilter === f.id
-                ? 'bg-surface-overlay text-content-inverse'
-                : 'bg-surface-sunken text-content-primary'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+    <div className="flex-1 min-h-0 flex px-3 pb-3 w-full">
+      {/* Inner list card */}
+      <div className={`relative flex-1 backdrop-blur-lg border rounded-[48px] overflow-hidden flex flex-col min-h-0 ${
+        light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+      }`}>
 
-      {/* Scrollable content below chips */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden px-4 pb-32 space-y-3">
+        {/* Filter chips — pinned above scroll, right gradient fade; padding lives
+            inside the scroll container so chips aren't clipped mid-scroll */}
+        <div className="relative shrink-0 pt-6">
+          <div ref={chipsRef} className="flex gap-1 items-center overflow-x-auto [&::-webkit-scrollbar]:hidden pl-6 pr-16">
+            {EXPLORE_FILTERS.map(f => (
+              <button
+                key={f.id}
+                ref={el => { chipRefs.current[f.id] = el }}
+                onClick={() => handleChipClick(f.id)}
+                className={`px-4 py-2 rounded-full border-2 shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'} ${
+                  activeFilter === f.id ? (light ? 'border-[#0a0a0a]' : 'border-[#fafafa]') : 'border-transparent'
+                }`}
+              >
+                <span className={`text-[14px] font-medium leading-5 whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{f.label}</span>
+              </button>
+            ))}
+          </div>
+          <div
+            className="absolute bottom-0 right-0 h-10 pointer-events-none"
+            style={{ width: 64, background: light ? 'linear-gradient(to left, #ffffff, rgba(255,255,255,0))' : 'linear-gradient(to left, #0a0a0a, rgba(10,10,10,0))' }}
+          />
+        </div>
 
-      {/* Top equities */}
-      <div ref={sectionRefs.equities} />
-      <SectionHeader title="Top equities" />
-      <div className="bg-surface-raised rounded-3xl overflow-hidden">
-        {/* TCB */}
-        <div className="flex gap-4 items-center p-4">
-          <div className="size-12 rounded-full bg-surface-sunken overflow-hidden shrink-0 relative">
-            <Image src="/tcb-logo.png" alt="TCB" fill className="object-cover" />
-          </div>
-          <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <div className="flex items-center justify-between text-md font-medium text-content-primary leading-6">
-              <span>TCB</span><span className="tabular-nums font-mono">34.30</span>
-            </div>
-            <div className="flex items-center justify-between text-[14px] leading-5">
-              <span className="text-content-primary truncate pr-2">Vietnam Technological And Commercial Joint Stock Bank</span>
-              <span className="text-success shrink-0">+1.29%</span>
-            </div>
-          </div>
-        </div>
-        <AssetDivider />
-        {/* VIC */}
-        <div className="flex gap-4 items-center p-4">
-          <div className="size-12 rounded-full bg-surface-sunken overflow-hidden shrink-0 relative">
-            <Image src="/vic-logo.png" alt="VIC" fill className="object-cover" />
-          </div>
-          <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <div className="flex items-center justify-between text-md font-medium text-content-primary leading-6">
-              <span>VIC</span><span className="tabular-nums font-mono">217.10</span>
-            </div>
-            <div className="flex items-center justify-between text-[14px] leading-5">
-              <span className="text-content-primary truncate pr-2">VinGroup Joint Stock Company</span>
-              <span className="text-success shrink-0">+0.98%</span>
-            </div>
-          </div>
-        </div>
-        <AssetDivider />
-        {/* MSN */}
-        <div className="flex gap-4 items-center p-4">
-          <div className="size-12 rounded-full bg-surface-overlay overflow-hidden shrink-0 relative">
-            <Image src="/msn-logo.png" alt="MSN" fill className="object-cover" />
-          </div>
-          <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <div className="flex items-center justify-between text-md font-medium text-content-primary leading-6">
-              <span>MSN</span><span className="tabular-nums font-mono">72.80</span>
-            </div>
-            <div className="flex items-center justify-between text-[14px] leading-5">
-              <span className="text-content-primary truncate pr-2">Masan Group Corporation</span>
-              <span className="text-success shrink-0">+0.41%</span>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Scrollable content */}
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden pb-14">
 
-      {/* Top bonds */}
-      <div ref={sectionRefs.bonds} />
-      <SectionHeader title="Top bonds" />
-      <div className="bg-surface-raised rounded-3xl overflow-hidden">
-        {[
-          { ticker: 'VHM12605', name: 'VINHOMES (Công ty Cổ Phần Vinhomes)', yield: '11.18%' },
-          { ticker: 'VHM12502', name: 'VINHOMES (Công ty Cổ Phần Vinhomes)', yield: '10.69%' },
-          { ticker: 'TRM12503', name: 'CT ĐT & PT BĐS TRƯỜNG MINH',          yield: '10.49%' },
-        ].map((bond, i, arr) => (
-          <div key={bond.ticker}>
-            <div className="flex gap-4 items-center p-4">
-              <div className="size-12 rounded-full bg-surface-sunken flex items-center justify-center shrink-0">
-                <Icon name="analytics" size={24} className="text-content-secondary" />
-              </div>
-              <div className="flex items-center flex-1 min-w-0 gap-1">
-                <div className="flex flex-col gap-1 flex-1 min-w-0">
-                  <p className="text-md font-medium text-content-primary leading-6 truncate">{bond.ticker}</p>
-                  <p className="text-[14px] text-content-primary leading-5 truncate">{bond.name}</p>
+          {/* Top equities */}
+          <div ref={sectionRefs.equities} />
+          <SectionHeader title="Top equities" />
+          {EQUITIES.map((eq, i) => (
+            <div key={eq.ticker}>
+              <div className="flex gap-1 items-center pl-1 pr-6 py-3 w-full">
+                <button
+                  onPointerDown={(e) => onDragStart?.(e, { ticker: eq.ticker, avatar: { type: 'image', src: eq.logo, bg: eq.logoBg } })}
+                  className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+                >
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                </button>
+                <div className="flex-1 flex items-start justify-between min-w-0">
+                  <div className="flex-1 flex gap-4 items-center min-w-0">
+                    <div className="size-11 rounded-full overflow-hidden shrink-0 relative" style={{ background: eq.logoBg }}>
+                      <Image src={eq.logo} alt={eq.ticker} fill className="object-cover" />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0 flex-1 pr-2">
+                      <p className={`text-[14px] font-medium leading-5 ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{eq.ticker}</p>
+                      <p className="text-[12px] font-medium text-[#737373] leading-4 truncate">{eq.name}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1 items-end text-right shrink-0">
+                    <p className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{eq.price}</p>
+                    <p className="text-[12px] font-medium text-success leading-4">{eq.change}</p>
+                  </div>
                 </div>
-                <YieldBadge value={bond.yield} up={true} />
               </div>
+              {i < EQUITIES.length - 1 && <ExploreDivider />}
             </div>
-            {i < arr.length - 1 && <AssetDivider />}
-          </div>
-        ))}
-      </div>
+          ))}
 
-      {/* Top fund */}
-      <div ref={sectionRefs.fund} />
-      <SectionHeader title="Top fund" />
-      <div className="bg-surface-raised rounded-3xl overflow-hidden">
-        {[
-          { ticker: 'TCEF',  name: 'Techcom Equity Fund',               logo: '/tcb-logo.png', yield: '11.18%' },
-          { ticker: 'TCRES', name: 'Techcom Real Estate Equity Fund',    logo: '/tcb-logo.png', yield: '10.49%' },
-          { ticker: 'DCDS',  name: 'DC Dynamic Securities',              logo: '/dcds-logo.png', yield: '11.18%' },
-        ].map((fund, i, arr) => (
-          <div key={fund.ticker}>
-            <div className="flex gap-4 items-center p-4">
-              <div className="size-12 rounded-full bg-surface-sunken overflow-hidden shrink-0 relative">
-                <Image src={fund.logo} alt={fund.ticker} fill className="object-cover" />
-              </div>
-              <div className="flex items-center flex-1 min-w-0 gap-1">
-                <div className="flex flex-col gap-1 flex-1 min-w-0">
-                  <p className="text-md font-medium text-content-primary leading-6">{fund.ticker}</p>
-                  <p className="text-[14px] text-content-primary leading-5 truncate">{fund.name}</p>
+          {/* Top bonds */}
+          <div ref={sectionRefs.bonds} />
+          <SectionHeader title="Top bonds" />
+          {EXPLORE_BONDS.map((bond, i) => (
+            <div key={bond.id}>
+              <div className="flex gap-1 items-center pl-1 pr-6 py-3 w-full">
+                <button
+                  onPointerDown={(e) => onDragStart?.(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
+                  className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+                >
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                </button>
+                <div className="flex-1 flex items-center justify-between min-w-0">
+                  <div className="flex gap-4 items-center min-w-0">
+                    <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
+                      <Icon name="analytics" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <p className={`text-[14px] font-medium leading-5 ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{bond.ticker}</p>
+                      <p className="text-[12px] font-medium text-[#737373] leading-4">{bond.maturity}</p>
+                    </div>
+                  </div>
+                  <YieldBadge value={bond.yield} up={true} light={light} />
                 </div>
-                <YieldBadge value={fund.yield} up={true} />
               </div>
+              {i < EXPLORE_BONDS.length - 1 && <ExploreDivider />}
             </div>
-            {i < arr.length - 1 && <AssetDivider />}
+          ))}
+
+          {/* Top fund */}
+          <div ref={sectionRefs.fund} />
+          <SectionHeader title="Top fund" />
+          {FUNDS.map((fund, i) => (
+            <div key={fund.ticker}>
+              <div className="flex gap-1 items-center pl-1 pr-6 py-3 w-full">
+                <button
+                  onPointerDown={(e) => onDragStart?.(e, { ticker: fund.ticker, avatar: { type: 'image', src: fund.logo, bg: '#f3f4f6' } })}
+                  className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+                >
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                </button>
+                <div className="flex-1 flex items-center justify-between min-w-0">
+                  <div className="flex gap-4 items-center min-w-0">
+                    <div className="size-11 rounded-full bg-[#f3f4f6] overflow-hidden shrink-0 relative">
+                      <Image src={fund.logo} alt={fund.ticker} fill className="object-cover" />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <p className={`text-[14px] font-medium leading-5 ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>{fund.ticker}</p>
+                      <p className="text-[12px] font-medium text-[#737373] leading-4 truncate">{fund.name}</p>
+                    </div>
+                  </div>
+                  <YieldBadge value={fund.yield} up={true} light={light} />
+                </div>
+              </div>
+              {i < FUNDS.length - 1 && <ExploreDivider />}
+            </div>
+          ))}
+
+          {/* Vietnam stock indices */}
+          <div ref={sectionRefs.vietnam} />
+          <SectionHeader title="Vietnam stock indices" />
+          <div className="flex gap-2 items-start px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            {VIETNAM_INDICES.map(idx => <IndexCard key={idx.name} {...idx} onDragStart={onDragStart} light={light} />)}
           </div>
-        ))}
-      </div>
 
-      {/* Vietnam stock indices */}
-      <div ref={sectionRefs.vietnam} />
-      <SectionHeader title="Vietnam stock indices" />
-      <div className="bg-surface-raised rounded-3xl p-4 flex gap-3">
-        {VIETNAM_INDICES.map(idx => <IndexCard key={idx.name} {...idx} />)}
-      </div>
+          {/* Commodities */}
+          <div ref={sectionRefs.commodities} />
+          <SectionHeader title="Commodities" />
+          <div className="flex gap-2 items-start px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            {COMMODITY_INDICES.map(idx => <IndexCard key={idx.name} {...idx} onDragStart={onDragStart} light={light} />)}
+          </div>
 
-      {/* Commodities */}
-      <div ref={sectionRefs.commodities} />
-      <SectionHeader title="Commodities" />
-      <div className="bg-surface-raised rounded-3xl p-4 flex gap-3">
-        {COMMODITY_INDICES.map(idx => <IndexCard key={idx.name} {...idx} />)}
-      </div>
+          {/* Global stock indices */}
+          <div ref={sectionRefs.global} />
+          <SectionHeader title="Global stock indices" />
+          <div className="flex gap-2 items-start px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            {GLOBAL_INDICES.map(idx => <IndexCard key={idx.name} {...idx} onDragStart={onDragStart} light={light} />)}
+          </div>
+        </div>
 
-      {/* Global stock indices */}
-      <div ref={sectionRefs.global} />
-      <SectionHeader title="Global stock indices" />
-      <div className="bg-surface-raised rounded-3xl p-4 flex gap-3">
-        {GLOBAL_INDICES.map(idx => <IndexCard key={idx.name} {...idx} />)}
-      </div>
+        {/* Bottom fade */}
+        <div className={`absolute bottom-0 inset-x-0 h-14 pointer-events-none rounded-b-[48px] ${
+          light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#0a0a0a] to-transparent'
+        }`} />
       </div>
     </div>
   )
@@ -487,7 +530,10 @@ function BottomNav({ onNavigate }) {
 
 /* ─── Page ──────────────────────────────────────────────────────────── */
 
-function AnalyzeOverlay({ onClose, showCard = true }) {
+function AnalyzeOverlay({ onClose, showCard = true, light = false }) {
+  // Same contrast rule as Home's overlays: light app → dark card.
+  const dark = light
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -509,74 +555,74 @@ function AnalyzeOverlay({ onClose, showCard = true }) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="bg-surface rounded-4xl p-4 flex flex-col gap-4 w-full"
+        className={`rounded-4xl p-4 flex flex-col gap-4 w-full ${dark ? 'bg-[#0a0a0a]' : 'bg-surface'}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between shrink-0">
-          <p className="text-[24px] font-semibold text-content-primary leading-8">Analyze</p>
+          <p className={`text-[24px] font-semibold leading-8 ${dark ? 'text-white' : 'text-content-primary'}`}>Analyze</p>
           <button
             onClick={onClose}
-            className="bg-surface-sunken size-12 rounded-full flex items-center justify-center shrink-0"
+            className={`size-12 rounded-full flex items-center justify-center shrink-0 ${dark ? 'bg-[#171717]' : 'bg-surface-sunken'}`}
           >
-            <Icon name="close" size={24} className="text-content-primary" />
+            <Icon name="close" size={24} className={dark ? 'text-white' : 'text-content-primary'} />
           </button>
         </div>
 
         {/* Health score */}
-        <div className="bg-[#f0fdf4] rounded-3xl p-4 flex flex-col gap-1">
-          <p className="text-[16px] font-medium text-content-primary leading-6">Health score</p>
+        <div className={`rounded-3xl p-4 flex flex-col gap-1 ${dark ? 'bg-[#171717]' : 'bg-[#f0fdf4]'}`}>
+          <p className={`text-[16px] font-medium leading-6 ${dark ? 'text-white' : 'text-content-primary'}`}>Health score</p>
           <p className="text-[32px] font-bold text-success leading-10">32/100</p>
-          <p className="text-[14px] text-content-secondary leading-5">Your 4.8% closer to your goal of buying a home. Keep going.</p>
+          <p className={`text-[14px] leading-5 ${dark ? 'text-[#a1a1a1]' : 'text-content-secondary'}`}>Your 4.8% closer to your goal of buying a home. Keep going.</p>
         </div>
 
         {/* Trading analytics */}
-        <div className="bg-surface-raised rounded-3xl overflow-hidden">
+        <div className={`rounded-3xl overflow-hidden ${dark ? 'bg-[#171717]' : 'bg-surface-raised'}`}>
           <div className="px-4 pt-4 pb-2">
-            <p className="text-[14px] font-medium text-content-primary leading-5">Trading analytics</p>
+            <p className={`text-[14px] font-medium leading-5 ${dark ? 'text-white' : 'text-content-primary'}`}>Trading analytics</p>
           </div>
           {/* TCB */}
           <div className="flex gap-4 items-start p-4">
-            <div className="size-12 rounded-full bg-surface-sunken overflow-hidden shrink-0 relative">
+            <div className={`size-12 rounded-full overflow-hidden shrink-0 relative ${dark ? 'bg-[#262626]' : 'bg-surface-sunken'}`}>
               <Image src="/tcb-logo.png" alt="TCB" fill className="object-cover" />
             </div>
             <div className="flex flex-col gap-1 flex-1 min-w-0">
-              <p className="text-[16px] font-medium text-content-primary leading-6">
+              <p className={`text-[16px] font-medium leading-6 ${dark ? 'text-white' : 'text-content-primary'}`}>
                 <span className="text-success">+8,000,000đ</span>{' in realized PnL'}
               </p>
-              <p className="text-[14px] text-content-muted leading-5">You started buying on 12 Apr 2024, Average buy price is 28,250đ. You bought 5 times, sold 2 times in total</p>
+              <p className={`text-[14px] leading-5 ${dark ? 'text-[#737373]' : 'text-content-muted'}`}>You started buying on 12 Apr 2024, Average buy price is 28,250đ. You bought 5 times, sold 2 times in total</p>
             </div>
           </div>
           <AssetDivider />
           {/* VIC */}
           <div className="flex gap-4 items-start p-4">
-            <div className="size-12 rounded-full bg-surface-sunken overflow-hidden shrink-0 relative">
+            <div className={`size-12 rounded-full overflow-hidden shrink-0 relative ${dark ? 'bg-[#262626]' : 'bg-surface-sunken'}`}>
               <Image src="/vic-logo.png" alt="VIC" fill className="object-cover" />
             </div>
             <div className="flex flex-col gap-1 flex-1 min-w-0">
-              <p className="text-[16px] font-medium text-content-primary leading-6">
+              <p className={`text-[16px] font-medium leading-6 ${dark ? 'text-white' : 'text-content-primary'}`}>
                 <span className="text-danger">-2,000,000đ</span>{' in realized PnL'}
               </p>
-              <p className="text-[14px] text-content-muted leading-5">You started buying on 12 Apr 2024, Average buy price is 220,000đ. You bought 4 times, sold 1 times in total</p>
+              <p className={`text-[14px] leading-5 ${dark ? 'text-[#737373]' : 'text-content-muted'}`}>You started buying on 12 Apr 2024, Average buy price is 220,000đ. You bought 4 times, sold 1 times in total</p>
             </div>
           </div>
         </div>
 
         {/* People like you often buy */}
-        <div className="bg-surface-raised border border-border-strong rounded-3xl overflow-hidden">
+        <div className={`border rounded-3xl overflow-hidden ${dark ? 'bg-[#171717] border-[#262626]' : 'bg-surface-raised border-border-strong'}`}>
           <div className="px-4 pt-4 pb-2">
-            <p className="text-[14px] font-medium text-content-primary leading-5">People like you often buy</p>
+            <p className={`text-[14px] font-medium leading-5 ${dark ? 'text-white' : 'text-content-primary'}`}>People like you often buy</p>
           </div>
           <div className="flex gap-4 items-center p-4">
-            <div className="size-12 rounded-full bg-surface-overlay overflow-hidden shrink-0 relative">
+            <div className={`size-12 rounded-full overflow-hidden shrink-0 relative ${dark ? 'bg-white' : 'bg-surface-overlay'}`}>
               <Image src="/msn-logo.png" alt="MSN" fill className="object-cover" />
             </div>
             <div className="flex flex-col gap-1 flex-1 min-w-0">
-              <div className="flex items-center justify-between text-[16px] font-medium text-content-primary leading-6">
+              <div className={`flex items-center justify-between text-[16px] font-medium leading-6 ${dark ? 'text-white' : 'text-content-primary'}`}>
                 <span>MSN</span><span className="tabular-nums font-mono">72.80</span>
               </div>
               <div className="flex items-center justify-between text-[14px] leading-5">
-                <span className="text-content-primary truncate pr-2">Masan Group Corporation</span>
+                <span className={`truncate pr-2 ${dark ? 'text-white' : 'text-content-primary'}`}>Masan Group Corporation</span>
                 <span className="text-success shrink-0">+0.41%</span>
               </div>
             </div>
@@ -585,18 +631,359 @@ function AnalyzeOverlay({ onClose, showCard = true }) {
 
         {/* CTA buttons */}
         <div className="flex flex-col gap-2 shrink-0">
-          <button className="w-full bg-surface-raised border border-[#1e2939] rounded-full px-4 py-3">
-            <span className="text-[14px] font-medium text-content-primary">Create a new plan</span>
+          <button className={`w-full border rounded-full px-4 py-3 ${dark ? 'bg-[#171717] border-[#262626]' : 'bg-surface-raised border-[#1e2939]'}`}>
+            <span className={`text-[14px] font-medium ${dark ? 'text-white' : 'text-content-primary'}`}>Create a new plan</span>
           </button>
-          <button className="w-full bg-surface-overlay rounded-full px-4 py-3 flex items-center justify-center gap-1">
+          <button className={`w-full rounded-full px-4 py-3 flex items-center justify-center gap-1 ${dark ? 'bg-white' : 'bg-surface-overlay'}`}>
             <div className="size-5 relative overflow-hidden shrink-0">
               <Image src="/tri.png" alt="" fill className="object-contain" />
             </div>
-            <span className="text-[14px] font-medium text-content-inverse">Ask TRÍ</span>
+            <span className={`text-[14px] font-medium ${dark ? 'text-[#0a0a0a]' : 'text-content-inverse'}`}>Ask TRÍ</span>
           </button>
         </div>
       </motion.div>
       )}
+    </motion.div>
+  )
+}
+
+/* ─── Dark keyboard mock — shared visual for expanded compose screens ──── */
+function DarkKeyboardMock() {
+  const rows = [
+    ['q','w','e','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l'],
+    ['z','x','c','v','b','n','m'],
+  ]
+  const DK = ({ label, className = '' }) => (
+    <button className={`h-11 bg-[#3a3a3c] rounded-[10px] flex items-center justify-center text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)] ${className}`}>
+      {label}
+    </button>
+  )
+  return (
+    <div className="w-full shrink-0">
+      <div className="bg-[#1c1c1e] rounded-t-4xl rounded-b-[60px]">
+        <div className="flex items-center border-b border-[#2c2c2e] py-2">
+          {['"The"', 'the', 'to'].map((s, i) => (
+            <div key={s} className={`flex-1 flex items-center justify-center py-1 ${i < 2 ? 'border-r border-[#2c2c2e]' : ''}`}>
+              <span className="text-[15px] text-white">{s}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2.75 px-2 py-3">
+          <div className="flex justify-center gap-1.5">
+            {rows[0].map(k => <DK key={k} label={k} className="w-9.25" />)}
+          </div>
+          <div className="flex justify-center gap-1.5">
+            {rows[1].map(k => <DK key={k} label={k} className="w-9.25" />)}
+          </div>
+          <div className="flex justify-center gap-1.5">
+            <DK label="⇧" className="w-11 bg-[#636366]!" />
+            {rows[2].map(k => <DK key={k} label={k} className="w-9.25" />)}
+            <DK label="⌫" className="w-11 bg-[#636366]!" />
+          </div>
+          <div className="flex gap-1.5">
+            <DK label="123" className="w-11 bg-[#636366]!" />
+            <button className="flex-1 h-11 bg-[#3a3a3c] rounded-[10px] text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]">space</button>
+            <button className="w-23 h-11 bg-[#007AFF] rounded-[10px] flex items-center justify-center shadow-[0_1px_0_rgba(0,0,0,0.5)]">
+              <Icon name="keyboard_return" size={18} className="text-white" />
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-9 pt-2 pb-8">
+          <Icon name="emoji_emotions" size={26} className="text-[#636366]" />
+          <Icon name="mic" size={22} className="text-[#636366]" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Chip avatar — image logo or icon-in-circle, matching the source row ── */
+function ChipAvatar({ avatar, size = 24 }) {
+  if (avatar?.type === 'image') {
+    return (
+      <div className="rounded-full overflow-hidden shrink-0 relative" style={{ width: size, height: size, background: avatar.bg }}>
+        <Image src={avatar.src} alt="" fill className="object-cover" />
+      </div>
+    )
+  }
+  return (
+    <div className="rounded-full bg-[#171717] flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <Icon name={avatar?.icon || 'trending_up'} size={size - 8} className="text-[#d4d4d4]" />
+    </div>
+  )
+}
+
+/* ─── Expanded Ask TRÍ compose screen — slides in from the right, same
+       pattern as Home's TriScreen; shows attached chips as avatar + ticker ── */
+
+// Entry-screen suggestion tiles — same visual language as Home's TRI_ENTRY_SUGGESTIONS
+const WEALTH_ASK_SUGGESTIONS = [
+  { id: 1, rotate: -8, icon: '/icons-home/tri-suggestion-house.svg', label: 'Make a plan to buy house',                    message: 'Make a plan to buy house' },
+  { id: 2, rotate: 8,  icon: '/icons-home/tri-suggestion-plane.svg', label: 'Summarize my total spending on Bangkok Trip', message: 'Summarize my total spending on Bangkok Trip' },
+]
+
+/* Scripted "compare & buy" demo — pre-fills each step when TCB + VIC are both
+   in the chip tray, but every step still requires the user to tap Send */
+const ASSET_COMPARE_SCRIPT = {
+  question: 'Which stock fits my home-buying goal better?',
+  compare: {
+    intro: 'For your current portfolio,',
+    groups: [
+      { ticker: 'TCB', bullets: ['Higher familiarity (already 50% of portfolio)', 'Higher concentration risk'] },
+      { ticker: 'VIC', bullets: ['Better diversification', 'Suitable if you want to reduce single-stock exposure'] },
+    ],
+    suggestionLabel: 'My suggestion:',
+    suggestionBullet: 'Your next investment is TCB.',
+    closing: 'It improves portfolio balance while keeping your expected return aligned with your goal. Do you want me to help you buy it?',
+  },
+  buyRequest: 'Buy 100 TCB at market price',
+  order: { Amount: '100', Price: '34.30', Total: '3.430.000đ' },
+}
+
+function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onConsumeChips, light = false }) {
+  const [messages, setMessages] = useState([])
+  const [thinking, setThinking] = useState(false)
+  const [inputText, setInputText] = useState('')
+  const draftedRef = useRef(false) // pre-fills the scripted question once, doesn't re-run on re-render
+  const scrollRef = useRef(null)
+
+  const isDemo = chatChips.some(c => c.ticker === 'TCB') && chatChips.some(c => c.ticker === 'VIC')
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [messages, thinking])
+
+  // Pre-fill the input with the scripted question the moment both chips are present —
+  // the user still has to hit Send themselves, same as the entry-point draft pattern.
+  useEffect(() => {
+    if (isDemo && !draftedRef.current && messages.length === 0) {
+      draftedRef.current = true
+      setInputText(ASSET_COMPARE_SCRIPT.question)
+    }
+  }, [isDemo, messages.length])
+
+  const handleSend = () => {
+    if (!inputText || thinking) return
+    const isFirst = messages.length === 0
+    const sent = inputText
+    setInputText('')
+
+    if (isFirst) {
+      setMessages([{ kind: 'user-text', text: sent, chips: chatChips }])
+      onConsumeChips?.() // chips move from the tray into the sent message
+      setThinking(true)
+      setTimeout(() => {
+        setThinking(false)
+        setMessages(prev => [...prev, { kind: 'ai-compare', data: ASSET_COMPARE_SCRIPT.compare }])
+        setTimeout(() => setInputText(ASSET_COMPARE_SCRIPT.buyRequest), 400)
+      }, 1400)
+    } else {
+      setMessages(prev => [...prev, { kind: 'user-text', text: sent }])
+      setThinking(true)
+      setTimeout(() => {
+        setThinking(false)
+        setMessages(prev => [...prev, { kind: 'ai-order', data: ASSET_COMPARE_SCRIPT.order }])
+      }, 1400)
+    }
+  }
+
+  const canSend = !!inputText && !thinking
+  const hasScript = messages.length > 0
+
+  return (
+    <motion.div
+      initial={{ x: 448 }} animate={{ x: 0 }} exit={{ x: 448 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+      className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
+    >
+      {/* Dotted pattern background — dark theme only */}
+      {!light && (
+        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      )}
+
+      {/* Status bar */}
+      <div className="absolute top-0 left-0 right-0 z-70">
+        <StatusBar dark={light} />
+      </div>
+
+      {/* Layout column */}
+      <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1">
+
+        {/* Main content card */}
+        <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col min-h-0 ${
+          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+        }`}>
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
+            <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
+              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+            }`}>
+              <Icon name="history" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
+                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+              }`}>
+                <Icon name="search" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+              </button>
+              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
+                <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+              </button>
+            </div>
+          </div>
+
+          {!hasScript ? (
+            /* Greeting + suggestion cards — matches Home's TriScreen entry screen */
+            <div className="backdrop-blur-[6px] flex-1 w-full flex flex-col items-center justify-end overflow-hidden min-h-0">
+              <div className="flex flex-col gap-2.5 p-4 shrink-0 w-full whitespace-nowrap">
+                <p className={`t-h3 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Hey Quang!</p>
+                <p className="t-label text-[#737373]">What&apos;s been on your mind lately?</p>
+              </div>
+              <div className="flex items-center pb-4 pt-3 px-4 shrink-0 w-full">
+                {WEALTH_ASK_SUGGESTIONS.map(({ id, rotate, icon, label, message }) => (
+                  <button
+                    key={id}
+                    onClick={() => setInputText(message)}
+                    className="flex items-start justify-start shrink-0 text-left"
+                    style={{ width: 135, height: 155, marginRight: -16 }}
+                  >
+                    <div
+                      className={`rounded-3xl flex flex-col gap-1 items-start px-4 py-4 shrink-0 border ${
+                        light ? 'bg-[#f5f5f5] border-[#e5e5e5]' : 'bg-[#171717] border-[#262626]'
+                      }`}
+                      style={{ width: 117, height: 140, transform: `rotate(${rotate}deg)` }}
+                    >
+                      <img src={icon} alt="" className="size-6" />
+                      <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{label}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Scripted message thread */
+            <div className="relative flex-1 min-h-0">
+              <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0 h-full">
+                <div className="flex flex-col py-4 w-full mt-auto">
+                  {messages.map((m, i) => (
+                    <div key={i} className={`flex flex-col w-full py-2 ${m.kind === 'user-text' ? 'items-end pl-24 pr-4' : 'items-start pl-4 pr-24'}`}>
+                      {m.kind === 'user-text' && m.chips && (
+                        <div className="flex gap-2 items-center pb-2">
+                          {m.chips.map(chip => (
+                            <div key={chip.ticker} className="bg-[#262626] flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
+                              <ChipAvatar avatar={chip.avatar} size={24} />
+                              <span className="flex items-center text-[12px] font-medium leading-none text-white whitespace-nowrap">{chip.ticker}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {m.kind === 'user-text' && (
+                        <div className="bg-info rounded-3xl px-4 py-3 max-w-full">
+                          <p className="text-[16px] leading-6 text-white">{m.text}</p>
+                        </div>
+                      )}
+
+                      {m.kind === 'ai-compare' && (
+                        <div className={`rounded-3xl px-4 py-3 max-w-full ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}>
+                          <div className={`text-[16px] leading-6 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+                            <p>{m.data.intro}</p>
+                            {m.data.groups.map(g => (
+                              <div key={g.ticker}>
+                                <p>{g.ticker}</p>
+                                <ul className="list-disc pl-6">
+                                  {g.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
+                                </ul>
+                              </div>
+                            ))}
+                            <p className="pt-2">{m.data.suggestionLabel}</p>
+                            <ul className="list-disc pl-6">
+                              <li>{m.data.suggestionBullet}</li>
+                            </ul>
+                            <p className="pt-2">{m.data.closing}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {m.kind === 'ai-order' && (
+                        <div className={`rounded-3xl px-4 py-3 max-w-full flex flex-col gap-4 items-end w-full ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}>
+                          <div className={`flex flex-col gap-1 w-full text-[16px] leading-6 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+                            <div className="flex items-center justify-between w-full"><p>Amount</p><p>{m.data.Amount}</p></div>
+                            <div className="flex items-center justify-between w-full"><p>Price</p><p>{m.data.Price}</p></div>
+                            <div className="flex items-center justify-between w-full"><p>Amount</p><p>{m.data.Total}</p></div>
+                          </div>
+                          <button
+                            onClick={onClose}
+                            className="backdrop-blur-sm border rounded-[60px] px-6 py-4 w-full bg-white border-black"
+                          >
+                            <span className="text-[14px] font-medium leading-5 text-black tracking-[0.28px]">Confirm</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Thinking indicator */}
+                  {thinking && (
+                    <div className="flex justify-start pl-4 pr-24 py-2 w-full">
+                      <motion.div
+                        animate={{ rotate: 360, scale: [1, 1.18, 1] }}
+                        transition={{ rotate: { duration: 1.6, repeat: Infinity, ease: 'linear' }, scale: { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } }}
+                      >
+                        <Image src="/tri.png" alt="" width={28} height={28} />
+                      </motion.div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Top fade — sits over the message list, not part of the scroll content */}
+              <div className={`absolute top-0 inset-x-0 h-14 pointer-events-none z-10 ${
+                light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#0a0a0a] to-transparent'
+              }`} />
+            </div>
+          )}
+        </div>
+
+        {/* Ask anything input — chips row above, input row below */}
+        <div className={`border rounded-[32px] flex flex-col gap-2 pl-4 pr-2 pt-2 pb-2 shrink-0 w-full ${
+          light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
+        }`}>
+          {chatChips.length > 0 && (
+            <div className="flex gap-1 items-start pt-2 w-full flex-wrap">
+              {chatChips.map(chip => (
+                <div key={chip.ticker} className="bg-[#262626] flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
+                  <ChipAvatar avatar={chip.avatar} size={24} />
+                  <span className="flex items-center text-[12px] font-medium leading-none text-white whitespace-nowrap">{chip.ticker}</span>
+                  <button onClick={() => onRemoveChip(chip.ticker)} className="flex items-center justify-center size-4 shrink-0">
+                    <Icon name="close" size={16} className="text-white" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 items-center justify-center w-full">
+            <Icon name="add" size={24} className="text-black shrink-0" />
+            <div className="flex-1 flex items-center gap-1 min-w-0">
+              <div className="bg-info h-5 w-1 rounded-full shrink-0" />
+              <span className="flex-1 text-[16px] leading-6 text-[#0a0a0a] text-left truncate">
+                {inputText || <span className="text-[#a1a1a1]">Ask anything</span>}
+              </span>
+            </div>
+            <button
+              onClick={handleSend}
+              disabled={!canSend}
+              className="bg-info rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40"
+            >
+              <Icon name="arrow_upward" size={24} className="text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Dark keyboard — in flow */}
+        <DarkKeyboardMock />
+      </div>
     </motion.div>
   )
 }
@@ -610,12 +997,49 @@ const FAB_ACTIONS = [
   { label: 'Top up',   icon: 'add_box' },
 ]
 
-export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen } = {}) {
+export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, menuOpen = false, onOpenMenu, light = false } = {}) {
   const [hidden, setHidden] = useState(false)
   const [navTab, setNavTab] = useState(defaultTab) // 'wealth' | 'explore'
   const [showAnalyze, setShowAnalyze] = useState(false)
-  const [assetFilter, setAssetFilter] = useState('all') // 'all' | 'accounts' | 'watchlist'
-  const [fabOpen, setFabOpen] = useState(false)
+  const [timeFilter, setTimeFilter] = useState('1D')
+  const [fabOpen, setFabOpen] = useState(false)       // invest panel mounted
+  const [bodyPushed, setBodyPushed] = useState(false)  // body compressed + dimmed
+
+  const openInvest  = () => { setFabOpen(true); setBodyPushed(true); onInvestOpen?.() }
+  const closeInvest = () => { setFabOpen(false); onInvestClose?.() } // body drops back via onExitComplete
+
+  /* ── Drag-to-chat: drag an item's handle onto the Ask TRÍ field to add a chip ──
+     chip shape: { ticker, avatar: { type: 'image', src, bg } | { type: 'icon', icon } } */
+  const [chatChips, setChatChips] = useState([])
+  const [ghost, setGhost] = useState(null)        // { ticker, x, y } — floating pill following the pointer
+  const [overAsk, setOverAsk] = useState(false)   // pointer currently over the Ask field
+  const [askChatOpen, setAskChatOpen] = useState(false) // expanded compose overlay
+  const rootRef = useRef(null)
+  const askRef = useRef(null)
+
+  const startDrag = (e, chip) => {
+    e.preventDefault()
+    const root = rootRef.current?.getBoundingClientRect()
+    if (!root) return
+    const hit = (ev) => {
+      const a = askRef.current?.getBoundingClientRect()
+      return !!a && ev.clientX >= a.left && ev.clientX <= a.right && ev.clientY >= a.top && ev.clientY <= a.bottom
+    }
+    const move = (ev) => {
+      setGhost({ ticker: chip.ticker, x: ev.clientX - root.left, y: ev.clientY - root.top })
+      setOverAsk(hit(ev))
+    }
+    const up = (ev) => {
+      if (hit(ev)) setChatChips(prev => prev.some(c => c.ticker === chip.ticker) ? prev : [...prev, chip])
+      setGhost(null)
+      setOverAsk(false)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+    move(e)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
 
   const tabsRowRef  = useRef(null)
   const tabBtnRefs  = useRef({})
@@ -628,284 +1052,351 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
     setIndicatorX(el.offsetLeft + (el.offsetWidth - 20) / 2)
   }, [navTab])
 
+  const SUMMARY = [
+    { icon: 'candlestick_chart', label: 'Equities', value: '12,008,897đ', align: 'items-start'  },
+    { icon: 'analytics',         label: 'Bonds',    value: '10,000,000đ', align: 'items-center' },
+    { icon: 'layers',            label: 'Fund',     value: '2,000,000đ',  align: 'items-end'    },
+  ]
+
   return (
-    <div className={`overflow-hidden relative flex flex-col ${
-      embedded ? 'w-full h-full' : 'w-[440px] h-[956px] rounded-[56px]'
+    <div ref={rootRef} className={`overflow-hidden relative ${light ? 'bg-white' : 'bg-black'} ${
+      embedded ? 'w-full h-full' : 'w-[440px] h-[956px] rounded-[64px]'
     }`}>
 
-      {/* Background: surface-raised base + animated image sequence (top-right) + pattern overlay */}
-      <div className="absolute inset-0 bg-surface-raised">
-        <div className="absolute top-[24px] right-[-124px] w-[310px] h-[175px]">
-          <ImageSequencePlayer />
-        </div>
-        <img src="/pattern.png" alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-      </div>
+      {/* Dotted pattern background — dark theme only */}
+      {!light && (
+        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover" />
+      )}
 
       {/* Status bar — standalone only */}
-      {embedded ? (
-        <div className="relative z-20 h-9.5 shrink-0" />
-      ) : (
-        <div className="relative z-20 shrink-0">
-          <StatusBar />
+      {!embedded && (
+        <div className="absolute top-0 left-0 right-0 z-70">
+          <StatusBar dark={light} />
         </div>
       )}
 
-      {/* ── Shared nav header — always mounted so indicator never jumps ── */}
-      <div className="relative z-10 shrink-0 flex items-center justify-between px-4 pt-4 pb-2">
-        <div ref={tabsRowRef} className="relative flex items-center gap-4">
-          {WEALTH_TABS.map(tab => (
-            <button
-              key={tab.id}
-              ref={el => { tabBtnRefs.current[tab.id] = el }}
-              onClick={() => setNavTab(tab.id)}
-              className="flex flex-col gap-1 items-center pb-1"
-            >
-              <span className={`text-[24px] font-semibold leading-8 ${navTab === tab.id ? 'text-content-primary' : 'text-content-muted'}`}>
-                {tab.label}
-              </span>
-            </button>
-          ))}
-          {/* Single sliding indicator — offsetLeft is unaffected by ancestor scale */}
-          {indicatorX !== null && (
-            <motion.div
-              className="absolute bottom-0 h-1 w-5 rounded-full bg-content-primary"
-              initial={false}
-              animate={{ x: indicatorX }}
-              transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            />
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="bg-surface-sunken size-12 rounded-full flex items-center justify-center shrink-0" onClick={() => onOpenSearch?.()}><Icon name="search" size={24} className="text-content-primary" /></button>
-        </div>
-      </div>
+      {/* Dark tint — light theme's card just fades to 50% opacity (still reads light/washed,
+          and leaves the outer padding gap raw white); this covers the full root so it
+          actually goes dark when the menu opens, same visual language as the Insight/Invest
+          overlay backdrops */}
+      {light && (
+        <motion.div
+          initial={false}
+          animate={{ opacity: (menuOpen || bodyPushed) ? 1 : 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+          className="absolute inset-0 bg-black/60 rounded-[64px] pointer-events-none z-30"
+        />
+      )}
 
-      {/* ── My wealth tab: content scrolls ── */}
-      {navTab === 'wealth' && (
-        <div
-          className="relative flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden"
-          style={{
-            zIndex: (portfolioHovered || advisorHovered || analyzeOpen) ? 'auto' : 10,
-            backdropFilter: (portfolioHovered || advisorHovered || analyzeOpen) ? 'none' : 'blur(6px)',
-            background: 'linear-gradient(to bottom, rgba(249,250,251,0), rgba(249,250,251,0.5))',
-          }}
+      {/* Layout column */}
+      <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-8">
+
+        {/* Main content card — slides up + dims when the menu sheet is open */}
+        <motion.div
+          initial={false}
+          animate={{ y: menuOpen ? -140 : 0, opacity: (menuOpen || bodyPushed) ? 0.5 : 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+          className={`relative flex-1 backdrop-blur-lg border rounded-[60px] overflow-hidden flex flex-col justify-end min-h-0 ${
+            light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+          }`}
         >
-          {/* Balance Info card — elevated above backdrop when portfolio is hovered */}
-          <div className="bg-surface border-l border-r border-t border-border-default rounded-tl-3xl rounded-tr-3xl pt-4 px-4 pb-0 flex flex-col gap-4 w-full shrink-0">
-            {/* Balance row */}
-            <div className="flex items-start justify-between">
-              <div className="flex flex-col gap-1 flex-1 min-w-0">
+          {/* Fixed-height content block pinned to the card bottom — when the menu
+              compresses the card, content rides up with it (top clips, like Home) */}
+          <div className="flex flex-col w-full shrink-0" style={{ height: 848 }}>
+
+          {/* Header — tabs + search */}
+          <div className="flex items-center justify-between pl-6 pr-3 pb-3 pt-16 shrink-0">
+            <div ref={tabsRowRef} className="relative flex items-center gap-4">
+              {WEALTH_TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  ref={el => { tabBtnRefs.current[tab.id] = el }}
+                  onClick={() => setNavTab(tab.id)}
+                  className="flex flex-col gap-1 items-center pb-1"
+                >
+                  <span className={`text-[24px] font-bold leading-8 tracking-[0.48px] ${navTab === tab.id ? (light ? 'text-[#0a0a0a]' : 'text-white') : (light ? 'text-[#a1a1a1]' : 'text-[#737373]')}`}>
+                    {tab.label}
+                  </span>
+                </button>
+              ))}
+              {indicatorX !== null && (
+                <motion.div
+                  className={`absolute bottom-0 h-1 w-5 rounded-full ${light ? 'bg-[#0a0a0a]' : 'bg-white'}`}
+                  initial={false}
+                  animate={{ x: indicatorX }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                />
+              )}
+            </div>
+            <button
+              onClick={() => onOpenSearch?.()}
+              className={`rounded-full px-6 py-3 flex items-center justify-center shrink-0 border ${
+                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+              }`}
+            >
+              <Icon name="search" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+            </button>
+          </div>
+
+          {/* ── My wealth tab ── */}
+          {navTab === 'wealth' && (
+            <>
+              {/* Balance */}
+              <div className="flex flex-col gap-2 px-6 py-3 shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-medium text-content-muted">Total Investment</span>
+                  <span className="text-[14px] text-[#737373] leading-5">Total Investment</span>
                   <button onClick={() => setHidden(v => !v)} className="flex items-center">
-                    <Icon name={hidden ? 'visibility_off' : 'visibility'} size={20} className="text-content-primary" />
+                    <Icon name={hidden ? 'visibility_off' : 'visibility'} size={20} className="text-[#737373]" />
                   </button>
                 </div>
-                <p className="text-[24px] font-semibold text-content-primary leading-8 tabular-nums font-mono">
-                  {hidden ? '••••••••••' : '24,008,897đ'}
-                </p>
-                <div className="flex items-center gap-1 text-[14px] font-medium">
-                  <span className="text-success tabular-nums font-mono">+2,993,009đ (9,78%)</span>
-                  <span className="text-content-muted">Today</span>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-[36px] font-bold leading-10 font-mono tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+                    {hidden ? '••••••••' : '24,008,897'}
+                  </span>
+                  <span className="text-[24px] font-bold text-[#737373] leading-8 tracking-[0.48px]">đ</span>
+                </div>
+                <div className="flex gap-1 text-[14px] font-medium leading-5">
+                  <span className="text-success">+2,993,009đ (9,78%)</span>
+                  <span className="text-[#737373]">Today</span>
                 </div>
               </div>
-              <Sparkline />
-            </div>
 
-            {/* Analyze my portfolio — AI prompt button */}
-            <button
-              className={`bg-surface-sunken border border-border-strong rounded-full px-3 py-2 flex gap-2 items-center shrink-0 self-start transition-all duration-200${portfolioHovered ? ' relative z-[70] bg-surface shadow-md scale-[1.03]' : ''}`}
-              onClick={() => { setShowAnalyze(true); onAnalyzeOpen?.() }}
-            >
-              <div className="size-5 relative overflow-hidden shrink-0">
-                <Image src="/tri.png" alt="" fill className="object-contain" />
-              </div>
-              <span className="text-[12px] text-content-primary leading-4 whitespace-nowrap">Analyze my portfolio</span>
-              <Icon name="arrow_right_alt" size={20} className="text-content-primary shrink-0" />
-            </button>
+              {/* Summary + chart card */}
+              <div className="px-3 pb-3 shrink-0">
+                <div className={`border rounded-[48px] overflow-hidden ${light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'}`}>
+                  {/* 3-column summary */}
+                  <div className="flex items-center justify-between p-6">
+                    {SUMMARY.map(item => (
+                      <div key={item.label} className={`flex flex-col gap-2 justify-center ${item.align}`}>
+                        <div className="flex gap-2 items-start">
+                          <Icon name={item.icon} size={20} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+                          <span className="text-[14px] font-medium text-[#737373] leading-5">{item.label}</span>
+                        </div>
+                        <span className={`text-[14px] font-medium leading-5 tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
 
-            {/* For You Container — pb-20 reserves space for fan cards to peek into */}
-            <div className={`bg-black border-2 border-black rounded-3xl overflow-hidden pb-20 pt-4 px-4 relative flex flex-col gap-4${advisorHovered ? ' z-70' : ''}`}>
-              <div className="flex flex-col gap-1 items-center w-full">
-                <div className="size-6 relative overflow-hidden shrink-0">
-                  <Image src="/tri.png" alt="" fill className="object-contain" />
+                  {/* Chart */}
+                  <div className="pt-3">
+                    <img src="/wealth-chart.svg" alt="" className="w-full h-[92px] object-cover" />
+                    <div className="flex items-center justify-between px-6 pb-6 pt-4">
+                      {/* Time filter pills */}
+                      <div className={`rounded-full p-1 flex items-start overflow-hidden ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
+                        {['1D', '1W', '1M', '1Y'].map(t => (
+                          <button
+                            key={t}
+                            onClick={() => setTimeFilter(t)}
+                            className={`rounded-full px-4 py-1 ${timeFilter === t ? (light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]') : ''}`}
+                          >
+                            <span className={`text-[14px] font-medium leading-5 ${
+                              timeFilter === t ? (light ? 'text-white' : 'text-[#0a0a0a]') : (light ? 'text-[#0a0a0a]' : 'text-[#fafafa]')
+                            }`}>{t}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {/* Collapse */}
+                      <button className={`rounded-full px-5 py-2 flex items-center justify-center border ${light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'}`}>
+                        <Icon name="keyboard_arrow_up" size={20} className={light ? 'text-[#0a0a0a]' : 'text-white'} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[16px] font-medium text-content-inverse text-center leading-6 w-full">Picked for you today</p>
-                <p className="text-[12px] text-content-muted text-center leading-4 w-full">Matched to your goal of buying a home 🏡</p>
               </div>
-              {/* Fan card 1 — VCB, left, -14.41deg */}
-              <div className="absolute flex items-center justify-center" style={{ bottom: -56.64, left: 37, width: 198, height: 119.637 }}>
-                <div style={{ transform: 'rotate(-14.41deg)' }}>
-                  <FanCard ticker="VCB" yieldStr="Est. Yield 9.8%" />
+
+              {/* My Assets card */}
+              <div className="flex-1 px-3 pb-3 min-h-0 flex">
+                <div className={`relative flex-1 backdrop-blur-lg border rounded-[48px] overflow-hidden flex flex-col min-h-0 ${
+                  light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+                }`}>
+                  <div className="px-6 pt-6 shrink-0">
+                    <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>My Assets (3)</p>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0">
+                    {/* Equities */}
+                    <div className="px-6 pt-3">
+                      <p className="text-[14px] font-medium text-[#737373] leading-5">Equities</p>
+                    </div>
+                    <div className="pl-1 pr-6 py-3 flex gap-1 items-center">
+                      <button
+                        onPointerDown={(e) => startDrag(e, { ticker: 'TCB', avatar: { type: 'image', src: '/tcb-logo.png', bg: '#f3f4f6' } })}
+                        className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+                      >
+                        <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                      </button>
+                      <div className="flex-1 flex items-start justify-between min-w-0">
+                        <div className="flex gap-4 items-center">
+                          <div className="size-11 rounded-full bg-[#f3f4f6] overflow-hidden relative shrink-0">
+                            <Image src="/tcb-logo.png" alt="TCB" fill className="object-cover" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className={`text-[14px] font-medium leading-5 ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>TCB</span>
+                            <span className="text-[12px] font-medium text-[#737373] leading-4">Qty: 400</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1 items-end text-right">
+                          <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>12,008,897đ</span>
+                          <span className="text-[12px] font-medium text-success leading-4">+149,000đ (+1.29%)</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pl-[83px] pr-4 w-full">
+                      <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
+                    </div>
+
+                    {/* Bonds */}
+                    <div className="px-6 pt-3">
+                      <p className="text-[14px] font-medium text-[#737373] leading-5">Bonds</p>
+                    </div>
+                    {BONDS.map((bond, i) => (
+                      <div key={bond.id}>
+                        <div className="pl-1 pr-6 py-3 flex gap-1 items-center">
+                          <button
+                            onPointerDown={(e) => startDrag(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
+                            className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+                          >
+                            <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#404040]"} />
+                          </button>
+                          <div className="flex-1 flex items-start justify-between min-w-0">
+                            <div className="flex gap-4 items-center">
+                              <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
+                                <Icon name="analytics" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <span className={`text-[14px] font-medium leading-5 ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{bond.ticker}</span>
+                                <span className="text-[12px] font-medium text-[#737373] leading-4">Maturity: {bond.maturity}</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1 items-end text-right">
+                              <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{bond.amount}</span>
+                              <span className="text-[12px] font-medium text-success leading-4">{bond.yieldStr}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {i < BONDS.length - 1 && (
+                          <div className="pl-[83px] pr-4 w-full">
+                            <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bottom fade */}
+                  <div className={`absolute bottom-0 inset-x-0 h-14 pointer-events-none rounded-b-[48px] ${
+                    light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#0a0a0a] to-transparent'
+                  }`} />
                 </div>
               </div>
-              {/* Fan card 2 — TCB, right-ish, -11.36deg */}
-              <div className="absolute flex items-center justify-center" style={{ bottom: -53.96, left: 175, width: 196.347, height: 110.958 }}>
-                <div style={{ transform: 'rotate(-11.36deg)' }}>
-                  <FanCard ticker="TCB" yieldStr="Est. Yield 6.8%" />
-                </div>
-              </div>
-              {/* Fan card 3 — TCB, center-right, +13.65deg */}
-              <div className="absolute -translate-x-1/2 flex items-center justify-center" style={{ bottom: -48.56, left: 'calc(50% + 10.92px)', width: 197.711, height: 117.517 }}>
-                <div style={{ transform: 'rotate(13.65deg)' }}>
-                  <FanCard ticker="TCB" yieldStr="Est. Yield 9.8%" />
-                </div>
-              </div>
+            </>
+          )}
+
+          {/* ── Explore tab ── */}
+          {navTab === 'explore' && (
+            <div className="relative flex-1 overflow-hidden flex flex-col">
+              <ExploreContent onDragStart={startDrag} light={light} />
             </div>
+          )}
           </div>
 
-          {/* My Assets section — same bg-surface, flows directly from balance card */}
-          <div className="flex flex-col gap-3 pt-4 pb-32 px-4 bg-surface" style={{ backdropFilter: 'blur(20px)' }}>
-            {/* Filter chips */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setAssetFilter('all')}
-                className={`flex items-center rounded-full pl-3 pr-1 py-1 gap-2 shrink-0 ${assetFilter === 'all' ? 'bg-surface-overlay' : 'bg-surface-sunken'}`}
-              >
-                <span className={`text-[14px] font-medium whitespace-nowrap ${assetFilter === 'all' ? 'text-content-inverse' : 'text-content-primary'}`}>My Assets</span>
-                <div className={`flex items-center gap-1 border rounded-full pl-2.5 pr-1 py-1 ${assetFilter === 'all' ? 'border-[#4a5565]' : 'border-border-default'}`}>
-                  <span className={`text-[14px] font-medium ${assetFilter === 'all' ? 'text-content-inverse' : 'text-content-primary'}`}>All</span>
-                  <Icon name="arrow_drop_down" size={20} className={assetFilter === 'all' ? 'text-content-inverse' : 'text-content-primary'} />
-                </div>
-              </button>
-              <button
-                onClick={() => setAssetFilter('accounts')}
-                className={`px-3 py-2 rounded-full shrink-0 ${assetFilter === 'accounts' ? 'bg-surface-overlay' : 'bg-surface-sunken'}`}
-              >
-                <span className={`text-[14px] font-medium whitespace-nowrap ${assetFilter === 'accounts' ? 'text-content-inverse' : 'text-content-primary'}`}>Accounts</span>
-              </button>
-              <button
-                onClick={() => setAssetFilter('watchlist')}
-                className={`px-3 py-2 rounded-full shrink-0 ${assetFilter === 'watchlist' ? 'bg-surface-overlay' : 'bg-surface-sunken'}`}
-              >
-                <span className={`text-[14px] font-medium whitespace-nowrap ${assetFilter === 'watchlist' ? 'text-content-inverse' : 'text-content-primary'}`}>Watch list</span>
-              </button>
-            </div>
-
-            {/* All view — detailed holdings */}
-            {assetFilter === 'all' && (
-              <div className="bg-surface-raised rounded-3xl overflow-hidden">
-                <div className="px-4 pt-4 pb-2">
-                  <p className="text-[14px] font-medium text-content-muted">Equities</p>
-                </div>
-                <div className="flex gap-4 items-center p-4">
-                  <div className="size-12 rounded-full bg-surface-sunken overflow-hidden shrink-0 relative">
-                    <Image src="/tcb-logo.png" alt="TCB" fill className="object-cover" />
-                  </div>
-                  <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <div className="flex items-center justify-between text-md font-medium text-content-primary leading-6">
-                      <span>TCB</span><span className="tabular-nums font-mono">12,008,897đ</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[14px] leading-5">
-                      <span className="text-content-primary">Qty: 400</span>
-                      <span className="text-success tabular-nums font-mono">+149,000đ (+1.29%)</span>
-                    </div>
-                  </div>
-                </div>
-                <AssetDivider />
-                <div className="px-4 pt-4 pb-2">
-                  <p className="text-[14px] font-medium text-content-muted">Bonds</p>
-                </div>
-                {BONDS.map((bond, i) => (
-                  <div key={bond.id}>
-                    <div className="flex gap-4 items-center p-4">
-                      <div className="size-12 rounded-full bg-surface-sunken flex items-center justify-center shrink-0">
-                        <Icon name="analytics" size={24} className="text-content-secondary" />
-                      </div>
-                      <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <div className="flex items-center justify-between text-md font-medium text-content-primary leading-6">
-                          <span>{bond.ticker}</span><span className="tabular-nums font-mono">{bond.amount}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[14px] leading-5">
-                          <span className="text-content-primary">Maturity: {bond.maturity}</span>
-                          <span className="text-success">{bond.yieldStr}</span>
-                        </div>
-                      </div>
-                    </div>
-                    {i < BONDS.length - 1 && <AssetDivider />}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Accounts view */}
-            {assetFilter === 'accounts' && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-surface-raised rounded-3xl overflow-hidden"
-              >
-                {[
-                  { label: 'Equities',  sub: 'Holding 1', amount: '12,008,897đ', icon: 'candlestick_chart', iconBg: 'bg-orange-200' },
-                  { label: 'Bonds',     sub: 'Holding 2', amount: '12,000,000đ', icon: 'analytics',         iconBg: 'bg-green-200'  },
-                  { label: 'Fund',      sub: 'Holding 0', amount: '0đ',           icon: 'credit_card',       iconBg: 'bg-cyan-200'   },
-                ].map((item, i, arr) => (
-                  <div key={item.label}>
-                    <div className="flex gap-4 items-center p-4">
-                      <div className={`size-12 rounded-full flex items-center justify-center shrink-0 ${item.iconBg}`}>
-                        <Icon name={item.icon} size={24} className="text-content-primary" />
-                      </div>
-                      <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <div className="flex items-center justify-between text-md font-medium text-content-primary leading-6">
-                          <span>{item.label}</span>
-                          <span className="tabular-nums font-mono">{item.amount}</span>
-                        </div>
-                        <span className="text-[14px] text-content-primary">{item.sub}</span>
-                      </div>
-                    </div>
-                    {i < arr.length - 1 && <AssetDivider />}
-                  </div>
-                ))}
-              </motion.div>
-            )}
-
-            {/* Watch list — empty state */}
-            {assetFilter === 'watchlist' && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-surface-raised rounded-3xl p-8 flex flex-col items-center gap-3"
-              >
-                <Icon name="bookmark" size={32} className="text-content-muted" />
-                <p className="text-[14px] text-content-muted text-center">Your watch list is empty</p>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Explore tab: white card scrolls inside ── */}
-      {navTab === 'explore' && (
-        <div className="relative z-10 flex-1 overflow-hidden flex flex-col">
-          <ExploreContent />
-        </div>
-      )}
-
-      {/* Bottom nav — standalone only */}
-      {!embedded && (
-        <div className="relative z-20 shrink-0 bg-surface">
-          <BottomNav onNavigate={onNavigate} />
-        </div>
-      )}
-
-      {/* FAB — always visible, rotates add → close */}
-      {!embedded && (
-        <button
-          onClick={() => setFabOpen(v => !v)}
-          className="absolute bg-surface-overlay flex items-center justify-center p-4 rounded-full shadow-2xl"
-          style={{ right: 20, bottom: 100, zIndex: 50 }}
-        >
-          <motion.span
-            animate={{ rotate: fabOpen ? 45 : 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-            className="material-symbols-outlined leading-none select-none text-content-inverse"
-            style={{ fontSize: 28, display: 'block' }}
+          {/* Invest FAB — single shared button across both tabs */}
+          <button
+            onClick={() => fabOpen ? closeInvest() : openInvest()}
+            className={`absolute right-6 bottom-6 rounded-[60px] px-8 py-5 flex items-center gap-2 shadow-[0_20px_12.5px_rgba(0,0,0,0.1),0_10px_5px_rgba(0,0,0,0.04)] ${light ? 'bg-black' : 'bg-white'}`}
           >
-            add
-          </motion.span>
-        </button>
+            <motion.span
+              animate={{ rotate: fabOpen ? 45 : 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+              className={`material-symbols-outlined leading-none select-none ${light ? 'text-white' : 'text-black'}`}
+              style={{ fontSize: 24, display: 'block' }}
+            >
+              add
+            </motion.span>
+            <span className={`text-[14px] font-medium leading-5 ${light ? 'text-white' : 'text-black'}`}>Invest</span>
+          </button>
+        </motion.div>
+
+        {/* Push spacer — compresses the card so its bottom lands 8px above the
+            menu sheet (356) or the invest panel (252), matching the Home transition */}
+        <motion.div
+          initial={false}
+          animate={{ height: menuOpen ? 560 : bodyPushed ? 252 : 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30, delay: (menuOpen || bodyPushed) ? 0.05 : 0 }}
+          className="shrink-0 -mt-2"
+        />
+
+        {/* Footer — dots menu + Ask TRÍ; stays put, dims while invest panel is open */}
+        <motion.div
+          initial={false}
+          animate={{ opacity: bodyPushed ? 0.5 : 1 }}
+          transition={{ duration: 0.25 }}
+          className="flex gap-2 items-end px-3 shrink-0"
+        >
+          <button
+            onClick={() => onOpenMenu ? onOpenMenu() : onNavigate?.('home')}
+            className={`rounded-[60px] px-8 py-5 flex items-center justify-center shrink-0 ${light ? 'bg-black' : 'bg-white'}`}
+          >
+            <div className="relative size-6">
+              {[[4, 4], [16, 4], [4, 16], [16, 16]].map(([x, y], i) => (
+                <div key={i} className={`absolute size-1 rounded-full ${light ? 'bg-white' : 'bg-black'}`} style={{ left: x, top: y }} />
+              ))}
+            </div>
+          </button>
+          <motion.div
+            ref={askRef}
+            initial={false}
+            animate={{ borderColor: overAsk ? (light ? '#0a0a0a' : '#fafafa') : (light ? '#e5e5e5' : '#404040'), scale: overAsk ? 1.02 : 1 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setAskChatOpen(true)}
+            className={`flex-1 backdrop-blur-[4px] border rounded-[60px] pl-5 pr-5 py-5 flex items-center justify-between min-w-0 cursor-pointer ${light ? 'bg-white' : 'bg-black'}`}
+          >
+            <div className="flex-1 flex items-center justify-between gap-2 min-w-0 px-3">
+              <span className={`text-[14px] leading-5 whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Ask anything...</span>
+              <AnimatePresence>
+                {chatChips.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                    className={`flex items-center h-6 gap-1 rounded-full pl-2 pr-1 shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}
+                  >
+                    <span className={`flex items-center text-[12px] font-medium leading-none whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+                      {chatChips.length} attached
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setChatChips([]) }}
+                      className="flex items-center justify-center size-4"
+                    >
+                      <Icon name="close" size={16} className={light ? 'text-[#0a0a0a]' : 'text-white'} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <Image src="/tri.png" alt="" width={24} height={24} className="shrink-0" />
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Drag ghost — floating pill following the pointer, above everything */}
+      {ghost && (
+        <div
+          className="absolute z-90 pointer-events-none"
+          style={{ left: ghost.x, top: ghost.y, transform: 'translate(-50%, -130%)' }}
+        >
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: overAsk ? 0.9 : 1, opacity: 1 }}
+            className={`flex items-center gap-1.5 border rounded-full pl-2 pr-3 py-1.5 shadow-[0_12px_24px_rgba(0,0,0,0.6)] ${
+              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#262626] border-[#404040]'
+            }`}
+          >
+            <Icon name="drag_indicator" size={14} className="text-[#737373]" />
+            <span className={`text-[12px] font-medium leading-4 whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>{ghost.ticker}</span>
+          </motion.div>
+        </div>
       )}
 
       {/* Analyze overlay — backdrop on hover, full sheet on click */}
@@ -914,46 +1405,94 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           <AnalyzeOverlay
             showCard={showAnalyze || analyzeOpen}
             onClose={() => { setShowAnalyze(false); onAnalyzeClose?.() }}
+            light={light}
           />
         )}
       </AnimatePresence>
 
-      {/* FAB overlay — backdrop + action list */}
+      {/* Expanded Ask TRÍ compose screen — slides in from the right when the ask bar is tapped */}
+      <AnimatePresence>
+        {askChatOpen && (
+          <AskExpandScreen
+            onClose={() => setAskChatOpen(false)}
+            onOpenSearch={onOpenSearch}
+            chatChips={chatChips}
+            onRemoveChip={(ticker) => setChatChips(prev => prev.filter(c => c.ticker !== ticker))}
+            onConsumeChips={() => setChatChips([])}
+            light={light}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Backdrop — dims the screen behind the Invest panel, same pattern as Home's balance overlay */}
       <AnimatePresence>
         {fabOpen && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="absolute inset-0 rounded-[56px] overflow-hidden"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)', zIndex: 45 }}
+            animate={{ opacity: 1, transition: { duration: 0.3 } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, delay: 0.3 } }}
+            className="absolute inset-0 z-40"
+            onClick={closeInvest}
           >
-            {/* Action buttons — positioned above FAB, spring up from it */}
-            <div
-              className="absolute flex flex-col gap-3 items-end"
-              style={{ right: 20, bottom: 168 }}
+            <div className={`absolute inset-0 rounded-[64px] ${light ? 'bg-black/10' : 'bg-black/60'}`} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Invest panel — scales up from a 24px dot on the right (like Home's balance overlay);
+          on close it slides fully out to the right, THEN the body drops back */}
+      <AnimatePresence onExitComplete={() => setBodyPushed(false)}>
+        {fabOpen && (
+          <motion.div
+            initial={{ width: 24, height: 24, right: 24, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#ffffff' }}
+            animate={{ width: 432, height: 244, right: 4, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#fafafa' }}
+            exit={{
+              x: 448, opacity: 1,
+              transition: { type: 'spring', stiffness: 300, damping: 32 },
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+            className={`absolute z-50 overflow-hidden rounded-[60px] backdrop-blur-lg border ${light ? 'border-[#262626]' : 'border-[#171717]'}`}
+            style={{ bottom: 104 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Content layer — fixed width so text doesn't reflow while scaling */}
+            <motion.div
+              className="flex flex-col h-full"
+              style={{ width: 432 }}
             >
-              {FAB_ACTIONS.map((action, i) => {
-                const reverseI = FAB_ACTIONS.length - 1 - i
-                const startY = (reverseI + 1) * 68
-                return (
-                  <motion.div
-                    key={action.label}
-                    initial={{ opacity: 0, y: startY }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: startY }}
-                    transition={{ type: 'spring', stiffness: 340, damping: 28, delay: reverseI * 0.04 }}
-                    className="flex gap-4 items-center justify-end"
-                  >
-                    <span className="text-md font-medium text-content-inverse whitespace-nowrap">{action.label}</span>
-                    <button className="bg-surface-sunken p-4 rounded-full shadow-xl shrink-0 flex items-center justify-center">
-                      <Icon name={action.icon} size={24} className="text-content-primary" />
-                    </button>
-                  </motion.div>
-                )
-              })}
-            </div>
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 pt-6 pb-3 w-full shrink-0">
+                <div className="flex flex-col gap-1 pl-3">
+                  <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Invest</p>
+                  <p className="text-[14px] text-[#737373] leading-5">Select a product.</p>
+                </div>
+                <button
+                  onClick={closeInvest}
+                  className={`backdrop-blur-[4px] rounded-[60px] px-6 py-4 shrink-0 border ${
+                    light ? 'bg-black border-white' : 'bg-white border-black'
+                  }`}
+                >
+                  <span className={`text-[14px] font-medium leading-5 ${light ? 'text-white' : 'text-black'}`}>Close</span>
+                </button>
+              </div>
+
+              {/* Products */}
+              <div className="flex gap-2 items-center justify-center px-3 pt-3 w-full">
+                {[
+                  { label: 'Equities', icon: 'candlestick_chart', bg: '#d5d4f7', iconLight: false },
+                  { label: 'Bonds',    icon: 'analytics',         bg: '#ccf5ff', iconLight: false },
+                  { label: 'Funds',    icon: 'layers',            bg: '#fff4cc', iconLight: false },
+                  { label: 'Top up',   icon: 'bar_chart',         bg: light ? '#262626' : '#e5e5e5', iconLight: light },
+                ].map(item => (
+                  <div key={item.label} className="flex-1 flex flex-col gap-1 items-center justify-center min-w-0">
+                    <div className="size-24 rounded-full flex items-center justify-center" style={{ background: item.bg }}>
+                      <Icon name={item.icon} size={24} className={item.iconLight ? 'text-white' : 'text-black'} />
+                    </div>
+                    <p className={`text-[14px] font-medium leading-5 text-center whitespace-nowrap ${light ? 'text-white' : 'text-black'}`}>{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

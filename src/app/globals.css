@@ -58,6 +58,7 @@
   /* ── Typography ── */
   --font-sans: 'SF Pro Display', -apple-system, ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'SF Pro Display', -apple-system, ui-sans-serif, system-ui, sans-serif;
+  --font-fono: var(--font-aeonik-fono), ui-sans-serif, system-ui, sans-serif;
 
   /* ── Font Size ── */
   --text-xs:   0.75rem;    /* 12px — captions, labels */
@@ -67,7 +68,7 @@
   --text-lg:   1.25rem;    /* 20px — body large ✓ extracted */
   --text-xl:   1.5rem;     /* 24px — h3 ✓ extracted */
   --text-2xl:  1.75rem;    /* 28px — h2 ✓ extracted */
-  --text-3xl:  2rem;       /* 32px — h1, balance display ✓ extracted */
+  --text-3xl:  2.25rem;    /* 36px — h1, balance display (Figma sync) */
   --text-4xl:  5rem;       /* 80px — t-display hero (Figma sync) */
 
   /* ── Font Weight ── */
@@ -124,17 +125,18 @@
 }
 
 @layer components {
-  .t-display  { @apply text-4xl  font-bold     leading-tighter      text-content-primary; }
-  .t-h1       { @apply text-3xl  font-semibold leading-tight        text-content-primary; }
-  .t-h2       { @apply text-2xl  font-light    leading-tight        text-content-primary; }
-  .t-h3       { @apply text-xl   font-semibold leading-snug         text-content-primary; }
-  .t-body-lg  { @apply text-lg   font-medium   leading-comfortable  text-content-secondary; }
-  .t-body     { @apply text-md   font-normal   leading-normal       text-content-primary; }
-  .t-caption  { @apply text-xs   font-normal   leading-snug         text-content-muted; }
-  .t-label    { @apply text-base font-medium   leading-comfortable  text-content-secondary; }
-  .t-label-lg { @apply text-md   font-medium   leading-comfortable  text-content-primary; }
-  .t-cta      { @apply text-md   font-semibold leading-normal       text-content-inverse; }
-  .t-number   { @apply text-md   font-mono     leading-normal tabular-nums text-content-primary; }
-  .t-body-md  { @apply text-base font-normal   leading-comfortable  text-content-secondary; }
-  .t-link     { @apply text-base font-semibold leading-comfortable  text-brand; }
+  /* Values synced from Figma text styles (Direction A, 2026-07-04) — px line-heights via spacing scale */
+  .t-display  { @apply text-4xl  font-normal   leading-24           text-content-primary; }  /* 80/96  Regular */
+  .t-h1       { @apply text-3xl  font-bold     font-mono leading-10 text-content-primary; }  /* 36/40  Mono Bold */
+  .t-h2       { @apply text-2xl  font-normal   leading-8            text-content-primary; }  /* 28/32  Regular */
+  .t-h3       { @apply text-xl   font-bold     leading-8 tracking-[0.02em] text-content-primary; }  /* 24/32  Bold */
+  .t-body-lg  { @apply text-xl   font-medium   leading-8            text-content-secondary; }/* 24/32  Medium */
+  .t-body     { @apply text-md   font-normal   leading-6            text-content-primary; }  /* 16/24  Regular */
+  .t-caption  { @apply text-xs   font-medium   leading-4            text-content-muted; }    /* 12/16  Medium */
+  .t-label    { @apply text-base font-medium   leading-5 tracking-[0.02em] text-content-secondary; }/* 14/20  Medium */
+  .t-label-lg { @apply text-md   font-semibold leading-6 tracking-[0.02em] text-content-primary; }  /* 16/24  Semibold */
+  .t-cta      { @apply text-md   font-normal   leading-6            text-content-inverse; }  /* 16/24  Regular */
+  .t-number   { @apply text-base font-mono     font-semibold leading-6 tabular-nums text-content-primary; } /* 14/24 Mono Semibold */
+  .t-body-md  { @apply text-base font-normal   leading-5            text-content-secondary; }/* 14/20  Regular */
+  .t-link     { @apply text-base font-normal   leading-5            text-brand; }            /* 14/20  Regular */
 }

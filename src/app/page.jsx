@@ -1,27 +1,27 @@
-import { Hero } from '@/components/screens/Hero'
-import { ContextAndGoals } from '@/components/screens/ContextAndGoals'
-import { UserSegments } from '@/components/screens/UserSegments'
-import { IntroduceTri } from '@/components/screens/IntroduceTri'
-import { HomeSection } from '@/components/screens/HomeSection'
-import { DynamicCreativeSection } from '@/components/screens/DynamicCreativeSection'
-import { SearchSection } from '@/components/screens/SearchSection'
-import { WealthSection } from '@/components/screens/WealthSection'
-import { MeasuringSuccess } from '@/components/screens/MeasuringSuccess'
-import { ScreensMarquee } from '@/components/screens/ScreensMarquee'
+import Image from 'next/image'
+import HomeScreen from '@/app/screens/home/page'
+
+const PHONE_W = 440
+const PHONE_H = 956
 
 export default function Home() {
   return (
-    <main className="bg-surface-raised">
-      <Hero />
-      <ContextAndGoals />
-      <UserSegments />
-      <IntroduceTri />
-      <HomeSection />
-      <DynamicCreativeSection />
-      <SearchSection />
-      <WealthSection />
-      <MeasuringSuccess />
-      <ScreensMarquee />
+    <main className="bg-black h-dvh w-full flex items-center justify-center overflow-hidden">
+      <div className="relative shrink-0" style={{ width: PHONE_W, height: PHONE_H }}>
+        {/* Phone frame — overflows 16px beyond the screen on each side */}
+        <Image
+          src="/mockup.png"
+          alt=""
+          width={PHONE_W + 32}
+          height={PHONE_H + 32}
+          className="absolute pointer-events-none z-10 max-w-none"
+          style={{ top: -16, left: -16 }}
+          priority
+        />
+        <div className="overflow-hidden rounded-[64px] relative z-0">
+          <HomeScreen />
+        </div>
+      </div>
     </main>
   )
 }

@@ -1,4 +1,14 @@
+import localFont from "next/font/local";
 import "./globals.css";
+
+const aeonikFono = localFont({
+  src: [
+    { path: "../fonts/AeonikFono-Regular.otf", weight: "400", style: "normal" },
+    { path: "../fonts/AeonikFono-Medium.otf",  weight: "500", style: "normal" },
+  ],
+  variable: "--font-aeonik-fono",
+  display: "swap",
+});
 
 export const metadata = {
   title: "Techcombank Mobile — AI-First Redesign",
@@ -7,7 +17,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi">
+    <html lang="vi" className={aeonikFono.variable}>
       <body className="font-sans">
         {/* Desktop-only gate — shown on mobile/tablet, hidden on lg+ */}
         <div className="fixed inset-0 z-9999 flex flex-col items-center justify-center gap-6 bg-surface-raised px-8 text-center lg:hidden">

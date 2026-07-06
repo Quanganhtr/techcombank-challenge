@@ -11,10 +11,10 @@ const PHONE_H   = 956
 const PHONE_W   = 440
 
 // Y positions in phone-screen coordinates (440×956) where each button centers
-// Calculated from actual HomeScreen layout, not Figma frame offsets
-const BALANCE_Y     = 175   // center of balance amount (text-[32px] leading-10)
-const TRANSACTION_Y = 685   // center of "AI insights" button in TransactionSection header
-const TRI_Y         = 896   // center of TRÍ button in BottomNav (956 − 96nav + 8pt + 28half)
+// Layout: status(36) + outer-pt(8) + inner-card → header(64) + balance(88) + promo+actions(260) + transaction
+const BALANCE_Y     = 168   // center of balance amount row
+const TRANSACTION_Y = 515   // center of Transaction History header row
+const TRI_Y         = 896   // center of TRÍ input in bottom bar (956 − 32pb − 28half)
 
 // Gap from visual mockup edge (mockup overflows 16px beyond phone screen)
 // 24px from mockup = 24 + 16 = 40px from phone screen edge

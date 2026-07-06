@@ -1,36 +1,22 @@
 'use client'
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, LayoutGroup, animate } from 'framer-motion'
 import dynamic from 'next/dynamic'
 
 const WealthScreen = dynamic(() => import('@/app/screens/wealth/page'), { ssr: false })
 
 /* ─── Data ─────────────────────────────────────────────────────────── */
 
-const FILTERS = ['All', 'Income', 'Transfer', 'Card Payment', 'Withdrawal']
-
 const TRANSACTIONS = [
-  {
-    date: 'Friday, 26 Jun 2026',
-    items: [
-      { id: 1, name: 'Shopee Pay',    type: 'Card Payment', time: '07:45', amount: '-50,000đ',     dir: 'out' },
-      { id: 2, name: 'Hoang Thu Ha',  type: 'Income',       time: '07:00', amount: '+20,000,000đ', dir: 'in'  },
-    ],
-  },
-  {
-    date: 'Thursday, 25 Jun 2026',
-    items: [
-      { id: 3, name: 'HKD Mai Khoi', type: 'Transfer',     time: '07:00', amount: '-50,000đ', dir: 'out' },
-      { id: 4, name: 'Starbucks',    type: 'Card Payment', time: '07:00', amount: '-50,000đ', dir: 'out' },
-      { id: 5, name: 'Shopee Pay',   type: 'Card Payment', time: '07:00', amount: '-50,000đ', dir: 'out' },
-      { id: 6, name: 'Sarah Davies', type: 'Transfer',     time: '07:00', amount: '-50,000đ', dir: 'out' },
-    ],
-  },
+  { id: 1, name: 'Shopee Pay',   type: 'Card Payment', time: '07:45', amount: '-50,000đ',     dir: 'out' },
+  { id: 2, name: 'Hoang Thu Ha', type: 'Income',       time: '07:00', amount: '+20,000,000đ', dir: 'in'  },
+  { id: 3, name: 'HKD Mai Khoi', type: 'Transfer',     time: '09:00', amount: '-50,000đ',     dir: 'out' },
+  { id: 4, name: 'Starbucks',    type: 'Card Payment', time: '08:30', amount: '-50,000đ',     dir: 'out' },
 ]
 
-/* ─── Micro-components ──────────────────────────────────────────────── */
+/* ─── Micro-components ─────────────────────────────────────────────── */
 
 function BlinkingCursor() {
   const [on, setOn] = useState(true)
@@ -52,11 +38,21 @@ function Icon({ name, size = 24, className = '' }) {
   )
 }
 
+/* Inline TCB logo — uses currentColor so it can recolor with text classes (unlike /logo.svg's baked-in fill) */
+function TcbLogoIcon({ size = 20, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <path d="M15.2008 5.40002L12.0023 8.59617V8.60542L15.2008 11.8016L12.0023 14.9977V15.0046L15.2008 18.2008L21.6 11.8016L15.2008 5.40002Z" fill="currentColor" />
+      <path d="M8.80156 5.40002L11.9954 8.59617V8.60542L8.80156 11.8016L11.9954 14.9977V15.0046L8.80156 18.2008L2.40002 11.8016L8.80156 5.40002Z" fill="currentColor" />
+    </svg>
+  )
+}
+
 function StatusBar({ dark = false }) {
   const imgStyle = dark ? { filter: 'invert(1)' } : {}
   return (
-    <div className="flex items-center justify-between px-14 pt-3.5 pb-1 shrink-0">
-      <span className={`text-[15px] font-semibold ${dark ? 'text-content-primary' : 'text-content-inverse'}`}>9:41</span>
+    <div className="flex items-center justify-between px-14 pt-6 pb-1 shrink-0">
+      <span className={`text-[15px] font-semibold ${dark ? 'text-content-primary' : 'text-white'}`}>9:41</span>
       <div className="flex items-center gap-1">
         <Image src="/cellular.svg" alt="" width={16} height={16} style={imgStyle} />
         <Image src="/wifi.svg"     alt="" width={16} height={16} style={imgStyle} />
@@ -66,556 +62,316 @@ function StatusBar({ dark = false }) {
   )
 }
 
-function TopNav({ onOpenSearch }) {
-  return (
-    <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-      {/* Avatar */}
-      <div className="size-12 rounded-full overflow-hidden shrink-0 relative">
-        <Image src="/avatar.png" alt="QA" fill className="object-cover" />
-      </div>
+/* ─── Home sub-components ───────────────────────────────────────────── */
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-2">
-        <button className="size-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
-          <Icon name="notifications" size={24} className="text-content-inverse" />
+function TopNav({ onOpenSearch, light = false }) {
+  const btnCls = light
+    ? 'bg-white border border-[#e5e5e5] rounded-full px-6 py-3 flex items-center justify-center'
+    : 'bg-[#0a0a0a] border border-[#262626] rounded-full px-6 py-3 flex items-center justify-center'
+  const iconCls = light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'
+  return (
+    <div className="flex items-center justify-between pl-6 pr-3 pb-3 pt-16 shrink-0">
+      <div className="h-8 relative shrink-0" style={{ width: 48 }}>
+        <Image src={light ? '/logo.svg' : '/logo-new.svg'} alt="TCB" fill className="object-contain object-left" />
+      </div>
+      <div className="flex items-center gap-1">
+        <button className={btnCls}>
+          <Icon name="notifications" size={24} className={iconCls} />
         </button>
-        <button
-          onClick={onOpenSearch}
-          className="size-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center"
-        >
-          <Icon name="search" size={24} className="text-content-inverse" />
+        <button onClick={onOpenSearch} className={btnCls}>
+          <Icon name="search" size={24} className={iconCls} />
         </button>
       </div>
     </div>
   )
 }
 
-function BalanceSection({ onOpenOverlay, overlayOpen, onCloseOverlay, cardOpen }) {
+function BalanceSection({ onOpenOverlay, light = false }) {
   const [hidden, setHidden] = useState(false)
 
   return (
-    <div className="px-4 pt-8 pb-24 flex flex-col gap-1">
-      {/* Label + amount — elevated above overlay when open */}
+    <div className="flex flex-col gap-2 px-6 py-3 shrink-0">
+      <div className="flex items-center gap-2">
+        <span className="t-body-md text-[#737373]">Current Balance</span>
+        <button onClick={() => setHidden(v => !v)} className="flex items-center">
+          <Icon name={hidden ? 'visibility_off' : 'visibility'} size={20} className="text-[#737373]" />
+        </button>
+      </div>
+      <div className="flex items-center gap-4 w-full">
+        <div className="flex items-baseline gap-1">
+          <span className={`t-h1 tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+            {hidden ? '••••••••' : '90,008,897'}
+          </span>
+          <span className="t-h3 text-[#737373]">đ</span>
+        </div>
+        <button
+          onClick={onOpenOverlay}
+          className="relative bg-cinnabar-500 rounded-full px-4 py-2 flex items-center gap-2 overflow-hidden shrink-0"
+        >
+          <img src="/insight-decor.svg" alt="" className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 107, height: 41 }} />
+          <span className="relative t-body-md text-white whitespace-nowrap">Insight</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const HOME_ACTIONS = [
+  { icon: '/icons-home/pay-bills.svg',       lightIcon: '/icons-home/pay-bills-light.svg',   label: 'Pay bills', variant: 'dark'   },
+  { icon: '/icons-home/savings.svg',         lightIcon: '/icons-home/savings-light.svg',     label: 'Savings',   variant: 'dark'   },
+  { icon: '/icons-home/swap-horiz.svg',      lightIcon: '/icons-home/swap-horiz-light.svg',  label: 'Transfer',  variant: 'dark'   },
+  { icon: '/icons-home/qr-scanner.svg',      lightIcon: '/icons-home/qr-scanner-light.svg',  label: 'Scan QR',   variant: 'light'  },
+  { icon: '/icons-home/arrow-right-red.svg', lightIcon: '/icons-home/arrow-right-black.svg', label: 'More',      variant: 'dashed' },
+]
+
+function BannerAndActions({ light = false }) {
+  const pillCls = (variant) => {
+    if (light) {
+      // Light theme inverts the pill roles: dark pills go light, the light pill goes black
+      return variant === 'light'
+        ? 'bg-[#0a0a0a]'
+        : variant === 'dashed'
+          ? 'border border-dashed border-[#d4d4d4]'
+          : 'bg-[#f5f5f5]'
+    }
+    return variant === 'light'
+      ? 'bg-[#fafafa]'
+      : variant === 'dashed'
+        ? 'border border-dashed border-[#262626]'
+        : 'bg-[#0a0a0a] border border-[#262626]'
+  }
+  const labelCls = (variant) => {
+    if (light) return variant === 'light' ? 'text-[#fafafa]' : 'text-[#0a0a0a]'
+    return variant === 'light' ? 'text-[#0a0a0a]' : 'text-[#fafafa]'
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-3 shrink-0">
+      {/* Action pill buttons — left column, label left / icon right */}
+      <div className="flex-1 flex flex-col gap-1 min-w-0">
+        {HOME_ACTIONS.map(({ icon, lightIcon, label, variant }) => (
+          <button
+            key={label}
+            className={`rounded-full px-6 py-4 flex items-center justify-between w-full ${pillCls(variant)}`}
+          >
+            <span className={`t-label whitespace-nowrap ${labelCls(variant)}`}>
+              {label}
+            </span>
+            <img src={light ? lightIcon : icon} alt="" className="size-6" />
+          </button>
+        ))}
+      </div>
+
+      {/* Auto Earning banner — right */}
       <div
-        className={`flex flex-col gap-1 ${overlayOpen ? 'relative z-60' : ''}`}
-        onClick={overlayOpen ? onCloseOverlay : undefined}
+        className="relative rounded-[48px] overflow-hidden flex flex-col items-center justify-between p-6 shrink-0"
+        style={{ width: 236, height: 296 }}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-[14px] font-medium text-content-inverse">Current Balance</span>
-          <button onClick={() => setHidden(v => !v)} className="flex items-center">
-            <Icon
-              name={hidden ? 'visibility_off' : 'visibility'}
-              size={20}
-              className="text-content-inverse"
-            />
+        {/* Background */}
+        <Image src="/banner-auto-earning-bg.png" alt="" fill className="object-cover rounded-[48px]" />
+
+        {/* Copy + CTA */}
+        <div className="relative flex flex-col items-center gap-4 w-full">
+          <div className="flex flex-col gap-2 text-center text-black w-full">
+            <p className="t-label-lg text-black">Auto Earning</p>
+            <p className="t-body-md text-black">Double Points, Redeem vouchers for food and shopping</p>
+          </div>
+          <button className="bg-[#0a0a0a] border border-[#262626] rounded-full px-5 py-2">
+            <span className="t-label text-[#fafafa] whitespace-nowrap">Explore now</span>
           </button>
         </div>
-        <p className="text-[32px] font-bold leading-10 text-content-inverse font-sans tabular-nums">
-          {hidden ? '••••••••••' : '90,008,897đ'}
-        </p>
-      </div>
 
-      <button
-        className={`flex items-center gap-2 bg-white/30 backdrop-blur-sm rounded-full px-3 py-2 self-start ${overlayOpen ? 'relative z-60' : ''}`}
-        onClick={(e) => { e.stopPropagation(); onOpenOverlay() }}
-      >
-        <Image src="/tri.png" alt="" width={20} height={20} className="shrink-0" />
-        <span className="text-[12px] text-content-inverse whitespace-nowrap">
-          8.7 months of your normal spending
-        </span>
-        <motion.span
-          animate={{ rotate: cardOpen ? 90 : 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-          className="material-symbols-outlined leading-none select-none text-content-inverse"
-          style={{ fontSize: 20 }}
-        >
-          arrow_right_alt
-        </motion.span>
-      </button>
-    </div>
-  )
-}
-
-function BalanceOverlay({ onClose, showCard = true }) {
-  return (
-    <>
-      {/* Backdrop — always shown when overlay is mounted */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="absolute inset-0 z-50"
-        onClick={onClose}
-      >
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[56px]" />
-      </motion.div>
-
-      {/* Card — only slides up on click (showCard = true) */}
-      <AnimatePresence>
-        {showCard && (
-          <motion.div
-            initial={{ y: 800 }}
-            animate={{ y: 0 }}
-            exit={{ y: 800 }}
-            transition={{ type: 'spring', stiffness: 140, damping: 18 }}
-            className="absolute inset-x-4 bottom-4 z-50"
-            style={{ top: 271 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* AI insight card */}
-            <div className="bg-surface rounded-4xl flex flex-col gap-4 p-4">
-
-              {/* Insight rows */}
-              <div className="bg-surface-raised rounded-3xl overflow-hidden">
-                {/* Row 1 */}
-                <div className="flex gap-4 items-start p-4">
-                  <div className="size-12 rounded-full bg-surface-sunken flex items-center justify-center shrink-0">
-                    <Icon name="attach_money" size={24} className="text-content-secondary" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-md font-medium text-content-primary leading-6">83,000,000đ has remained</p>
-                    <p className="text-[14px] text-content-muted leading-5">unused for over 4 months</p>
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="pl-20 pr-4">
-                  <div className="h-px bg-surface-overlay opacity-10 rounded-full" />
-                </div>
-
-                {/* Row 2 */}
-                <div className="flex gap-4 items-start p-4">
-                  <div className="size-12 rounded-full bg-surface-sunken flex items-center justify-center shrink-0">
-                    <Icon name="payments" size={24} className="text-content-secondary" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-md font-medium text-content-primary leading-6 whitespace-nowrap">20,000,000đ month salary</p>
-                    <p className="text-[14px] text-content-muted leading-5">
-                      consistently covers your regular spending and remaining instalments
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Investable cash card */}
-              <div className="bg-blue-500/8 rounded-3xl p-4 flex flex-col gap-1">
-                <p className="text-md font-medium text-content-primary leading-6">Est. investable cash</p>
-                <p className="text-[32px] font-bold leading-10 text-info font-sans tabular-nums">55 - 65Mđ</p>
-                <p className="text-[14px] text-content-secondary leading-5">
-                  Based on 12 months of cash flow, recurring income and remaining instalments.
-                </p>
-              </div>
-
-              {/* CTAs */}
-              <div className="flex flex-col gap-2">
-                <button className="w-full flex items-center justify-center gap-1.5 border border-surface-overlay bg-surface-raised px-4 py-3 rounded-full">
-                  <span className="text-[14px] font-medium text-content-primary">Create an investment plan</span>
-                </button>
-                <button onClick={onClose} className="w-full flex items-center justify-center gap-1.5 bg-surface-overlay px-4 py-3 rounded-full">
-                  <Image src="/tri.png" alt="AI" width={20} height={20} />
-                  <span className="text-[14px] font-medium text-content-inverse">Ask a follow-up</span>
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  )
-}
-
-function QuickActions() {
-  const actions = [
-    { icon: 'qr_code_scanner', label: 'Scan QR',  dark: true  },
-    { icon: 'swap_horiz',      label: 'Transfer', dark: false },
-    { icon: 'receipt_long',    label: 'Pay bills',dark: false },
-    { icon: 'savings',         label: 'Savings',  dark: false },
-  ]
-
-  return (
-    <div className="flex gap-1">
-      {actions.map(({ icon, label, dark }) => (
-        <button
-          key={label}
-          className={`flex-1 flex flex-col gap-2 px-4 py-3 rounded-3xl shadow-xs ${
-            dark
-              ? 'bg-surface-overlay'
-              : 'bg-surface-raised'
-          }`}
-        >
-          <Icon
-            name={icon}
-            size={24}
-            className={dark ? 'text-content-inverse' : 'text-content-primary'}
-          />
-          <span
-            className={`text-[12px] leading-4 font-sans whitespace-nowrap ${
-              dark ? 'text-content-inverse' : 'text-content-primary'
-            }`}
-          >
-            {label}
-          </span>
-        </button>
-      ))}
-
-      {/* More button */}
-      <button className="flex flex-col gap-2 items-center justify-center p-3 rounded-3xl shadow-xs bg-surface-raised self-stretch">
-        <Icon name="arrow_right_alt" size={24} className="text-content-primary" />
-      </button>
-    </div>
-  )
-}
-
-function PromoCards() {
-  return (
-    <div className="flex gap-2.5 h-40">
-      {/* Ride deals card */}
-      <div className="flex-1 rounded-3xl bg-blue-200 p-4 flex flex-col justify-between overflow-hidden relative">
-        <img src="/car.png" alt="" className="absolute pointer-events-none" style={{ left: 118, top: 20, width: 231, height: 231 }} />
-        <div className="relative z-10">
-          <p className="text-[14px] font-medium text-blue-950">Ride deals</p>
-          <p className="text-md font-medium text-blue-950 leading-6">
-            Up to 30K off your rides! (Grab, Be...)
-          </p>
+        {/* Pagination */}
+        <div className="relative backdrop-blur-[6px] bg-black/60 rounded-full p-1 flex items-start gap-0.5">
+          <div className="bg-[#fafafa] rounded-full" style={{ width: 16, height: 4 }} />
+          {[0, 1, 2].map(i => (
+            <div key={i} className="bg-white/50 rounded-full" style={{ width: 6, height: 4 }} />
+          ))}
         </div>
-        <button className="relative z-10 self-start bg-blue-950 text-content-inverse text-[12px] px-3 py-2 rounded-full">
-          Receive now
-        </button>
-      </div>
-
-      {/* Gold card */}
-      <div className="w-[120px] rounded-3xl bg-amber-100 p-4 flex flex-col justify-between overflow-hidden relative shrink-0">
-        {/* Gold coins */}
-        <div className="absolute left-[55px] top-[93px] size-[85px]">
-          <Image src="/gold.png" alt="" fill className="object-cover object-bottom" />
-        </div>
-        <div className="absolute left-[66px] top-[59px] size-[51px] flex items-center justify-center">
-          <div className="-rotate-[34deg] size-[37px] relative">
-            <Image src="/gold.png" alt="" fill className="object-cover object-bottom" />
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <p className="text-[14px] font-medium text-content-primary">Gold price increased</p>
-          <p className="text-[20px] font-normal leading-7 text-content-primary">4%</p>
-        </div>
-        <button className="relative z-10 w-full bg-amber-950 text-content-inverse text-[12px] px-3 py-2 rounded-full text-center">
-          Take a look
-        </button>
       </div>
     </div>
   )
 }
 
-function TransactionItem({ item, isLast }) {
+function TransactionItem({ item, isLast, light = false }) {
   const isIncome = item.dir === 'in'
-
   return (
     <>
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-start justify-between px-4 py-3">
         <div className="flex items-center gap-4">
-          {/* Icon */}
-          <div className="size-12 rounded-full bg-surface-sunken flex items-center justify-center shrink-0">
+          <div className={`rounded-full p-2.5 flex items-center justify-center shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
             <Icon
               name={isIncome ? 'arrow_downward' : 'arrow_upward'}
               size={24}
-              className="text-content-secondary"
+              className={light ? (isIncome ? 'text-success' : 'text-[#737373]') : 'text-[#d4d4d4]'}
             />
           </div>
-
-          {/* Info */}
-          <div className="flex flex-col gap-1">
-            <p className="text-md font-medium text-content-primary whitespace-nowrap">{item.name}</p>
-            <div className="flex items-center gap-1 text-[14px] text-content-secondary">
+          <div className="flex flex-col gap-0.5 pb-0.5">
+            <p className={`t-label whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{item.name}</p>
+            <div className="flex items-center gap-1 t-caption text-[#737373]">
               <span>{item.type}</span>
               <span>·</span>
               <span>{item.time}</span>
             </div>
           </div>
         </div>
-
-        {/* Amount */}
-        <p className={`text-md font-medium whitespace-nowrap font-sans tabular-nums ${
-          isIncome ? 'text-success' : 'text-content-primary'
-        }`}>
+        <p className={`t-number whitespace-nowrap ${isIncome ? 'text-success' : light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>
           {item.amount}
         </p>
       </div>
-
-      {/* Divider */}
       {!isLast && (
-        <div className="pl-20 pr-4">
-          <div className="h-px bg-surface-overlay opacity-10 rounded-full" />
+        <div className="pl-[83px] pr-4">
+          <div className="h-px bg-[#737373] opacity-10 rounded-full" />
         </div>
       )}
     </>
   )
 }
 
-function TransactionOverlay({ onClose, showCard = true }) {
-  const suggestions = [
-    'Why is it higher this month?',
-    'How much did I spend at Shopee this year?',
-    'Set a monthly budget',
-  ]
+const TX_FILTERS = ['All', 'Income', 'Transfer', 'Card Payment', 'Withdrawal']
 
-  const spendingRows = [
-    { label: 'Total coffee spending',        amount: '3,200,000vnd' },
-    { label: 'Total only shopping spending', amount: '1,200,000vnd' },
-    { label: 'Total food spending',          amount: '1,200,000vnd' },
-  ]
+function TransactionSection({ menuOpen = false, light = false }) {
+  const [activeFilter, setActiveFilter] = useState('All')
+  const cardBg = light ? '#ffffff' : '#0a0a0a'
 
   return (
-    <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="absolute inset-0 z-50"
-        onClick={onClose}
-      >
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[56px]" />
-      </motion.div>
+    <div
+      className="flex-1 pb-3 px-3 overflow-hidden min-h-0"
+      style={{ minHeight: menuOpen ? 372 : 0 }}
+    >
+      <div className={`backdrop-blur-lg border rounded-[48px] h-full flex flex-col overflow-hidden relative ${
+        light ? 'bg-white border-[#ececec]' : 'bg-[#0a0a0a] border-[#262626]'
+      }`}>
+        {/* Header */}
+        <div className="flex items-center justify-between pt-6 px-6 shrink-0">
+          <p className={`t-label-lg whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>Transaction History</p>
+        </div>
 
-      {/* Card — only slides up on click */}
-      <AnimatePresence>
-        {showCard && (
-          <motion.div
-            initial={{ y: 800 }}
-            animate={{ y: 0 }}
-            exit={{ y: 800 }}
-            transition={{ type: 'spring', stiffness: 140, damping: 18 }}
-            className="absolute inset-x-4 bottom-10 z-60"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-surface rounded-4xl flex flex-col gap-4 p-4">
-
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <span className="text-[24px] font-bold text-content-primary leading-8">Analyze</span>
-                <button
-                  onClick={onClose}
-                  className="size-10 bg-surface-sunken rounded-full flex items-center justify-center shrink-0"
-                >
-                  <Icon name="close" size={20} className="text-content-secondary" />
-                </button>
-              </div>
-
-              {/* AI insight */}
-              <div className="bg-amber-50 rounded-3xl p-4 flex flex-col gap-1">
-                <p className="text-[13px] font-medium text-content-secondary leading-5">You overspent</p>
-                <p className="text-[28px] font-bold text-amber-500 leading-9">2Mvnđ on coffee</p>
-                <p className="text-[13px] text-content-secondary leading-5">
-                  Your coffee spending has increased 18% this month, mainly after payday.
-                </p>
-              </div>
-
-              {/* Spending breakdown */}
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between pb-3">
-                  <span className="text-[14px] font-semibold text-content-primary leading-5">Spending</span>
-                  <span className="text-[14px] font-medium text-info leading-5">Define new one</span>
-                </div>
-                {spendingRows.map(({ label, amount }) => (
-                  <div key={label}>
-                    <div className="h-px bg-border-default" />
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-[13px] text-content-muted leading-5">{label}</span>
-                      <span className="text-[13px] font-medium text-danger leading-5 shrink-0 ml-2">{amount}</span>
-                    </div>
-                  </div>
-                ))}
-                {/* Info note */}
-                <div className="bg-info-subtle rounded-2xl p-3 flex items-start gap-2 mt-1">
-                  <Icon name="info" size={18} className="text-info shrink-0 mt-px" />
-                  <p className="text-[12px] text-info leading-4">
-                    The categories is being created by TRÍ. You can add TRÍ to add more or remove the wrong one.
-                  </p>
-                </div>
-              </div>
-
-              {/* CTA buttons */}
-              <div className="flex flex-col gap-2">
-                {suggestions.map(text => (
-                  <button key={text} className="w-full flex items-center justify-center border border-border-strong bg-surface-raised px-4 py-3 rounded-full">
-                    <span className="text-[14px] font-medium text-content-primary">{text}</span>
-                  </button>
-                ))}
-                <button onClick={onClose} className="w-full flex items-center justify-center gap-2 bg-surface-overlay px-4 py-3 rounded-full">
-                  <Image src="/tri.png" alt="AI" width={20} height={20} />
-                  <span className="text-[14px] font-medium text-content-inverse">Ask a follow-up</span>
-                </button>
-              </div>
-
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  )
-}
-
-function TransactionSection({ activeFilter, setActiveFilter, onOpenInsights, transactionHovered }) {
-  const filterRowRef = useRef(null)
-  const filterRefs   = useRef({})
-  const [filterPill, setFilterPill] = useState(null)
-
-  useLayoutEffect(() => {
-    const el  = filterRefs.current[activeFilter]
-    const row = filterRowRef.current
-    if (!el || !row) return
-    setFilterPill({ left: el.offsetLeft, width: el.offsetWidth })
-  }, [activeFilter])
-
-  return (
-    <div className="flex flex-col gap-3 px-4 py-2 pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <p className="text-md font-semibold text-content-primary">Transaction History</p>
-        <button
-          onClick={onOpenInsights}
-          className={`flex items-center gap-2 border border-border-default bg-surface-sunken px-3 py-2 rounded-full ${transactionHovered ? 'relative z-55' : ''}`}
-        >
-          <Image src="/tri.png" alt="" width={20} height={20} />
-          <span className="text-[14px] font-medium text-content-primary">AI insights</span>
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div ref={filterRowRef} className="relative flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {filterPill && (
-          <motion.div
-            className="absolute top-0 bottom-0 bg-surface-raised border-2 border-surface-overlay rounded-full"
-            initial={false}
-            animate={{ left: filterPill.left, width: filterPill.width }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-          />
-        )}
-        {FILTERS.map(f => (
-          <button
-            key={f}
-            ref={el => { filterRefs.current[f] = el }}
-            onClick={() => setActiveFilter(f)}
-            className="relative flex-none px-3 py-2 rounded-full whitespace-nowrap"
-          >
-            <span className="relative z-10 t-label text-content-primary">{f}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Transaction list */}
-      <div className="bg-surface-raised rounded-3xl overflow-hidden">
-        {TRANSACTIONS.map(group => (
-          <div key={group.date}>
-            <div className="px-4 pt-4 pb-2">
-              <p className="text-[14px] font-medium text-content-muted">{group.date}</p>
-            </div>
-            {group.items.map((item, i) => (
-              <TransactionItem
-                key={item.id}
-                item={item}
-                isLast={i === group.items.length - 1}
-              />
+        {/* Filter chips */}
+        <div className="relative flex gap-3 pt-4 shrink-0">
+          <div className="flex-1 flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden pl-6 pr-6">
+            {TX_FILTERS.map(f => (
+              <button
+                key={f}
+                onClick={() => setActiveFilter(f)}
+                className={`rounded-full h-9 px-4 flex items-center shrink-0 border-2 ${
+                  light
+                    ? `bg-[#f5f5f5] ${f === activeFilter ? 'border-[#0a0a0a] bg-white' : 'border-transparent'}`
+                    : `bg-[#171717] ${f === activeFilter ? 'border-[#fafafa]' : 'border-transparent'}`
+                }`}
+              >
+                <span className={`t-label whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>
+                  {f}
+                </span>
+              </button>
             ))}
           </div>
-        ))}
-      </div>
+          <div
+            className="absolute bottom-0 right-0 h-9 pointer-events-none"
+            style={{ width: 64, background: `linear-gradient(to left, ${cardBg}, ${light ? 'rgba(255,255,255,0)' : 'rgba(10,10,10,0)'})` }}
+          />
+        </div>
 
-      {/* See more */}
-      <button className="w-full border border-surface-overlay text-[14px] font-medium text-content-primary py-3 rounded-full bg-surface-raised">
-        See more
-      </button>
+        {/* Transaction list */}
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden pt-3">
+          {TRANSACTIONS.map((item, i) => (
+            <TransactionItem key={item.id} item={item} isLast={i === TRANSACTIONS.length - 1} light={light} />
+          ))}
+        </div>
+
+        {/* Bottom fade */}
+        <div
+          className="absolute bottom-0 inset-x-0 h-14 pointer-events-none"
+          style={{ background: `linear-gradient(to top, ${cardBg}, ${light ? 'rgba(255,255,255,0)' : 'rgba(10,10,10,0)'})` }}
+        />
+      </div>
     </div>
   )
 }
 
-function BottomNav({ onOpenTri, triMode, onCloseTri, keyboardOpen, onOpenKeyboard, onCloseKeyboard, triHovered, onSend, navActive = 'home', onNavChange }) {
-  const tabs = [
-    { id: 'home',       icon: null,          label: 'Home'       },
-    { id: 'cards',      icon: 'credit_card', label: 'Cards'      },
-    { id: 'rewards',    icon: 'redeem',      label: 'Rewards'    },
-    { id: 'investment', icon: 'money_bag',   label: 'My wealth'  },
-  ]
-  const active    = navActive
-  const setActive = onNavChange ?? (() => {})
+/* ─── Bottom bar ───────────────────────────────────────────────────── */
 
-  const navBarRef = useRef(null)
-  const tabRefs   = useRef({})
-  const [pill, setPill] = useState(null)
+function MenuDots() {
+  return (
+    <div className="flex flex-wrap w-6">
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="p-1 flex items-center">
+          <div className="size-1 rounded-full bg-black" />
+        </div>
+      ))}
+    </div>
+  )
+}
 
-  useLayoutEffect(() => {
-    const el = tabRefs.current[active]
-    const bar = navBarRef.current
-    if (!el || !bar) return
-    setPill({ left: el.offsetLeft, width: el.offsetWidth })
-  }, [active])
+/* Static menu / close icon — no morph animation */
+function MenuToggleIcon({ open, light = false }) {
+  if (open) {
+    return <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+  }
+  return (
+    <Image
+      src="/menu.svg"
+      alt=""
+      width={24}
+      height={24}
+      style={light ? { filter: 'invert(1)' } : undefined}
+    />
+  )
+}
 
+function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, onOpenKeyboard, onCloseKeyboard, onSend, menuOpen, onOpenMenu, light = false }) {
   const fade = { duration: 0.18, ease: 'easeInOut' }
 
   return (
-    <div
-      className="relative px-4 py-2 pb-8 backdrop-blur-[2px] shrink-0"
-      style={{ background: 'linear-gradient(to bottom, rgba(249,250,251,0), #f9fafb)' }}
-    >
-      {/* Normal mode — full tab bar + AI circle */}
+    <div className="relative shrink-0" style={{ height: 64 }}>
+
+      {/* Normal mode */}
       <motion.div
         initial={false}
         animate={{ opacity: triMode ? 0 : 1, y: triMode ? 4 : 0, pointerEvents: triMode ? 'none' : 'auto' }}
         transition={fade}
-        className="flex items-center gap-2"
+        className="absolute inset-0 flex items-center px-3 gap-2"
       >
-        <div ref={navBarRef} className="relative flex-1 flex items-center gap-1 p-1 bg-surface-raised border border-border-default rounded-full shadow-xl">
-          {/* Sliding pill — plain div + CSS transition; no Framer Motion to avoid transform conflicts */}
-          {pill && (
-            <div
-              className="absolute top-1 bottom-1 bg-surface-overlay rounded-full"
-              style={{
-                left: pill.left,
-                width: pill.width,
-                transition: 'left 0.28s cubic-bezier(0.34,1.56,0.64,1), width 0.28s cubic-bezier(0.34,1.56,0.64,1)',
-              }}
-            />
-          )}
-          {tabs.map(tab => {
-            const isActive = active === tab.id
-            return (
-              <button
-                key={tab.id}
-                ref={el => { tabRefs.current[tab.id] = el }}
-                onClick={() => setActive(tab.id)}
-                className={`relative flex items-center justify-center gap-1 px-4 py-3 rounded-full ${isActive ? 'flex-1' : ''}`}
-              >
-                <span className="relative z-10 flex items-center gap-1 overflow-hidden">
-                  {tab.id === 'home'
-                    ? <Image src="/logo.svg" alt="" width={24} height={24} className="shrink-0" />
-                    : <Icon name={tab.icon} size={24} className={`shrink-0 ${isActive ? 'text-content-inverse' : 'text-content-secondary'}`} />
-                  }
-                  {/* label always collapses/expands instantly — no CSS width transition, so offsetWidth is always the settled value */}
-                  <span
-                    className="t-label text-content-inverse whitespace-nowrap"
-                    style={{ opacity: isActive ? 1 : 0, maxWidth: isActive ? '999px' : 0, overflow: 'hidden', transition: 'opacity 0.15s' }}
-                  >
-                    {tab.label}
-                  </span>
-                </span>
-              </button>
-            )
-          })}
-        </div>
-        <button
+        {/* Menu pill — morphs into the menu sheet via layoutId */}
+        {!menuOpen && (
+          <motion.button
+            layoutId="menu-surface"
+            style={{ borderRadius: 36 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onOpenMenu}
+            className={`px-8 py-5 flex items-center justify-center shrink-0 ${light ? 'bg-black' : 'bg-white'}`}
+          >
+            {/* Dots rendered by the static overlay button — this preserves the pill's size */}
+            <div className="size-6" />
+          </motion.button>
+        )}
+        {/* Spacer holds the pill's slot while the sheet is open */}
+        {menuOpen && <div className="shrink-0" style={{ width: 88, height: 64 }} />}
+
+        {/* Ask TRÍ input — physically shoved off the right edge when menu opens */}
+        <motion.button
+          initial={false}
+          animate={{
+            x: menuOpen ? 380 : 0,
+            rotate: menuOpen ? 4 : 0,
+            opacity: menuOpen ? 0 : 1,
+            pointerEvents: menuOpen ? 'none' : 'auto',
+          }}
+          transition={{ type: 'spring', stiffness: 260, damping: 26 }}
           onClick={onOpenTri}
-          className={`size-14 rounded-full bg-surface-raised border border-border-strong flex items-center justify-center shrink-0 transition-all duration-200 ${triHovered ? 'shadow-[0_0_0_4px_rgba(237,28,36,0.25),0_4px_24px_rgba(0,0,0,0.18)] scale-110' : 'shadow-xl'}`}
+          className={`flex-1 flex items-center justify-between backdrop-blur-sm border rounded-[36px] pl-8 pr-5 py-5 transition-shadow duration-200 ${
+            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#404040]'
+          } ${triHovered ? 'shadow-[0_0_0_4px_rgba(237,28,36,0.25)]' : ''}`}
         >
-          <div className="size-10 rounded-full flex items-center justify-center">
-            <Image src="/tri.png" alt="AI" width={24} height={24} />
+          <span className={`t-caption whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Ask anything...</span>
+          <div className="size-6 flex items-center justify-center shrink-0">
+            <Image src="/tri.png" alt="" width={24} height={24} />
           </div>
-        </button>
+        </motion.button>
       </motion.div>
 
-      {/* TRÍ base mode — logo pill + input bar */}
+      {/* TRÍ base mode — input visible, not keyboard */}
       <motion.div
         initial={false}
         animate={{
@@ -624,29 +380,23 @@ function BottomNav({ onOpenTri, triMode, onCloseTri, keyboardOpen, onOpenKeyboar
           pointerEvents: triMode && !keyboardOpen ? 'auto' : 'none',
         }}
         transition={{ ...fade, delay: triMode && !keyboardOpen ? 0.08 : 0 }}
-        className="absolute inset-x-4 top-2 flex items-center gap-2"
+        className="absolute inset-0 flex items-center gap-2"
       >
-        <button
-          onClick={onCloseTri}
-          className="size-14 flex items-center justify-center bg-surface-raised border border-border-default rounded-full shadow-xl shrink-0"
-        >
-          {active === 'home'
-            ? <Image src="/logo.svg" alt="" width={24} height={24} />
-            : <Icon name={tabs.find(t => t.id === active)?.icon} size={24} className="text-content-secondary" />
-          }
+        <button onClick={onCloseTri} className="bg-white rounded-[36px] px-8 py-5 flex items-center justify-center shrink-0">
+          <MenuDots />
         </button>
         <button
           onClick={onOpenKeyboard}
-          className="flex-1 flex items-center gap-2.5 bg-surface-raised border border-border-strong rounded-full pl-4 pr-2 py-2 shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_10px_10px_-5px_rgba(0,0,0,0.04)]"
+          className="flex-1 flex items-center justify-between bg-[#0a0a0a] backdrop-blur-sm border border-[#fafafa] rounded-[36px] pl-8 pr-5 py-5"
         >
-          <span className="flex-1 text-md text-content-muted leading-6 overflow-hidden whitespace-nowrap text-left">Ask TRÍ everything ...</span>
-          <div className="p-2 rounded-full bg-surface-overlay flex items-center justify-center shrink-0">
+          <span className="t-caption text-white whitespace-nowrap">Ask TRÍ anything...</span>
+          <div className="size-6 flex items-center justify-center shrink-0">
             <Image src="/tri.png" alt="" width={24} height={24} />
           </div>
         </button>
       </motion.div>
 
-      {/* TRÍ keyboard mode — full-width input + X close button */}
+      {/* TRÍ keyboard mode — typing state */}
       <motion.div
         initial={false}
         animate={{
@@ -655,102 +405,823 @@ function BottomNav({ onOpenTri, triMode, onCloseTri, keyboardOpen, onOpenKeyboar
           pointerEvents: triMode && keyboardOpen ? 'auto' : 'none',
         }}
         transition={{ ...fade, delay: triMode && keyboardOpen ? 0.05 : 0 }}
-        className="absolute inset-x-4 top-2 flex items-center gap-2"
+        className="absolute inset-0 flex items-center gap-2"
       >
-        <div className="flex-1 flex items-center gap-2.5 bg-surface-raised border border-border-strong rounded-full pl-4 pr-2 py-2 shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_10px_10px_-5px_rgba(0,0,0,0.04)]">
-          <span className="flex-1 text-md text-content-primary leading-6 overflow-hidden whitespace-nowrap flex items-center gap-px">
+        <div className="flex-1 flex items-center justify-between bg-[#0a0a0a] backdrop-blur-sm border border-[#fafafa] rounded-[36px] pl-8 pr-5 py-5">
+          <span className="t-caption text-white flex items-center gap-px">
             Freeze my card
             <BlinkingCursor />
           </span>
-          <button onClick={onSend} className="p-2 rounded-full bg-surface-overlay flex items-center justify-center shrink-0">
+          <button onClick={onSend} className="size-6 flex items-center justify-center shrink-0">
             <Image src="/tri.png" alt="" width={24} height={24} />
           </button>
         </div>
         <button
           onClick={onCloseKeyboard}
-          className="shrink-0 p-1 rounded-full bg-surface-raised border border-border-default shadow-xl"
+          className="bg-[#0a0a0a] border border-[#262626] rounded-full p-3 flex items-center justify-center shrink-0"
         >
-          <div className="p-3 rounded-full flex items-center justify-center">
-            <Icon name="close" size={24} className="text-content-primary" />
-          </div>
+          <Icon name="close" size={24} className="text-white" />
         </button>
       </motion.div>
     </div>
   )
 }
 
-/* ─── TRÍ Screen ────────────────────────────────────────────────────── */
+/* ─── Menu Sheet — blooms out of the bottom-left pill ──────────────── */
 
-// Clip-path origin matches the AI button center in the phone frame:
-//   X: 440 - 16(padding) - 28(half button) = 396px
-//   Y: 956 - 32(pb-8) - 28(half button) = 896px
+const MENU_ITEMS = [
+  { label: 'Home',              icon: 'logo',            navKey: 'home'       },
+  { label: 'Accounts & Cards',  icon: 'wallet'    },
+  { label: 'Transfer & Pay',    icon: 'mobiledata_arrows' },
+  { label: 'Techcombank OneU',  icon: 'money_bag' },
+  { label: 'My Wealth',         icon: 'lightbulb',       navKey: 'investment' },
+]
 
-function TriScreen({ onClose, keyboardOpen = false, onOpenSearch }) {
-  const suggestions = [
-    'Make a plan to build house',
-    'Summarize my total spending in Bangkok Trip',
-    'Freeze my credit card',
-  ]
+const MENU_QUICK_LINKS = [
+  { label: 'Payment  Link', icon: 'link' },
+  { label: 'Card offers',   icon: 'credit_card' },
+  { label: `What's new`,    icon: 'bolt' },
+  { label: 'Refer & Earn',  icon: 'group' },
+]
+
+function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, activeNav = 'home' }) {
+  // Same contrast rule as the other overlays: light app → dark sheet.
+  const dark = light
+
+  // Bottom-up stagger: content nearest the origin (the pill) lands first
+  const rise = (order) => ({
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { delay: 0.18 + order * 0.05, duration: 0.32, ease: [0.16, 1, 0.3, 1] } },
+    exit:    { opacity: 0, transition: { duration: 0.1 } },
+  })
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="absolute inset-0 z-20 bg-surface flex flex-col overflow-hidden"
+      layoutId="menu-surface"
+      style={{ borderRadius: 60, top: 160 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      className={`absolute left-1 right-1 bottom-2 z-50 flex flex-col overflow-hidden ${dark ? 'bg-[#0a0a0a]' : 'bg-white'}`}
     >
-      {/* Status bar spacer (actual bar is z-70 in parent, switches to dark mode) */}
-      <div className="h-9.5 shrink-0" />
+      <div className="flex-1 flex flex-col gap-2 p-3 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
 
-      {/* Top nav */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-        <button onClick={onClose} className="size-12 rounded-full overflow-hidden relative shrink-0">
-          <Image src="/avatar.png" alt="QA" fill className="object-cover" />
-        </button>
-        <div className="flex items-center gap-2">
-          <button className="size-12 shrink-0 bg-surface-sunken rounded-full flex items-center justify-center">
-            <Icon name="history" size={24} className="text-content-secondary" />
-          </button>
-          <button onClick={onOpenSearch} className="size-12 shrink-0 bg-surface-sunken rounded-full flex items-center justify-center">
-            <Icon name="search" size={24} className="text-content-secondary" />
-          </button>
-        </div>
-      </div>
-
-      {/* Middle — TRÍ logo + label centered */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 pt-10">
-        <div className="size-24 relative shrink-0">
-          <Image src="/tri.png" alt="" fill className="object-contain" />
-        </div>
-        <p className="text-[16px] font-medium text-content-primary text-center">Trí is here, Ask Trí anything...</p>
-      </div>
-
-      {/* Suggestions */}
-      <div
-        className="px-4 pb-4 flex flex-col gap-2"
-        style={{ background: 'linear-gradient(to bottom, rgba(249,250,251,0), rgba(249,250,251,0.6))' }}
-      >
-        {suggestions.map((s, i) => (
-          <motion.button
-            key={s}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1], delay: 0.15 + i * 0.06 }}
-            className="self-start bg-surface-sunken px-4 py-3 rounded-full"
+        {/* Profile card — always the cinnabar gradient, only its content inverts */}
+        <motion.div
+          {...rise(4)}
+          className="relative overflow-hidden rounded-[48px] p-6 flex items-center justify-between gap-4 shrink-0"
+          style={{ backgroundImage: 'linear-gradient(106deg, #ff9da1 0%, #fe353d 100%)' }}
+        >
+          <div
+            className="absolute flex items-center justify-center pointer-events-none"
+            style={{ left: 192, top: '50%', width: 274, height: 214, transform: 'translateY(-50%)' }}
           >
-            <span className="text-[14px] font-medium text-content-primary">{s}</span>
-          </motion.button>
-        ))}
+            <div className="relative shrink-0 opacity-40 rotate-[15deg]" style={{ width: 241, height: 157 }}>
+              <Image src="/menu-profile-pattern.png" alt="" fill className="object-cover" />
+            </div>
+          </div>
+          <div className="relative flex items-center gap-3">
+            <div className="size-14 rounded-full bg-[#e5e5e5] overflow-hidden relative shrink-0">
+              <Image src="/avatar.png" alt="QA" fill className="object-cover" />
+            </div>
+            <div className="flex flex-col gap-2 items-start">
+              <span className={`t-label-lg ${dark ? 'text-white' : 'text-black'}`}>Quang Anh</span>
+              <div className={`rounded-full px-2 py-1 flex items-center gap-1 ${dark ? 'bg-white' : 'bg-black'}`}>
+                <Image src="/logo.svg" alt="" width={16} height={16} />
+                <span className={`text-[12px] font-medium leading-4 whitespace-nowrap ${dark ? 'text-black' : 'text-white'}`}>Inspire Max</span>
+              </div>
+            </div>
+          </div>
+          <div className="relative flex items-center gap-2 shrink-0">
+            <span className={`text-[12px] whitespace-nowrap ${dark ? 'text-white' : 'text-black'}`}>Membership benefits</span>
+            <button className={`rounded-full p-1 flex items-center justify-center ${dark ? 'bg-white' : 'bg-black'}`}>
+              <Icon name="chevron_right" size={16} className={dark ? 'text-black' : 'text-white'} />
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Main menu items */}
+        <motion.div {...rise(3)} className={`rounded-[32px] flex flex-col shrink-0 ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
+          {MENU_ITEMS.map(({ label, icon, navKey }, i) => {
+            const active = navKey === activeNav
+            return (
+              <button
+                key={label}
+                onClick={label === 'Home' ? onClose : label === 'My Wealth' ? onNavigateWealth : undefined}
+                className={`flex items-center gap-6 px-6 w-full text-left ${
+                  i === 0 ? 'pt-6 pb-4' : i === MENU_ITEMS.length - 1 ? 'pt-4 pb-6' : 'py-4'
+                }`}
+              >
+                {icon === 'logo'
+                  ? <TcbLogoIcon size={20} className="text-cinnabar-500" />
+                  : <Icon name={icon} size={20} className={active ? 'text-cinnabar-500' : (dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]')} />
+                }
+                <span className={`t-label ${active ? 'text-cinnabar-500' : (dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]')}`}>{label}</span>
+              </button>
+            )
+          })}
+        </motion.div>
+
+        {/* Quick links + branch/map card */}
+        <motion.div {...rise(2)} className="flex items-stretch gap-2.5 shrink-0">
+          <div className={`shrink-0 rounded-[32px] flex flex-col ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
+            {MENU_QUICK_LINKS.map(({ label, icon }, i) => (
+              <button
+                key={label}
+                className={`flex items-center gap-6 px-6 w-full text-left ${
+                  i === 0 ? 'pt-6 pb-4' : i === MENU_QUICK_LINKS.length - 1 ? 'pt-4 pb-6' : 'py-4'
+                }`}
+              >
+                <Icon name={icon} size={20} className={`shrink-0 ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`} />
+                <span className={`t-label whitespace-nowrap ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>{label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className={`flex-1 border border-info rounded-[32px] overflow-hidden flex flex-col min-w-0 ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
+            <p className={`t-label px-6 pt-6 pb-3 ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Find branches &amp; ATMs on map</p>
+            <div className="px-6"><div className="h-px bg-[#737373] opacity-10 rounded-full w-full" /></div>
+            <div className="flex flex-col gap-2 px-6 py-3">
+              <p className={`t-label ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Book an appointment</p>
+              <p className="text-[12px] leading-4 text-[#737373]">For a smoother branch visit</p>
+            </div>
+            <div className="relative flex-1 min-h-24">
+              <Image src="/menu-map.png" alt="" fill className="object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-info rounded-full p-1 flex items-center justify-center shadow-lg">
+                  <Icon name="location_on" size={20} className="text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Space reserved for bottom nav — grows when keyboard is open */}
+      {/* Footer — dots slot left (rendered by static overlay), language + theme + settings right */}
+      <div className="flex items-center justify-between px-11 py-5 shrink-0">
+        <div className="size-6" />
+        <motion.div {...rise(0)} className="flex items-center gap-4">
+          <span className={`t-label-lg ${dark ? 'text-white' : 'text-black'}`}>EN</span>
+          <button onClick={onToggleTheme} className="flex items-center">
+            <Icon name={light ? 'light_mode' : 'dark_mode'} size={24} className={dark ? 'text-white' : 'text-black'} />
+          </button>
+          <button className="flex items-center">
+            <Icon name="settings" size={24} className={dark ? 'text-white' : 'text-black'} />
+          </button>
+        </motion.div>
+      </div>
+
+      {/* Bottom spacer */}
+      <div className="h-7 shrink-0" />
+    </motion.div>
+  )
+}
+
+/* ─── Overlays (light-themed, pop above dark background) ───────────── */
+
+/* Counts from 0 to `to` on mount — runs when the Insight panel opens */
+function CountUp({ to, format = (v) => Math.round(v).toLocaleString('en-US'), duration = 1.2, delay = 0.25, className = '' }) {
+  const [display, setDisplay] = useState(() => format(0))
+  useEffect(() => {
+    const controls = animate(0, to, {
+      duration,
+      delay,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setDisplay(format(v)),
+    })
+    return () => controls.stop()
+  }, [to, duration, delay]) // eslint-disable-line react-hooks/exhaustive-deps
+  return <span className={`tabular-nums ${className}`}>{display}</span>
+}
+
+function InsightStatCard({ icon, label, value, description, dark = false }) {
+  return (
+    <div className={`flex-1 border rounded-[48px] p-6 flex flex-col items-end justify-center gap-1 min-w-0 ${
+      dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
+    }`}>
+      <div className={`rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
+        <Icon name={icon} size={24} className={dark ? 'text-white' : 'text-content-primary'} />
+      </div>
+      <div className="w-full flex flex-col gap-1">
+        <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">{label}</p>
+        {value}
+        <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">{description}</p>
+      </div>
+    </div>
+  )
+}
+
+const GOAL_BARS = 25
+const GOAL_ACTIVE_BAR = 12
+const GOAL_PERCENT = 45
+const GOAL_FILL_WIDTH = 201
+
+const INSIGHT_STARS = [
+  { src: '/icons-home/insight-star-1.svg', size: 16, left: 101, top: 3,  delay: 0    },
+  { src: '/icons-home/insight-star-2.svg', size: 8,  left: 97,  top: 45, delay: 0.12 },
+  { src: '/icons-home/insight-star-3.svg', size: 12, left: 145, top: 21, delay: 0.24 },
+]
+
+/* Sparkle burst — rises, rotates, then fades out. Plays once on mount. */
+function InsightStarBurst() {
+  return (
+    <>
+      {INSIGHT_STARS.map((s, i) => (
+        <motion.img
+          key={i}
+          src={s.src}
+          alt=""
+          className="absolute pointer-events-none"
+          style={{ left: s.left, top: s.top, width: s.size, height: s.size }}
+          initial={{ opacity: 0, y: 6, rotate: 0, scale: 0.8 }}
+          animate={{ opacity: [0, 1, 1, 0], y: [6, -6, -14, -22], rotate: [0, 20, 35, 50], scale: [0.8, 1, 1, 0.9] }}
+          transition={{ duration: 1.4, times: [0, 0.2, 0.7, 1], ease: 'easeOut', delay: s.delay }}
+        />
+      ))}
+    </>
+  )
+}
+
+function CoffeeInsightCard({ dark = false }) {
+  return (
+    <div className={`relative flex-1 border rounded-[48px] p-6 flex flex-col items-end justify-center gap-1 min-w-0 overflow-hidden ${
+      dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
+    }`}>
+      {/* Diagonal shine — sweeps from outside the top-left corner to outside the bottom-right, once, to draw the eye to the new card */}
       <motion.div
-        className="shrink-0"
-        initial={false}
-        animate={{ height: keyboardOpen ? 96 + 342 : 96 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-      />
+        className="absolute pointer-events-none"
+        style={{ left: 22, top: 14 }}
+        initial={{ x: -160, y: -160, opacity: 0 }}
+        animate={{ x: 160, y: 160, opacity: [0, 1, 1, 0] }}
+        transition={{ duration: 1.1, ease: 'easeInOut', times: [0, 0.15, 0.85, 1] }}
+      >
+        <div className="rotate-45 blur-md bg-white/40" style={{ width: 46, height: 260 }} />
+      </motion.div>
+      <div className={`relative rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
+        <Icon name="coffee" size={24} className={dark ? 'text-white' : 'text-content-primary'} />
+        <InsightStarBurst />
+      </div>
+      <div className="relative w-full flex flex-col gap-1">
+        <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">You have spent</p>
+        <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] ${dark ? 'text-white' : 'text-black'}`}>1.4m</p>
+        <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">on daily coffee this month</p>
+      </div>
+    </div>
+  )
+}
+
+const SHAKE = {
+  animate: { rotate: [-0.6, 0.6, -0.6, 0.6, -0.6, 0.6] },
+  transition: { repeat: Infinity, duration: 0.9, ease: 'easeInOut' },
+}
+
+function RemoveBtn({ dark }) {
+  return (
+    <div className={`absolute -top-3 -left-3 z-10 rounded-full px-2 py-1 flex items-center justify-center border ${
+      dark ? 'bg-[#fafafa] border-[#0a0a0a]' : 'bg-black border-white'
+    }`}>
+      <Icon name="check_indeterminate_small" size={20} className={dark ? 'text-[#0a0a0a]' : 'text-white'} />
+    </div>
+  )
+}
+
+function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false, insightAdded = false }) {
+  // The overlay always contrasts against the app's own theme: dark app → light panel,
+  // light app → dark panel.
+  const dark = light
+  const [isEditing, setIsEditing] = useState(false)
+
+  // One shared progress value (0 → 45) drives the percent text, fill widths, and active tick
+  const [goalProgress, setGoalProgress] = useState(0)
+  useEffect(() => {
+    if (!showCard) return
+    const controls = animate(0, GOAL_PERCENT, {
+      duration: 1.2,
+      delay: 0.25,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: setGoalProgress,
+    })
+    return () => controls.stop()
+  }, [showCard])
+
+  const fillWidth = (goalProgress / GOAL_PERCENT) * GOAL_FILL_WIDTH
+  const activeBar = Math.round((goalProgress / GOAL_PERCENT) * GOAL_ACTIVE_BAR)
+
+  const panelBg = dark ? '#0a0a0a' : '#ffffff'
+  const panelExitBg = dark ? '#fafafa' : '#0a0a0a'
+
+  return (
+    <>
+      {/* Backdrop — stays fully dark through the panel's collapse, only fades at the very end */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: { duration: 0.3 } }}
+        exit={{ opacity: 0, transition: { duration: 0.15, delay: 0.3 } }}
+        className="absolute inset-0 z-50"
+        onClick={onClose}
+      >
+        <div className={`absolute inset-0 rounded-[64px] ${dark ? 'bg-black/60' : 'bg-black/60'}`} />
+      </motion.div>
+
+      {/* Insight panel — unfolds (height-only) from the seam between header and body */}
+      {showCard && (
+          <motion.div
+            initial={{ width: 24, height: 24, y: 120, opacity: 1, backgroundColor: panelBg }}
+            animate={{ width: 424, height: insightAdded ? 868 : 768, y: 0, opacity: 1, backgroundColor: panelBg }}
+            exit={{
+              width: 24, height: 24, y: 120, opacity: 0, backgroundColor: panelExitBg,
+              transition: {
+                type: 'spring', stiffness: 300, damping: 32,
+                backgroundColor: { duration: 0.1, delay: 0.26, ease: 'easeIn' },
+                opacity: { duration: 0.08, delay: 0.36, ease: 'easeIn' },
+              },
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+            className="absolute left-2 top-2 z-50 overflow-hidden rounded-[60px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Content layer — fades out immediately so nothing lingers visible while the shell collapses */}
+            <motion.div
+              exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }}
+              className={`border-[0.75px] border-dashed rounded-[60px] flex flex-col overflow-hidden h-full ${dark ? 'border-[#262626]' : 'border-[#fafaf9]'}`}
+              style={{ width: 424 }}
+            >
+              {/* Content */}
+              <div className="flex-1 flex flex-col gap-2 px-3 pt-16 pb-3 w-full min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                {/* Stat cards row */}
+                <div className="flex items-stretch gap-2 w-full">
+                  <motion.div className="relative flex-1 min-w-0" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? SHAKE.transition : {}}>
+                    {isEditing && <RemoveBtn dark={dark} />}
+                    <InsightStatCard
+                      icon="attach_money"
+                      label="You have"
+                      dark={dark}
+                      value={<CountUp to={53} format={(v) => `${Math.round(v)}m`} className={`block text-[24px] font-bold leading-8 tracking-[0.48px] ${dark ? 'text-white' : 'text-black'}`} />}
+                      description="has remained unused for over 4 months"
+                    />
+                  </motion.div>
+                  <motion.div className="relative flex-1 min-w-0" animate={isEditing ? { ...SHAKE.animate, rotate: SHAKE.animate.rotate.map(r => -r) } : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.08 } : {}}>
+                    {isEditing && <RemoveBtn dark={dark} />}
+                    <InsightStatCard
+                      icon="wallet"
+                      label="You already spent"
+                      dark={dark}
+                      value={<p className={`text-[24px] font-bold leading-8 tracking-[0.48px] tabular-nums ${dark ? 'text-white' : 'text-black'}`}>2,4m / 20m</p>}
+                      description="of your monthly budget"
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Buying House Goal card — the accent block, opposite tone of the panel */}
+                <motion.div className="relative w-full" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.04 } : {}}>
+                  {isEditing && <RemoveBtn dark={dark} />}
+                <div className={`rounded-[48px] overflow-hidden relative flex flex-col gap-4 w-full ${dark ? 'bg-[#fafafa]' : 'bg-[#0a0a0a]'}`}>
+                  {/* Progress region backdrop — grows with the percentage */}
+                  <div
+                    className={`absolute left-0 bottom-0 ${dark ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}
+                    style={{ height: 220, width: fillWidth }}
+                  />
+                  <div className="relative flex flex-col gap-2 pt-6 px-6 w-full">
+                    <div className="flex items-start justify-between w-full">
+                      <div className="flex flex-col gap-1">
+                        <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>Buying House Goal</p>
+                        <span className="text-[24px] font-bold leading-8 text-info tracking-[0.48px] tabular-nums">
+                          {Math.round(goalProgress)}%
+                        </span>
+                      </div>
+                      <div className={`rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#e5e5e5]' : 'bg-[#262626]'}`}>
+                        <Icon name="add_home" size={24} className={dark ? 'text-[#0a0a0a]' : 'text-[#fafafa]'} />
+                      </div>
+                    </div>
+                    <p className={`t-body-md w-full ${dark ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>
+                      Almost halfway to your goal.
+                    </p>
+                  </div>
+                  {/* Tick bars + progress */}
+                  <div className="relative flex flex-col w-full">
+                    <div className="flex items-center justify-between w-full">
+                      {Array.from({ length: GOAL_BARS }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-12 w-0.5 rounded-full ${i === activeBar && goalProgress > 0.5 ? 'bg-info' : (dark ? 'bg-[#e5e5e5]' : 'bg-[#262626]')}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="bg-info h-6" style={{ width: fillWidth }} />
+                  </div>
+                </div>
+                </motion.div>
+
+                {/* Add new insight */}
+                {insightAdded ? (
+                  <div className="flex items-stretch gap-2 w-full">
+                    <motion.div className="relative w-1/2 min-w-0" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.12 } : {}}>
+                      {isEditing && <RemoveBtn dark={dark} />}
+                      <CoffeeInsightCard dark={dark} />
+                    </motion.div>
+                    <button
+                      onClick={onAddInsight}
+                      className={`w-1/2 min-w-0 border border-dashed rounded-[48px] p-6 flex flex-col items-center justify-center gap-2 ${dark ? 'border-[#fafafa]' : 'border-[#0a0a0a]'}`}
+                    >
+                      <Image src="/tri.png" alt="" width={24} height={24} />
+                      <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] text-center ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={onAddInsight}
+                    className={`border border-dashed rounded-[48px] p-6 flex items-center justify-center gap-2 w-full ${dark ? 'border-[#fafafa]' : 'border-[#0a0a0a]'}`}
+                  >
+                    <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
+                    <Image src="/tri.png" alt="" width={24} height={24} />
+                  </button>
+                )}
+              </div>
+
+              {/* Footer — Edit / Close */}
+              <div className={`flex items-center justify-between px-6 pt-3 pb-0 shrink-0 w-full bg-gradient-to-b ${
+                dark ? 'from-black/0 to-black' : 'from-white/0 to-white'
+              }`}>
+                <button onClick={() => setIsEditing(v => !v)} className="bg-black border border-white rounded-[60px] px-8 py-5 backdrop-blur-sm">
+                  <span className="text-[14px] font-medium leading-5 text-white tracking-[0.28px]">{isEditing ? 'Done' : 'Edit'}</span>
+                </button>
+                <button onClick={onClose} className="bg-white border border-black rounded-[60px] px-8 py-5 backdrop-blur-sm">
+                  <span className="text-[14px] font-medium leading-5 text-black tracking-[0.28px]">Close</span>
+                </button>
+              </div>
+              <div className="h-6 shrink-0" />
+            </motion.div>
+          </motion.div>
+      )}
+    </>
+  )
+}
+
+function TransactionOverlay({ onClose, showCard = true, light = false }) {
+  // Same contrast rule as BalanceOverlay: light app → dark card.
+  const dark = light
+
+  const suggestions = [
+    'Why is it higher this month?',
+    'How much did I spend at Shopee this year?',
+    'Set a monthly budget',
+  ]
+  const spendingRows = [
+    { label: 'Total coffee spending',        amount: '3,200,000vnd' },
+    { label: 'Total only shopping spending', amount: '1,200,000vnd' },
+    { label: 'Total food spending',          amount: '1,200,000vnd' },
+  ]
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="absolute inset-0 z-50"
+        onClick={onClose}
+      >
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[64px]" />
+      </motion.div>
+
+      <AnimatePresence>
+        {showCard && (
+          <motion.div
+            initial={{ y: 800 }} animate={{ y: 0 }} exit={{ y: 800 }}
+            transition={{ type: 'spring', stiffness: 140, damping: 18 }}
+            className="absolute inset-x-4 bottom-10 z-60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`rounded-4xl flex flex-col gap-4 p-4 ${dark ? 'bg-[#0a0a0a]' : 'bg-surface'}`}>
+              <div className="flex items-center justify-between">
+                <span className={`text-[24px] font-bold leading-8 ${dark ? 'text-white' : 'text-content-primary'}`}>Analyze</span>
+                <button onClick={onClose} className={`size-10 rounded-full flex items-center justify-center shrink-0 ${dark ? 'bg-[#171717]' : 'bg-surface-sunken'}`}>
+                  <Icon name="close" size={20} className={dark ? 'text-[#a1a1a1]' : 'text-content-secondary'} />
+                </button>
+              </div>
+
+              <div className={`rounded-3xl p-4 flex flex-col gap-1 ${dark ? 'bg-[#171717]' : 'bg-amber-50'}`}>
+                <p className={`text-[13px] font-medium leading-5 ${dark ? 'text-[#a1a1a1]' : 'text-content-secondary'}`}>You overspent</p>
+                <p className="text-[28px] font-bold text-amber-500 leading-9">2Mvnđ on coffee</p>
+                <p className={`text-[13px] leading-5 ${dark ? 'text-[#a1a1a1]' : 'text-content-secondary'}`}>
+                  Your coffee spending has increased 18% this month, mainly after payday.
+                </p>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between pb-3">
+                  <span className={`text-[14px] font-semibold leading-5 ${dark ? 'text-white' : 'text-content-primary'}`}>Spending</span>
+                  <span className="text-[14px] font-medium text-info leading-5">Define new one</span>
+                </div>
+                {spendingRows.map(({ label, amount }) => (
+                  <div key={label}>
+                    <div className={`h-px ${dark ? 'bg-[#262626]' : 'bg-border-default'}`} />
+                    <div className="flex items-center justify-between py-3">
+                      <span className={`text-[13px] leading-5 ${dark ? 'text-[#737373]' : 'text-content-muted'}`}>{label}</span>
+                      <span className="text-[13px] font-medium text-danger leading-5 shrink-0 ml-2">{amount}</span>
+                    </div>
+                  </div>
+                ))}
+                <div className="bg-info-subtle rounded-2xl p-3 flex items-start gap-2 mt-1">
+                  <Icon name="info" size={18} className="text-info shrink-0 mt-px" />
+                  <p className="text-[12px] text-info leading-4">
+                    The categories is being created by TRÍ. You can add TRÍ to add more or remove the wrong one.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {suggestions.map(text => (
+                  <button key={text} className={`w-full flex items-center justify-center border px-4 py-3 rounded-full ${
+                    dark ? 'border-[#262626] bg-[#171717]' : 'border-border-strong bg-surface-raised'
+                  }`}>
+                    <span className={`text-[14px] font-medium ${dark ? 'text-white' : 'text-content-primary'}`}>{text}</span>
+                  </button>
+                ))}
+                <button onClick={onClose} className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full ${dark ? 'bg-white' : 'bg-surface-overlay'}`}>
+                  <Image src="/tri.png" alt="AI" width={20} height={20} />
+                  <span className={`text-[14px] font-medium ${dark ? 'text-[#0a0a0a]' : 'text-content-inverse'}`}>Ask a follow-up</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
+/* ─── TRÍ Screen ────────────────────────────────────────────────────── */
+
+const TRI_ENTRY_SUGGESTIONS = [
+  { id: 1, rotate: -8, icon: '/icons-home/tri-suggestion-house.svg', label: 'Make a plan to buy house',                    message: 'Make a plan to buy house' },
+  { id: 2, rotate: 8,  icon: '/icons-home/tri-suggestion-plane.svg', label: 'Summarize my total spending on Bangkok Trip', message: 'Summarize my total spending on Bangkok Trip' },
+  { id: 3, rotate: -8, icon: 'freeze',                               label: 'Freeze my Credit card',                       message: 'Freeze my card' },
+]
+
+function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
+  return (
+    <motion.div
+      initial={{ x: 448 }} animate={{ x: 0 }} exit={{ x: 448 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+      className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
+    >
+      {/* Dotted pattern background — dark theme only */}
+      {!light && (
+        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      )}
+
+      {/* Status bar */}
+      <div className="absolute top-0 left-0 right-0 z-70">
+        <StatusBar dark={light} />
+      </div>
+
+      {/* Layout column */}
+      <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1">
+
+        {/* Main content card */}
+        <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col items-center min-h-0 ${
+          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+        }`}>
+
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
+            <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
+              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+            }`}>
+              <Icon name="history" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
+                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+              }`}>
+                <Icon name="search" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+              </button>
+              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
+                <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+              </button>
+            </div>
+          </div>
+
+          {/* Greeting + suggestion cards */}
+          <div className="backdrop-blur-[6px] flex-1 w-full flex flex-col items-center justify-end overflow-hidden min-h-0">
+            <div className="flex flex-col gap-2.5 p-4 shrink-0 w-full whitespace-nowrap">
+              <p className={`t-h3 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Hey Quang!</p>
+              <p className="t-label text-[#737373]">What&apos;s been on your mind lately?</p>
+            </div>
+
+            <div className="flex items-center pb-4 pt-3 px-4 shrink-0 w-full">
+              {TRI_ENTRY_SUGGESTIONS.map(({ id, rotate, icon, label, message }) => (
+                <button
+                  key={id}
+                  onClick={() => onOpenChat?.(message)}
+                  className="flex items-start justify-start shrink-0 text-left"
+                  style={{ width: 135, height: 155, marginRight: -16 }}
+                >
+                  <div
+                    className={`rounded-3xl flex flex-col gap-1 items-start px-4 py-4 shrink-0 border ${
+                      light ? 'bg-[#f5f5f5] border-[#e5e5e5]' : 'bg-[#171717] border-[#262626]'
+                    }`}
+                    style={{ width: 117, height: 140, transform: `rotate(${rotate}deg)` }}
+                  >
+                    {icon === 'freeze' ? (
+                      <div className="bg-cinnabar-400 rounded-lg size-6 flex items-center justify-center shrink-0">
+                        <div className="bg-cinnabar-200 rounded-full size-4" />
+                      </div>
+                    ) : (
+                      <img src={icon} alt="" className="size-6" />
+                    )}
+                    <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{label}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Ask anything input */}
+        <button
+          onClick={() => onOpenChat?.('Freeze my card')}
+          className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 w-full ${
+            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
+          }`}
+        >
+          <Icon name="add" size={24} className="text-black shrink-0" />
+          <div className="flex-1 flex items-center gap-1 min-w-0">
+            <div className="bg-info h-5 w-1 rounded-full shrink-0" />
+            <span className="flex-1 t-body text-[#a1a1a1] text-left">Ask anything</span>
+          </div>
+          <div className="bg-info rounded-full p-2 flex items-center justify-center shrink-0">
+            <Icon name="arrow_upward" size={24} className="text-white" />
+          </div>
+        </button>
+
+        {/* Dark keyboard — in flow */}
+        <DarkKeyboardMock />
+      </div>
+    </motion.div>
+  )
+}
+
+/* ─── Insight Chat Screen — scripted "Add new insight" conversation ─── */
+
+const INSIGHT_SCRIPT = {
+  draft1: 'Add me a new financial insight to control my balance',
+  reply1: {
+    lines: ['What financial insight would you like to add?', 'You can ask things like:'],
+    bullets: ['Spending by category', 'Subscription analysis', 'Salary & cash flow', 'Investment performance'],
+  },
+  draft2: 'Monthly coffee spending',
+  reply2: { text: 'I’ve added a new Coffee Spending insight.', view: true },
+}
+
+function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false }) {
+  const [messages, setMessages] = useState([])
+  const [inputText, setInputText] = useState(INSIGHT_SCRIPT.draft1)
+  const [thinking, setThinking] = useState(false)
+  const scrollRef = useRef(null)
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [messages, thinking])
+
+  const handleSend = () => {
+    if (!inputText || thinking) return
+    const isFirst = messages.length === 0
+    const sent = inputText
+    setMessages(prev => [...prev, { role: 'user', content: sent }])
+    setInputText('')
+    setThinking(true)
+    setTimeout(() => {
+      setThinking(false)
+      setMessages(prev => [...prev, { role: 'ai', content: isFirst ? INSIGHT_SCRIPT.reply1 : INSIGHT_SCRIPT.reply2 }])
+      if (isFirst) setTimeout(() => setInputText(INSIGHT_SCRIPT.draft2), 500)
+    }, 1000)
+  }
+
+  const canSend = !!inputText && !thinking
+
+  return (
+    <motion.div
+      initial={{ x: 448 }} animate={{ x: 0 }} exit={{ x: 448 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+      className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
+    >
+      {/* Dotted pattern background — dark theme only */}
+      {!light && (
+        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      )}
+
+      {/* Status bar */}
+      <div className="absolute top-0 left-0 right-0 z-70">
+        <StatusBar dark={light} />
+      </div>
+
+      {/* Layout column */}
+      <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1">
+
+        {/* Main content card */}
+        <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col min-h-0 ${
+          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+        }`}>
+
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
+            <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
+              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+            }`}>
+              <Icon name="history" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
+                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+              }`}>
+                <Icon name="search" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+              </button>
+              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
+                <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+              </button>
+            </div>
+          </div>
+
+          {/* Message list */}
+          <div className="relative flex-1 min-h-0">
+          <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0 h-full">
+            <div className="flex flex-col py-4 w-full mt-auto">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex w-full py-2 ${m.role === 'user' ? 'justify-end pl-24 pr-4' : 'justify-start pl-4 pr-24'}`}>
+                  {m.role === 'user' ? (
+                    <div className="bg-info rounded-3xl px-4 py-3 max-w-full">
+                      <p className="text-[16px] leading-6 text-white">{m.content}</p>
+                    </div>
+                  ) : (
+                    <div className={`rounded-3xl px-4 py-3 max-w-full flex items-center gap-2.5 ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}>
+                      {m.content.bullets ? (
+                        <div className={`text-[16px] leading-6 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+                          {m.content.lines.map((line, li) => <p key={li}>{line}</p>)}
+                          <ul className="list-disc pl-6">
+                            {m.content.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
+                          </ul>
+                        </div>
+                      ) : (
+                        <p className={`text-[16px] leading-6 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>{m.content.text}</p>
+                      )}
+                      {m.content?.view && (
+                        <button
+                          onClick={onViewInsight}
+                          className={`border rounded-[60px] px-6 py-4 backdrop-blur-sm shrink-0 ${
+                            light ? 'bg-[#0a0a0a] border-black text-white' : 'bg-white border-black text-black'
+                          }`}
+                        >
+                          <span className="text-[14px] font-medium leading-5 tracking-[0.28px]">View</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Thinking indicator */}
+              {thinking && (
+                <div className="flex justify-start pl-4 pr-24 py-2 w-full">
+                  <motion.div
+                    animate={{ rotate: 360, scale: [1, 1.18, 1] }}
+                    transition={{ rotate: { duration: 1.6, repeat: Infinity, ease: 'linear' }, scale: { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } }}
+                  >
+                    <Image src="/tri.png" alt="" width={28} height={28} />
+                  </motion.div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Top fade — sits over the message list, not part of the scroll content */}
+          <div className={`absolute top-0 inset-x-0 h-14 pointer-events-none z-10 ${
+            light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#0a0a0a] to-transparent'
+          }`} />
+          </div>
+        </div>
+
+        {/* Ask anything input */}
+        <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 w-full ${
+          light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
+        }`}>
+          <Icon name="add" size={24} className="text-black shrink-0" />
+          <div className="flex-1 flex items-center gap-1 min-w-0">
+            <div className="bg-info h-5 w-1 rounded-full shrink-0" />
+            <span className="flex-1 t-body text-[#0a0a0a] text-left truncate">
+              {inputText || <span className="text-[#a1a1a1]">Ask anything</span>}
+            </span>
+          </div>
+          <button
+            onClick={handleSend}
+            disabled={!canSend}
+            className="bg-info rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40"
+          >
+            <Icon name="arrow_upward" size={24} className="text-white" />
+          </button>
+        </div>
+
+        {/* Dark keyboard — in flow */}
+        <DarkKeyboardMock />
+      </div>
     </motion.div>
   )
 }
@@ -765,25 +1236,18 @@ function KeyboardMock({ delay = 0, noAnim = false, zIndex = 25 }) {
   ]
 
   const K = ({ label, className = '' }) => (
-    <button
-      className={`h-10.75 bg-white rounded-[10px] flex items-center justify-center text-[17px] text-content-primary shadow-[0_1px_0_rgba(0,0,0,0.3)] ${className}`}
-    >
+    <button className={`h-10.75 bg-white rounded-[10px] flex items-center justify-center text-[17px] text-content-primary shadow-[0_1px_0_rgba(0,0,0,0.3)] ${className}`}>
       {label}
     </button>
   )
 
   return (
-    /* Clipping wrapper — positioned at bottom, clips the slide-up animation so it looks
-       like the keyboard rises from below the screen edge even inside overflow-hidden parents */
     <div className="absolute bottom-0 left-0 right-0 overflow-hidden" style={{ zIndex }}>
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
         transition={noAnim ? { duration: 0 } : { type: 'spring', stiffness: 280, damping: 30, delay }}
         className="bg-[#E4E5EA] rounded-t-3xl"
       >
-        {/* Autocorrect bar */}
         <div className="flex items-center border-b border-[#C2C4CA] py-2">
           {['"The"', 'the', 'to'].map((s, i) => (
             <div key={s} className={`flex-1 flex items-center justify-center py-1 ${i < 2 ? 'border-r border-[#C2C4CA]' : ''}`}>
@@ -791,36 +1255,26 @@ function KeyboardMock({ delay = 0, noAnim = false, zIndex = 25 }) {
             </div>
           ))}
         </div>
-
-        {/* Key rows */}
         <div className="flex flex-col gap-2.75 px-2 py-3">
-          {/* Row 1 */}
           <div className="flex justify-center gap-1.5">
             {rows[0].map(k => <K key={k} label={k} className="w-9.25" />)}
           </div>
-          {/* Row 2 */}
           <div className="flex justify-center gap-1.5">
             {rows[1].map(k => <K key={k} label={k} className="w-9.25" />)}
           </div>
-          {/* Row 3 — shift + letters + delete */}
           <div className="flex justify-center gap-1.5">
             <K label="⇧" className="w-11 bg-[#C9CCCE]!" />
             {rows[2].map(k => <K key={k} label={k} className="w-9.25" />)}
             <K label="⌫" className="w-11 bg-[#C9CCCE]!" />
           </div>
-          {/* Row 4 — 123, space, return */}
           <div className="flex gap-1.5">
             <K label="123" className="w-11 bg-[#C9CCCE]!" />
-            <button className="flex-1 h-10.75 bg-white rounded-[10px] text-[17px] text-content-primary shadow-[0_1px_0_rgba(0,0,0,0.3)]">
-              space
-            </button>
+            <button className="flex-1 h-10.75 bg-white rounded-[10px] text-[17px] text-content-primary shadow-[0_1px_0_rgba(0,0,0,0.3)]">space</button>
             <button className="w-23 h-10.75 bg-[#007AFF] rounded-[10px] flex items-center justify-center shadow-[0_1px_0_rgba(0,0,0,0.3)]">
               <Icon name="keyboard_return" size={18} className="text-white" />
             </button>
           </div>
         </div>
-
-        {/* Emoji / mic bar */}
         <div className="flex items-center justify-between px-9 pt-2 pb-8">
           <Icon name="emoji_emotions" size={26} className="text-content-secondary" />
           <Icon name="mic" size={22} className="text-content-secondary" />
@@ -832,15 +1286,15 @@ function KeyboardMock({ delay = 0, noAnim = false, zIndex = 25 }) {
 
 /* ─── Search Screen ─────────────────────────────────────────────────── */
 
-const RECENT_SEARCHES = [
-  { id: 1, icon: 'tri',    label: 'Shopee spending this month' },
-  { id: 2, icon: 'tri',    label: 'Can I afford an iPhone 17?' },
-  { id: 3, icon: 'savings', label: 'Auto Savings' },
+const RECENT_CARDS = [
+  { id: 1, label: 'Shopee spending this month', icon: 'tri'     },
+  { id: 2, label: 'Auto Savings',               icon: 'savings' },
+  { id: 3, label: 'Can I afford an iPhone 17?', icon: 'tri'     },
 ]
 
 const SUGGESTED_STOCKS = [
-  { id: 1, icon: 'candlestick_chart', ticker: 'TCB',  subtitle: 'Equities',          price: '34.56', change: '+2.24%' },
-  { id: 2, icon: 'candlestick_chart', ticker: 'VIC',  subtitle: 'Equities',          price: '220',   change: '+1.29%' },
+  { id: 1, icon: 'candlestick_chart', ticker: 'TCB',  subtitle: 'Equities',          price: '34.56', change: '+2.24%'  },
+  { id: 2, icon: 'candlestick_chart', ticker: 'VIC',  subtitle: 'Equities',          price: '220',   change: '+2.24%'  },
   { id: 3, icon: 'bar_chart',         ticker: 'TCBF', subtitle: 'Techcom Bond Fund', price: null,    change: '+20.49%' },
 ]
 
@@ -850,13 +1304,13 @@ const FEATURE_RESULTS = [
 ]
 
 const TRI_SUGGESTIONS = [
-  { id: 1, label: 'Freeze my card...', message: 'Freeze my card' },
+  { id: 1, label: 'Freeze my card ...',        message: 'Freeze my card' },
   { id: 2, label: 'Which card suits me best?', message: 'Which card suits me best?' },
-  { id: 3, label: 'Estimate my credit limit', message: 'Estimate my credit limit' },
+  { id: 3, label: 'Estimate my credit limit',  message: 'Estimate my credit limit' },
 ]
 
-/* Highlights the first occurrence of `query` in `text` with info (blue) color */
 function HighlightMatch({ text, query }) {
+  if (!query) return <span>{text}</span>
   const idx = text.toLowerCase().indexOf(query.toLowerCase())
   if (idx === -1) return <span>{text}</span>
   return (
@@ -868,394 +1322,310 @@ function HighlightMatch({ text, query }) {
   )
 }
 
-const CONTENT_CLASSES = 'flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden backdrop-blur-[6px] bg-linear-to-b from-[rgba(249,250,251,0)] to-[rgba(249,250,251,0.5)]'
-
-function SearchDivider() {
+function SearchResultDivider() {
   return (
-    <div className="bg-white pl-14 pr-4 shrink-0 w-full">
-      <div className="bg-surface-overlay h-px opacity-10 rounded-full w-full" />
+    <div className="pl-[75px] pr-4 w-full">
+      <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
     </div>
   )
 }
 
-export function SearchScreen({ onClose, onOpenChat, autoType = false }) {
+function DarkKeyboardMock() {
+  const rows = [
+    ['q','w','e','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l'],
+    ['z','x','c','v','b','n','m'],
+  ]
+  const DK = ({ label, className = '' }) => (
+    <button className={`h-11 bg-[#3a3a3c] rounded-[10px] flex items-center justify-center text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)] ${className}`}>
+      {label}
+    </button>
+  )
+  return (
+    <div className="w-full shrink-0">
+      <div className="bg-[#1c1c1e] rounded-t-4xl rounded-b-[60px]">
+        <div className="flex items-center border-b border-[#2c2c2e] py-2">
+          {['"The"', 'the', 'to'].map((s, i) => (
+            <div key={s} className={`flex-1 flex items-center justify-center py-1 ${i < 2 ? 'border-r border-[#2c2c2e]' : ''}`}>
+              <span className="text-[15px] text-white">{s}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2.75 px-2 py-3">
+          <div className="flex justify-center gap-1.5">
+            {rows[0].map(k => <DK key={k} label={k} className="w-9.25" />)}
+          </div>
+          <div className="flex justify-center gap-1.5">
+            {rows[1].map(k => <DK key={k} label={k} className="w-9.25" />)}
+          </div>
+          <div className="flex justify-center gap-1.5">
+            <DK label="⇧" className="w-11 bg-[#636366]!" />
+            {rows[2].map(k => <DK key={k} label={k} className="w-9.25" />)}
+            <DK label="⌫" className="w-11 bg-[#636366]!" />
+          </div>
+          <div className="flex gap-1.5">
+            <DK label="123" className="w-11 bg-[#636366]!" />
+            <button className="flex-1 h-11 bg-[#3a3a3c] rounded-[10px] text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]">space</button>
+            <button className="w-23 h-11 bg-[#007AFF] rounded-[10px] flex items-center justify-center shadow-[0_1px_0_rgba(0,0,0,0.5)]">
+              <Icon name="keyboard_return" size={18} className="text-white" />
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-9 pt-2 pb-8">
+          <Icon name="emoji_emotions" size={26} className="text-[#636366]" />
+          <Icon name="mic" size={22} className="text-[#636366]" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function SearchScreen({ onClose, onOpenChat, autoType = false, light = false }) {
+  const SLIDE = { type: 'spring', stiffness: 300, damping: 32 }
+  const TARGET = 'Card'
   const [typing, setTyping] = useState(false)
   const [typedText, setTypedText] = useState('')
-  const TARGET = 'Card'
+
+  // Type "Card" letter by letter
+  const startTyping = () => {
+    if (typing) return
+    setTyping(true)
+    let i = 0
+    const id = setInterval(() => {
+      i++
+      setTypedText(TARGET.slice(0, i))
+      if (i >= TARGET.length) clearInterval(id)
+    }, 120)
+  }
+
+  const clearTyping = () => { setTyping(false); setTypedText('') }
 
   useEffect(() => {
-    if (!autoType) {
-      setTyping(false)
-      setTypedText('')
-      return
-    }
-    setTypedText('')
-    let i = 0
-    const start = setTimeout(() => {
-      setTyping(true)
-      const id = setInterval(() => {
-        i++
-        setTypedText(TARGET.slice(0, i))
-        if (i >= TARGET.length) clearInterval(id)
-      }, 120)
-      return () => clearInterval(id)
-    }, 200)
-    return () => clearTimeout(start)
+    if (!autoType) return
+    const t = setTimeout(startTyping, 800)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoType])
 
+  const iconPillBg = light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'
+  const iconPillFg = light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'
+  const primaryText = light ? 'text-[#0a0a0a]' : 'text-white'
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute inset-0 z-80 bg-surface rounded-[56px] overflow-hidden flex flex-col"
+      initial={{ x: 448 }} animate={{ x: 0 }} exit={{ x: 448 }}
+      transition={SLIDE}
+      className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
     >
-      <StatusBar dark={true} />
+      {/* Dotted pattern background — dark theme only */}
+      {!light && (
+        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      )}
 
-      {/* Nav */}
-      <div className="flex gap-2 items-center px-4 pt-4 pb-2 shrink-0">
-        {/* Search pill */}
-        <div
-          role="button"
-          onClick={() => setTyping(true)}
-          className="flex-1 flex items-center gap-2.5 bg-surface-raised border border-border-strong rounded-full pl-2 pr-4 py-2 shadow-xl overflow-hidden min-w-0 cursor-text"
-        >
-          <div className="bg-surface p-2 rounded-full flex items-center justify-center shrink-0">
-            <Icon name="search" size={24} className="text-content-primary" />
+      {/* Status bar */}
+      <div className="absolute top-0 left-0 right-0 z-70">
+        <StatusBar dark={light} />
+      </div>
+
+      {/* Layout column */}
+      <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1 pb-0">
+
+        {/* Main content card */}
+        <div className={`relative flex-1 backdrop-blur-lg border rounded-[60px] overflow-hidden flex flex-col min-h-0 ${
+          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+        }`}>
+
+          {/* Header */}
+          <div className="flex items-center px-4 pb-3 pt-16 shrink-0 w-full">
+            <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] ${primaryText}`}>
+              {typing ? <>Result of &ldquo;{typedText}&rdquo;</> : 'Search'}
+            </p>
           </div>
 
-          {/* Cursor + text — cursor leads in empty state, trails in typing state */}
-          <div className="flex-1 flex items-center gap-1 min-w-0">
-            <AnimatePresence mode="wait" initial={false}>
-              {typing ? (
-                <motion.div
-                  key="typing"
-                  className="flex items-center gap-1"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                >
-                  <span className="text-md text-content-primary leading-6">{typedText}</span>
-                  <BlinkingCursor />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty"
-                  className="flex items-center gap-1"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                >
-                  <BlinkingCursor />
-                  <span className="text-md text-content-muted leading-6">Search</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Dark inline clear button — only in typing state */}
-          <AnimatePresence>
-            {typing && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.7 }}
-                transition={{ duration: 0.15 }}
-                onClick={e => { e.stopPropagation(); setTyping(false) }}
-                className="bg-surface-overlay p-0.5 rounded-full flex items-center justify-center shrink-0"
+          <AnimatePresence mode="wait" initial={false}>
+            {typing ? (
+              /* ─── Results of "Card" ─── */
+              <motion.div
+                key="results"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0"
               >
-                <Icon name="close" size={16} className="text-content-inverse" />
-              </motion.button>
+                {/* Features label */}
+                <div className="flex items-center p-4 shrink-0 text-[14px] font-medium leading-5">
+                  <span className="text-[#737373]">Features</span>
+                </div>
+
+                {/* Feature results */}
+                {FEATURE_RESULTS.map((item) => (
+                  <div key={item.id}>
+                    <div className="flex gap-4 items-center px-4 py-3">
+                      <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${iconPillBg}`}>
+                        <Icon name={item.icon} size={24} className={iconPillFg} />
+                      </div>
+                      <p className={`flex-1 text-[14px] font-medium leading-5 min-w-0 ${primaryText}`}>
+                        <HighlightMatch text={item.label} query={typedText} />
+                      </p>
+                      <Icon name="chevron_right" size={20} className="text-[#737373] shrink-0" />
+                    </div>
+                    <SearchResultDivider />
+                  </div>
+                ))}
+
+                {/* Talk to Trí header */}
+                <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 text-[14px] font-medium leading-5">
+                  <span className="text-[#737373]">Talk to Trí</span>
+                  <span className={primaryText}>Open conversation</span>
+                </div>
+
+                {/* Trí suggestions */}
+                {TRI_SUGGESTIONS.map((item, i) => (
+                  <div key={item.id}>
+                    <button
+                      onClick={() => onOpenChat?.(item.message)}
+                      className="flex gap-4 items-center px-4 py-3 w-full text-left"
+                    >
+                      <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${iconPillBg}`}>
+                        <Image src="/tri.png" alt="" width={24} height={24} />
+                      </div>
+                      <span className={`flex-1 text-[14px] font-medium leading-5 ${primaryText}`}>{item.label}</span>
+                      <Icon name="chevron_right" size={20} className="text-[#737373] shrink-0" />
+                    </button>
+                    {i < TRI_SUGGESTIONS.length - 1 && <SearchResultDivider />}
+                  </div>
+                ))}
+              </motion.div>
+            ) : (
+              /* ─── Default: recent + suggestions ─── */
+              <motion.div
+                key="default"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0"
+              >
+                {/* Recent header */}
+                <div className="flex items-center justify-between p-4 shrink-0 text-[14px] font-medium leading-5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#737373]">Recent</span>
+                    <span className={primaryText}>Clear</span>
+                  </div>
+                  <span className="text-info">View All</span>
+                </div>
+
+                {/* Recent cards — horizontal row */}
+                <div className="flex gap-2 items-stretch px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden shrink-0">
+                  {RECENT_CARDS.map(card => (
+                    <div key={card.id} className={`shrink-0 w-[156px] rounded-[32px] px-4 py-4 flex flex-col gap-1 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
+                      <div className="flex items-start justify-between w-full">
+                        <div className={`p-2.5 rounded-full flex items-center justify-center ${iconPillBg}`}>
+                          {card.icon === 'tri'
+                            ? <Image src="/tri.png" alt="" width={24} height={24} />
+                            : <Icon name={card.icon} size={24} className={iconPillFg} />
+                          }
+                        </div>
+                        <button className="mt-0.5">
+                          <Icon name="close" size={20} className="text-[#737373]" />
+                        </button>
+                      </div>
+                      <p className={`text-[14px] font-medium leading-5 mt-auto ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{card.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* AI suggestion label */}
+                <div className="flex items-center gap-1 px-4 pt-4 pb-2 shrink-0 text-[14px] font-medium leading-5 whitespace-nowrap">
+                  <span className="text-[#737373]">Because you recently asked about</span>
+                  <span className={primaryText}>&ldquo;Conservative&rdquo;</span>
+                </div>
+
+                {/* Stock list */}
+                {SUGGESTED_STOCKS.map((stock, i) => (
+                  <div key={stock.id}>
+                    <div className="flex gap-4 items-center px-4 py-3">
+                      <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${iconPillBg}`}>
+                        <Icon name={stock.icon} size={24} className={iconPillFg} />
+                      </div>
+                      <div className="flex-1 flex flex-col gap-1 min-w-0">
+                        <p className={`text-[14px] font-medium leading-5 ${primaryText}`}>{stock.ticker}</p>
+                        <p className="text-[12px] font-medium text-[#737373] leading-4">{stock.subtitle}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0 whitespace-nowrap">
+                        {stock.price
+                          ? <>
+                              <p className={`text-[14px] font-medium leading-5 tabular-nums ${primaryText}`}>{stock.price}</p>
+                              <p className="text-[12px] font-medium text-success leading-4 tabular-nums">{stock.change}</p>
+                            </>
+                          : <p className="text-[14px] font-medium text-success leading-5 tabular-nums">{stock.change}</p>
+                        }
+                      </div>
+                    </div>
+                    {i < SUGGESTED_STOCKS.length - 1 && <SearchResultDivider />}
+                  </div>
+                ))}
+              </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Bottom fade */}
+          <div className={`absolute bottom-0 left-0 right-0 h-14 pointer-events-none rounded-b-[60px] ${
+            light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#0a0a0a] to-transparent'
+          }`} />
         </div>
 
-        {/* Outer close */}
-        <button
-          onClick={onClose}
-          className="bg-surface-raised border border-border-default rounded-full p-1 shadow-xl shrink-0"
-        >
-          <div className="p-3 rounded-full flex items-center justify-center">
-            <Icon name="close" size={24} className="text-content-primary" />
-          </div>
-        </button>
-      </div>
-
-      {/* Content — fades between recent ↔ typing results */}
-      <AnimatePresence mode="wait" initial={false}>
-        {typing ? (
-          <motion.div
-            key="results"
-            className={CONTENT_CLASSES}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            {/* Features */}
-            <div className="flex items-center px-4 pb-2 pt-4 shrink-0">
-              <span className="text-[14px] font-medium text-content-muted">Features</span>
-            </div>
-            {FEATURE_RESULTS.map((item, i) => (
-              <>
-                <div key={item.id} className="flex gap-4 items-center px-4 py-3">
-                  <Icon name={item.icon} size={24} className="text-content-secondary shrink-0" />
-                  <p className="flex-1 text-[14px] font-medium text-content-primary min-w-0">
-                    <HighlightMatch text={item.label} query="Card" />
-                  </p>
-                  <Icon name="chevron_right" size={20} className="text-content-muted shrink-0" />
-                </div>
-                <SearchDivider />
-              </>
-            ))}
-
-            {/* Talk to Trí */}
-            <div className="flex items-center justify-between px-4 pb-2 pt-4 shrink-0">
-              <span className="text-[14px] font-medium text-content-muted">Talk to Trí</span>
-              <span className="text-[14px] font-medium text-info">Open conversation</span>
-            </div>
-            {TRI_SUGGESTIONS.map((item, i) => (
-              <>
-                <button key={item.id} onClick={() => onOpenChat(item.message)} className="flex gap-4 items-center px-4 py-3 w-full text-left">
-                  <Image src="/tri.png" alt="" width={24} height={24} className="shrink-0" />
-                  <span className="flex-1 text-[14px] font-medium text-content-primary">{item.label}</span>
-                  <Icon name="chevron_right" size={20} className="text-content-muted shrink-0" />
-                </button>
-                {i < TRI_SUGGESTIONS.length - 1 && <SearchDivider />}
-              </>
-            ))}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="recent"
-            className={CONTENT_CLASSES}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            {/* Recent */}
-            <div className="flex items-center justify-between px-4 pb-2 pt-4 shrink-0">
-              <span className="text-[14px] font-medium text-content-muted">Recent</span>
-              <span className="text-[14px] font-medium text-content-primary">Clear</span>
-            </div>
-            {RECENT_SEARCHES.map((item, i) => (
-              <>
-                <div key={item.id} className="flex gap-4 items-center px-4 py-3">
-                  {item.icon === 'tri'
-                    ? <Image src="/tri.png" alt="" width={24} height={24} className="shrink-0" />
-                    : <Icon name={item.icon} size={24} className="text-content-secondary shrink-0" />
-                  }
-                  <span className="flex-1 text-[14px] font-medium text-content-primary">{item.label}</span>
-                  <button className="shrink-0">
-                    <Icon name="close" size={20} className="text-content-muted" />
-                  </button>
-                </div>
-                {i < RECENT_SEARCHES.length - 1 && <SearchDivider />}
-              </>
-            ))}
-
-            {/* View more */}
-            <div className="flex items-center justify-center px-4 py-2">
-              <button className="bg-surface-raised border border-[#1e2939] rounded-full px-4 py-2 h-8 flex items-center justify-center w-full">
-                <span className="text-[11px] text-content-primary">View more</span>
-              </button>
-            </div>
-
-            {/* Contextual header */}
-            <div className="flex items-center gap-1 px-4 pb-2 pt-4 shrink-0">
-              <span className="text-[14px] font-medium text-content-muted whitespace-nowrap">Because you recently asked about</span>
-              <span className="text-[14px] font-medium text-content-primary whitespace-nowrap">&ldquo;Conservative&rdquo;</span>
-            </div>
-
-            {/* Suggested stocks */}
-            {SUGGESTED_STOCKS.map((stock, i) => (
-              <>
-              <div key={stock.id} className="flex gap-4 items-center px-4 py-3">
-                <Icon name={stock.icon} size={24} className="text-content-secondary shrink-0" />
-                <div className="flex-1 flex flex-col gap-1 min-w-0">
-                  <span className="text-[14px] font-medium text-content-primary">{stock.ticker}</span>
-                  <span className="text-[12px] text-content-muted">{stock.subtitle}</span>
-                </div>
-                <div className="flex flex-col items-end gap-2 shrink-0 whitespace-nowrap">
-                  {stock.price && <span className="text-[14px] font-medium text-content-primary">{stock.price}</span>}
-                  <span className="text-[12px] text-success">{stock.change}</span>
-                </div>
-              </div>
-              {i < SUGGESTED_STOCKS.length - 1 && <SearchDivider />}
-              </>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating button — 16px above keyboard top, pinned to right, always visible */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 28, delay: 0.25 }}
-        className="absolute right-4 bg-surface-overlay rounded-full pl-3 pr-4 py-3 shadow-xl flex items-center gap-2"
-        style={{ bottom: 342 + 16 }}
-      >
-        <Image src="/tri.png" alt="" width={24} height={24} />
-        <span className="text-[14px] font-medium text-content-inverse">Ask Trí</span>
-      </motion.button>
-
-      {/* Keyboard slides up after screen fades in */}
-      <KeyboardMock delay={0.2} />
-    </motion.div>
-  )
-}
-
-/* ─── TRÍ Chat Screen ───────────────────────────────────────────────── */
-
-function CardThumbnail({ variant = 'gold' }) {
-  return (
-    <div className={`w-16 h-10 rounded-sm shrink-0 overflow-hidden flex flex-col justify-between p-1.5 ${
-      variant === 'gold'
-        ? 'bg-linear-to-br from-amber-300 to-orange-500'
-        : 'bg-linear-to-br from-gray-700 to-gray-900'
-    }`}>
-      <span className={`text-[6px] font-bold ${variant === 'gold' ? 'text-amber-900' : 'text-white'} opacity-70`}>TCB</span>
-      <span className={`text-[7px] font-bold italic self-end ${variant === 'gold' ? 'text-amber-900' : 'text-white'}`}>VISA</span>
-    </div>
-  )
-}
-
-export function TriChatScreen({ onClose, userMessage = 'Freeze my card' }) {
-  const [phase, setPhase] = useState('user') // 'user' | 'thinking' | 'answer'
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setPhase('thinking'), 600)
-    const t2 = setTimeout(() => setPhase('answer'), 2600)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-      className="absolute inset-0 z-90 bg-surface rounded-[56px] overflow-hidden flex flex-col"
-    >
-      <StatusBar dark={false} />
-
-      {/* Top nav */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-        <div className="size-12 rounded-full overflow-hidden shrink-0 relative">
-          <Image src="/avatar.png" alt="QA" fill className="object-cover" />
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="size-12 shrink-0 bg-surface-sunken rounded-full flex items-center justify-center">
-            <Icon name="history" size={24} className="text-content-secondary" />
-          </button>
-          <button className="size-12 shrink-0 bg-surface-sunken rounded-full flex items-center justify-center">
-            <Icon name="search" size={24} className="text-content-secondary" />
-          </button>
-        </div>
-      </div>
-
-      {/* Chat content */}
-      <div className="flex-1 flex flex-col gap-2 px-4 pt-4 pb-4 overflow-y-auto [&::-webkit-scrollbar]:hidden backdrop-blur-[6px] bg-linear-to-b from-[rgba(249,250,251,0)] to-[rgba(249,250,251,0.5)]">
-
-        {/* Spacer pushes messages to the bottom by default */}
-        <div className="flex-1" />
-
-        {/* User message */}
+        {/* Footer + keyboard — slide up after screen lands */}
         <motion.div
-          className="flex justify-end"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 320, damping: 28, delay: 0.1 }}
+          initial={{ y: 480 }} animate={{ y: 0 }}
+          transition={{ ...SLIDE, delay: 0.28 }}
+          className="flex flex-col gap-2 shrink-0"
         >
-          <div className="bg-surface-overlay px-4 py-3 rounded-full">
-            <span className="text-[14px] font-medium text-content-inverse">{userMessage}</span>
-          </div>
-        </motion.div>
-
-        {/* AI section — single AnimatePresence so popLayout takes exiting element out of flow
-            immediately, preventing the double layout-shift that caused the message to drop */}
-        <AnimatePresence mode="popLayout">
-          {phase === 'thinking' && (
-            <motion.div
-              key="thinking"
-              className="flex items-center"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.22 }}
+          {/* Search field + close */}
+          <div className="flex gap-2 items-center px-3 w-full">
+            <div
+              role="button"
+              onClick={startTyping}
+              className={`flex-1 backdrop-blur-[4px] border rounded-[60px] pl-6 pr-4 py-4 flex items-center gap-4 min-w-0 cursor-text ${
+                light ? 'bg-[#0a0a0a] border-[#0a0a0a]' : 'bg-[#fafafa] border-[#fafafa]'
+              }`}
             >
-              <motion.div
-                animate={{ rotate: 360, scale: [1, 1.18, 1] }}
-                transition={{
-                  rotate: { duration: 1.6, repeat: Infinity, ease: 'linear' },
-                  scale: { duration: 0.9, repeat: Infinity, ease: 'easeInOut' },
-                }}
-              >
-                <Image src="/tri.png" alt="" width={28} height={28} />
-              </motion.div>
-            </motion.div>
-          )}
-          {phase === 'answer' && (
-            <motion.div
-              key="answer"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-              className="bg-surface-sunken p-4 rounded-3xl flex flex-col gap-3 w-full"
-            >
-              <p className="text-[14px] font-medium text-content-primary">Which card do you want me to freeze?</p>
-
-              {/* Card list */}
-              <div className="bg-surface-raised rounded-2xl overflow-hidden">
-                {/* Card 1 — unselected */}
-                <div className="flex gap-4 items-center px-4 py-3">
-                  <CardThumbnail variant="gold" />
-                  <div className="flex-1 flex flex-col gap-1 min-w-0">
-                    <span className="text-[14px] font-medium text-content-primary">Techcombank Visa Everyday</span>
-                    <span className="text-[12px] text-content-muted">**** 8978</span>
-                  </div>
-                  <Icon name="radio_button_unchecked" size={24} className="text-content-muted shrink-0" />
-                </div>
-                {/* Divider */}
-                <div className="pl-24 pr-4">
-                  <div className="h-px bg-surface-overlay opacity-10" />
-                </div>
-                {/* Card 2 — selected */}
-                <div className="flex gap-4 items-center px-4 py-3">
-                  <CardThumbnail variant="dark" />
-                  <div className="flex-1 flex flex-col gap-1 min-w-0">
-                    <span className="text-[14px] font-medium text-content-primary">Techcombank Visa Everyday</span>
-                    <span className="text-[12px] text-content-muted">**** 8978</span>
-                  </div>
-                  <Icon name="radio_button_checked" size={24} className="text-info shrink-0" />
-                </div>
+              <div className="flex-1 flex items-center gap-1 min-w-0">
+                {typing ? (
+                  <>
+                    <span className={`text-[16px] leading-6 whitespace-nowrap ${light ? 'text-white' : 'text-[#0a0a0a]'}`}>{typedText}</span>
+                    <BlinkingCursor />
+                  </>
+                ) : (
+                  <>
+                    <BlinkingCursor />
+                    <span className="flex-1 text-[16px] text-[#a1a1a1] leading-6">Search</span>
+                  </>
+                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Bottom input bar */}
-      <div className="flex gap-2 items-center pb-4 pt-2 px-4 shrink-0 bg-linear-to-b from-[rgba(249,250,251,0)] to-surface backdrop-blur-sm">
-        <div className="flex-1 flex items-center gap-2.5 bg-surface-raised border border-border-strong rounded-full pl-4 pr-2 py-2 shadow-xl min-w-0 overflow-hidden">
-          <span className="flex-1 text-md text-content-muted leading-6 whitespace-nowrap overflow-hidden">Ask TRÍ everything ...</span>
-          <div className="bg-surface-overlay p-2 rounded-full flex items-center justify-center shrink-0">
-            <Image src="/tri.png" alt="" width={24} height={24} />
+              <AnimatePresence>
+                {typing && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
+                    transition={{ duration: 0.15 }}
+                    onClick={e => { e.stopPropagation(); clearTyping() }}
+                    className={`p-1 rounded-full flex items-center justify-center shrink-0 ${light ? 'bg-[#404040]' : 'bg-[#d4d4d4]'}`}
+                  >
+                    <Icon name="close" size={16} className={light ? 'text-white' : 'text-[#0a0a0a]'} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+              <Icon name="search" size={24} className={light ? 'text-white shrink-0' : 'text-black shrink-0'} />
+            </div>
+            <button
+              onClick={onClose}
+              className={`rounded-[60px] px-6 py-4 flex items-center justify-center shrink-0 ${light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]'}`}
+            >
+              <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+            </button>
           </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="bg-surface-raised border border-border-default rounded-full p-1 shadow-xl shrink-0"
-        >
-          <div className="p-3 rounded-full flex items-center justify-center">
-            <Icon name="close" size={24} className="text-content-primary" />
-          </div>
-        </button>
+
+          {/* Dark keyboard — in flow */}
+          <DarkKeyboardMock />
+        </motion.div>
       </div>
-
-      {/* Spacer reserves room for the keyboard */}
-      <div className="shrink-0 h-85.5" />
-
-      {/* Keyboard */}
-      <KeyboardMock noAnim />
     </motion.div>
   )
 }
@@ -1266,239 +1636,254 @@ export default function HomeScreen({
   overlayOpen: extOverlay,
   onOverlayClose: extClose,
   balanceHovered = false,
-  transactionOpen: extTransaction,
-  onTransactionClose: extTransactionClose,
   transactionHovered = false,
   triOpen: extTri,
   onTriClose: extTriClose,
   triHovered = false,
   defaultTab = 'home',
-  defaultTriChatOpen = false,
+  defaultTheme = 'dark',
 } = {}) {
-  const [activeFilter, setActiveFilter] = useState('All')
-  const [internalOverlay, setInternalOverlay] = useState(false)
-  const [internalTransaction, setInternalTransaction] = useState(false)
-  const [showTriScreen, setShowTriScreen] = useState(false)
-  const [keyboardOpen, setKeyboardOpen] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
-  const [triChatOpen, setTriChatOpen] = useState(defaultTriChatOpen)
-  const [triChatMsg, setTriChatMsg] = useState('')
-  const [navActive, setNavActive] = useState(defaultTab)
-  const [wealthFabOpen, setWealthFabOpen] = useState(false)
-  const [wealthAnalyzeOpen, setWealthAnalyzeOpen] = useState(false)
+  const [theme,               setTheme]               = useState(defaultTheme)
+  const [internalOverlay,     setInternalOverlay]     = useState(false)
+  const [showTriScreen,       setShowTriScreen]       = useState(false)
+  const [keyboardOpen,        setKeyboardOpen]        = useState(false)
+  const [showSearch,          setShowSearch]          = useState(false)
+  const [navActive,           setNavActive]           = useState(defaultTab)
+  const [wealthAnalyzeOpen,   setWealthAnalyzeOpen]   = useState(false)
+  const [wealthInvestOpen,    setWealthInvestOpen]    = useState(false)
+  const [menuOpen,            setMenuOpen]            = useState(false)
+  const [showInsightChat,     setShowInsightChat]     = useState(false)
+  const [insightAdded,        setInsightAdded]        = useState(false)
 
-  const openTriChat = (message) => {
-    setTriChatMsg(message)
-    setTriChatOpen(true)
+  // Suggestion taps / Ask TRÍ send used to open a scripted demo chat (TriChatScreen);
+  // that screen has been removed, so these now just close back to the current screen.
+  const closeTriFlow = () => {
     setShowSearch(false)
-    // TriScreen stays mounted — TriChatScreen (z-90) covers it so there's no flash of home
+    setShowTriScreen(false)
+    setKeyboardOpen(false)
   }
 
   const showOverlay     = extOverlay     !== undefined ? extOverlay     : internalOverlay
-  const showTransaction = extTransaction !== undefined ? extTransaction : internalTransaction
   const showTri         = extTri         !== undefined ? extTri         : showTriScreen
+  const light           = theme === 'light'
 
   const openOverlay      = () => { if (extOverlay === undefined) setInternalOverlay(true) }
   const closeOverlay     = () => { extClose            ? extClose()            : setInternalOverlay(false) }
-  const closeTransaction = () => { extTransactionClose ? extTransactionClose() : setInternalTransaction(false) }
 
   return (
-    <div className="w-[440px] h-[956px] overflow-hidden relative bg-surface-overlay rounded-[56px]">
+    <div className={`w-[440px] h-[956px] overflow-hidden relative rounded-[64px] ${light ? 'bg-white' : 'bg-black'}`}>
 
-      {/* Layer 1 — background image only, stays fixed */}
-      <div className="absolute inset-0">
-        <Image src="/background.png" alt="" fill sizes="440px" priority className="object-cover" />
+      {/* Dotted pattern background — dark theme only */}
+      {!light && (
+        <Image src="/background-dark.png" alt="" fill priority unoptimized className="object-cover rounded-[64px]" />
+      )}
+
+      {/* Slideable home content — exits left when search opens */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{ x: showSearch || showTri || showInsightChat ? -448 : 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+      >
+
+      {/* Absolute status bar — always on top */}
+      <div className="absolute top-0 left-0 right-0 z-70">
+        <StatusBar dark={light || showTri || showOverlay} />
       </div>
 
-      {/* Layer 2 — everything scrolls together (no z-index so BalanceSection z-60 escapes to root) */}
-      <div className="absolute inset-0 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
-        {/* Push content below the fixed status bar */}
-        <div className="h-9.5 shrink-0" />
-        <TopNav onOpenSearch={() => setShowSearch(true)} />
-        <BalanceSection
-          onOpenOverlay={openOverlay}
-          overlayOpen={showOverlay || balanceHovered}
-          onCloseOverlay={closeOverlay}
-          cardOpen={showOverlay}
-        />
+      {/* Main layout column */}
+      <LayoutGroup id="home-menu">
+      <div className="absolute inset-0 flex flex-col overflow-hidden">
 
-        {/* White card — slides up over the balance section as you scroll */}
-        {/* Single bg-surface wrapper prevents subpixel gap between sections at scaled transforms */}
-        <div className="bg-surface rounded-t-4xl pb-32">
+        {/* Outer padding container */}
+        <div className="flex-1 flex flex-col gap-2 px-1 pt-1 pb-8 min-h-0">
+
+          {/* Inner dark card — split into header + rest so the Insight overlay can
+              separate them: header exits up, rest sinks to the bottom (172px visible) */}
           <motion.div
-            initial={{ y: 8, opacity: 0.8 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            initial={false}
+            animate={{
+              y: showOverlay ? -160 : menuOpen ? -140 : 0,
+              opacity: menuOpen ? 0.5 : 1,
+              borderBottomLeftRadius: showOverlay ? 60 : 0,
+              borderBottomRightRadius: showOverlay ? 60 : 0,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+            className={`backdrop-blur-lg border border-b-0 rounded-t-[60px] shrink-0 ${
+              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+            }`}
           >
-            <div className="flex flex-col gap-3 px-4 pt-4 pb-2">
-              <QuickActions />
-              <p className="text-md font-semibold text-content-primary mt-1">Just for you</p>
-              <PromoCards />
-            </div>
+            <TopNav onOpenSearch={() => setShowSearch(true)} light={light} />
+          </motion.div>
+          <motion.div
+            initial={false}
+            animate={{
+              y: showOverlay ? 649 : menuOpen ? -140 : 0,
+              opacity: menuOpen ? 0.5 : 1,
+              paddingTop: showOverlay ? 24 : 0,
+              borderTopLeftRadius: showOverlay ? 60 : 0,
+              borderTopRightRadius: showOverlay ? 60 : 0,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+            style={{ zIndex: showOverlay ? 20 : 'auto' }}
+            className={`flex-1 -mt-2 backdrop-blur-lg border border-t-0 rounded-b-[60px] flex flex-col justify-end overflow-hidden min-h-0 ${
+              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+            }`}
+          >
+            <BalanceSection onOpenOverlay={openOverlay} light={light} />
+            <BannerAndActions light={light} />
+            <TransactionSection
+              menuOpen={menuOpen}
+              light={light}
+            />
           </motion.div>
 
-          {/* TransactionSection z-index still escapes — stacking context is now on the outer div, not motion.div */}
-          <TransactionSection
-            activeFilter={activeFilter}
-            setActiveFilter={setActiveFilter}
-            onOpenInsights={() => setInternalTransaction(true)}
-            transactionHovered={transactionHovered || showTransaction}
+          {/* Push spacer — compresses the card; the whole page (header + card)
+              also translates up 140px, so the spacer covers the remainder */}
+          <motion.div
+            initial={false}
+            animate={{ height: menuOpen ? 560 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30, delay: menuOpen ? 0.05 : 0 }}
+            className="shrink-0 -mt-2"
+          />
+
+          {/* Bottom bar */}
+          <BottomBar
+            triMode={showTri}
+            onOpenTri={() => setShowTriScreen(true)}
+            onCloseTri={() => { setShowTriScreen(false); setKeyboardOpen(false) }}
+            keyboardOpen={keyboardOpen}
+            onOpenKeyboard={() => setKeyboardOpen(true)}
+            onCloseKeyboard={() => setKeyboardOpen(false)}
+            triHovered={triHovered}
+            onSend={closeTriFlow}
+            menuOpen={menuOpen}
+            onOpenMenu={() => setMenuOpen(true)}
+            light={light}
           />
         </div>
       </div>
 
-      {/* Layer 3 — status bar; dark text when TRÍ or wealth screen (both have light backgrounds) */}
-      <div className="absolute top-0 left-0 right-0 z-70">
-        <StatusBar dark={showTri || navActive === 'investment'} />
-      </div>
-
-      {/* Bottom nav — pushed up when iOS keyboard is open */}
-      <motion.div
-        className="absolute left-0 right-0 z-30"
-        initial={false}
-        animate={{ bottom: showTri && keyboardOpen ? 342 : 0 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-      >
-        <BottomNav
-          triMode={showTri}
-          onOpenTri={() => setShowTriScreen(true)}
-          onCloseTri={() => { setShowTriScreen(false); setKeyboardOpen(false) }}
-          keyboardOpen={keyboardOpen}
-          onOpenKeyboard={() => setKeyboardOpen(true)}
-          onCloseKeyboard={() => setKeyboardOpen(false)}
-          triHovered={triHovered}
-          onSend={() => openTriChat('Freeze my card')}
-          navActive={navActive}
-          onNavChange={setNavActive}
+      {/* Menu tap-to-close area — sits on the compressed card */}
+      {menuOpen && (
+        <div
+          className="absolute inset-x-1 top-1 z-40"
+          style={{ height: 148 }}
+          onClick={() => setMenuOpen(false)}
         />
-      </motion.div>
+      )}
 
-      {/* Keyboard — only in TRÍ mode before chat opens; TriChatScreen has its own internal keyboard */}
+      {/* Menu sheet — the pill morphs into this */}
       <AnimatePresence>
-        {showTri && keyboardOpen && !triChatOpen && (
+        {menuOpen && (
+          <MenuSheet
+            onClose={() => { setMenuOpen(false); setNavActive('home') }}
+            onNavigateWealth={() => { setMenuOpen(false); setNavActive('investment') }}
+            onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+            light={light}
+            activeNav={navActive}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Menu dots — single element that tracks the pill icon slot when closed
+          (pill at x16 + px-8 pad = 48) and the sheet footer slot when open
+          (sheet at x4 + px-8 pad = 36) */}
+      {!showTri && !showSearch && !showOverlay && !showInsightChat && !wealthInvestOpen && (
+        <motion.button
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          onClick={() => setMenuOpen(v => !v)}
+          className="absolute z-60"
+          initial={false}
+          animate={{ left: menuOpen ? 36 : 48 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          style={{ bottom: 52 }}
+        >
+          <MenuToggleIcon open={menuOpen} light={light} />
+        </motion.button>
+      )}
+      </LayoutGroup>
+
+      {/* Keyboard — TRÍ mode before chat opens */}
+      <AnimatePresence>
+        {showTri && keyboardOpen && (
           <KeyboardMock key="keyboard" zIndex={25} />
         )}
       </AnimatePresence>
 
-      {/* Balance AI insights overlay — backdrop on hover, card on click */}
+      {/* Balance AI overlay */}
       <AnimatePresence>
         {(showOverlay || balanceHovered) && (
-          <BalanceOverlay onClose={closeOverlay} showCard={showOverlay} />
+          <BalanceOverlay
+            onClose={closeOverlay}
+            onAddInsight={() => { closeOverlay(); setShowInsightChat(true) }}
+            showCard={showOverlay}
+            light={light}
+            insightAdded={insightAdded}
+          />
         )}
       </AnimatePresence>
 
-      {/* Transaction AI insights overlay — backdrop on hover, card on click */}
-      <AnimatePresence>
-        {(showTransaction || transactionHovered) && (
-          <TransactionOverlay onClose={closeTransaction} showCard={showTransaction} />
-        )}
-      </AnimatePresence>
-
-      {/* Wealth screen — z-20 keeps it below nav (z-30) and status bar (z-70) */}
+      {/* Wealth screen */}
       <AnimatePresence>
         {navActive === 'investment' && (
-          <div className="absolute inset-0 overflow-hidden" style={{ zIndex: wealthAnalyzeOpen ? 40 : 20 }}>
-            <WealthScreen onNavigate={(tab) => setNavActive(tab)} embedded={true} onOpenSearch={() => setShowSearch(true)} onAnalyzeOpen={() => setWealthAnalyzeOpen(true)} onAnalyzeClose={() => setWealthAnalyzeOpen(false)} />
+          <div className="absolute inset-0 overflow-hidden" style={{ zIndex: (wealthAnalyzeOpen || wealthInvestOpen) ? 40 : 20 }}>
+            <WealthScreen
+              onNavigate={(tab) => setNavActive(tab)}
+              embedded={true}
+              onOpenSearch={() => setShowSearch(true)}
+              onAnalyzeOpen={() => setWealthAnalyzeOpen(true)}
+              onAnalyzeClose={() => setWealthAnalyzeOpen(false)}
+              onInvestOpen={() => setWealthInvestOpen(true)}
+              onInvestClose={() => setWealthInvestOpen(false)}
+              menuOpen={menuOpen}
+              onOpenMenu={() => setMenuOpen(true)}
+              light={light}
+            />
           </div>
         )}
       </AnimatePresence>
 
-      {/* Wealth screen FAB — hidden when TRÍ/Search/Chat overlays are open */}
-      <AnimatePresence>
-        {navActive === 'investment' && !showTri && !showSearch && !triChatOpen && !wealthAnalyzeOpen && (
-          <button
-            onClick={() => setWealthFabOpen(v => !v)}
-            className="absolute right-5 size-14 rounded-full bg-surface-overlay flex items-center justify-center shadow-2xl"
-            style={{ bottom: 100, zIndex: 35 }}
-          >
-            <motion.span
-              animate={{ rotate: wealthFabOpen ? 45 : 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-              className="material-symbols-outlined leading-none select-none text-content-inverse"
-              style={{ fontSize: 28, display: 'block' }}
-            >
-              add
-            </motion.span>
-          </button>
-        )}
-      </AnimatePresence>
+      </motion.div>{/* end slideable home content */}
 
-      {/* Wealth FAB overlay */}
+      {/* TRÍ screen — slides in from the right, same as Search */}
       <AnimatePresence>
-        {navActive === 'investment' && wealthFabOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="absolute inset-0 overflow-hidden"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)', zIndex: 34, borderRadius: 56 }}
-          >
-            <div className="absolute flex flex-col gap-3 items-end" style={{ right: 20, bottom: 168 }}>
-              {[
-                { label: 'Equities', icon: 'candlestick_chart' },
-                { label: 'Bonds',    icon: 'analytics' },
-                { label: 'Fund',     icon: 'credit_card' },
-                { label: 'Top up',   icon: 'add_box' },
-              ].map((action, i, arr) => {
-                const reverseI = arr.length - 1 - i
-                const startY = (reverseI + 1) * 68
-                return (
-                  <motion.div
-                    key={action.label}
-                    initial={{ opacity: 0, y: startY }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: startY }}
-                    transition={{ type: 'spring', stiffness: 340, damping: 28, delay: reverseI * 0.04 }}
-                    className="flex gap-4 items-center justify-end"
-                  >
-                    <span className="text-[16px] font-medium text-content-inverse whitespace-nowrap">{action.label}</span>
-                    <button className="bg-surface-sunken p-4 rounded-full shadow-xl shrink-0 flex items-center justify-center">
-                      <span className="material-symbols-outlined leading-none select-none text-content-primary" style={{ fontSize: 24 }}>{action.icon}</span>
-                    </button>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* TRÍ screen — after WealthScreen in DOM so z-20 wins by order */}
-      <AnimatePresence>
-        {showTri && <TriScreen onClose={() => { setShowTriScreen(false); extTriClose?.() }} keyboardOpen={keyboardOpen} onOpenSearch={() => setShowSearch(true)} />}
-      </AnimatePresence>
-
-      {/* Search screen — covers everything */}
-      <AnimatePresence>
-        {showSearch && <SearchScreen onClose={() => setShowSearch(false)} onOpenChat={openTriChat} />}
-      </AnimatePresence>
-
-      {/* TRÍ chat screen — top of the stack */}
-      <AnimatePresence>
-        {triChatOpen && (
-          <TriChatScreen
-            userMessage={triChatMsg}
-            onClose={() => {
-              setTriChatOpen(false)
-              setShowTriScreen(false)
-              setKeyboardOpen(false)
-            }}
+        {showTri && (
+          <TriScreen
+            onClose={() => { setShowTriScreen(false); extTriClose?.() }}
+            onOpenSearch={() => setShowSearch(true)}
+            onOpenChat={closeTriFlow}
+            light={light}
           />
         )}
       </AnimatePresence>
+
+      {/* Search screen */}
+      <AnimatePresence>
+        {showSearch && <SearchScreen onClose={() => setShowSearch(false)} onOpenChat={closeTriFlow} light={light} />}
+      </AnimatePresence>
+
+      {/* Insight chat screen — "Add new insight" scripted conversation */}
+      <AnimatePresence>
+        {showInsightChat && (
+          <InsightChatScreen
+            onClose={() => setShowInsightChat(false)}
+            onOpenSearch={() => setShowSearch(true)}
+            onViewInsight={() => { setInsightAdded(true); setShowInsightChat(false); openOverlay() }}
+            light={light}
+          />
+        )}
+      </AnimatePresence>
+
 
       {/* Backdrop for TRÍ hover preview */}
       <AnimatePresence>
         {triHovered && !showTri && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             className="absolute inset-0 z-20 pointer-events-none"
           >
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[56px]" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-[64px]" />
           </motion.div>
         )}
       </AnimatePresence>

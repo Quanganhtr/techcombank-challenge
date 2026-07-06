@@ -2,7 +2,7 @@
 
 import { useRef, useState, useLayoutEffect, useEffect } from 'react'
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion'
-import { SearchScreen, TriChatScreen } from '@/app/screens/home/page'
+import { SearchScreen } from '@/app/screens/home/page'
 
 const PHONE_H = 956
 const PHONE_W = 440
@@ -21,7 +21,6 @@ const PANELS = [
 export function SearchSection() {
   const [baseScale, setBaseScale] = useState(1)
   const [panelIndex, setPanelIndex] = useState(0)
-  const [chatMsg, setChatMsg] = useState(null)
   const pinRef   = useRef(null)
   const phoneRef = useRef(null)
 
@@ -103,16 +102,7 @@ export function SearchSection() {
             >
               <SearchScreen
                 autoType={panelIndex === 1}
-                onOpenChat={(msg) => setChatMsg(msg)}
               />
-              <AnimatePresence>
-                {chatMsg && (
-                  <TriChatScreen
-                    userMessage={chatMsg}
-                    onClose={() => setChatMsg(null)}
-                  />
-                )}
-              </AnimatePresence>
             </div>
 
             <img

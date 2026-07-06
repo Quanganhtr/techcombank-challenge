@@ -192,14 +192,12 @@ Steps — complete ALL steps in order, do not stop after variables:
 
 5. Create Collection 3 "Typography" via set_variable MCP tool
    Mode: (none — single values)
-   Neither font is in the Tailwind library — both are hardcoded.
-   Font/Sans holds one literal name, not code's full fallback stack —
-   it should match the FIRST entry in --font-sans, not "Be Vietnam Pro"
-   (which is the next/font-loaded fallback for non-Apple visitors):
-     Font/Sans → "SF Pro Display" (hardcode — first entry in --font-sans)
-     Font/Mono → "JetBrains Mono" (hardcode, loaded via next/font/google)
+   Neither font is in the Tailwind library — both are hardcoded,
+   loaded via next/font/google in src/app/layout.jsx:
+     Font/Sans → "Be Vietnam Pro" (hardcode)
+     Font/Mono → "JetBrains Mono" (hardcode)
 
-6. Create Collection 4 "Radius" via set_variable MCP tool
+6. Create Collection 5 "Radius" via set_variable MCP tool
    Mode: (none — single values)
    Techcombank has no @theme radius override — these are Tailwind v4's
    default radius scale, aliased straight from the TailwindCSS library so
@@ -216,7 +214,7 @@ Steps — complete ALL steps in order, do not stop after variables:
      rounded-4xl  → alias radius/4xl   (32px)
      rounded-full → alias radius/full  (pills, avatars)
 
-7. Create Collection 5 "Spacing" via set_variable MCP tool
+7. Create Collection 4 "Spacing" via set_variable MCP tool
    Mode: (none — single values)
    Alias from TailwindCSS library (naming: spacing/1, spacing/2 etc) —
    these match Tailwind's default scale exactly:
