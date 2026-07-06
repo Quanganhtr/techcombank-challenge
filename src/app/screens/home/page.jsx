@@ -604,7 +604,7 @@ function CountUp({ to, format = (v) => Math.round(v).toLocaleString('en-US'), du
 
 function InsightStatCard({ icon, label, value, description, dark = false }) {
   return (
-    <div className={`flex-1 border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 ${
+    <div className={`flex-1 h-full w-full border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 ${
       dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
     }`}>
       <div className={`rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
@@ -621,6 +621,7 @@ function InsightStatCard({ icon, label, value, description, dark = false }) {
 
 const GOAL_BARS = 25
 const GOAL_ACTIVE_BAR = 12
+const GOAL_PROGRESS_OFFSET_BARS = 2
 const GOAL_PERCENT = 45
 const GOAL_FILL_WIDTH = 201
 
@@ -712,8 +713,8 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
     return () => controls.stop()
   }, [showCard])
 
-  const fillWidth = (goalProgress / GOAL_PERCENT) * GOAL_FILL_WIDTH
-  const activeBar = Math.round((goalProgress / GOAL_PERCENT) * GOAL_ACTIVE_BAR)
+  const fillWidth = (goalProgress / GOAL_PERCENT) * GOAL_FILL_WIDTH * ((GOAL_ACTIVE_BAR - GOAL_PROGRESS_OFFSET_BARS) / GOAL_ACTIVE_BAR)
+  const activeBar = Math.max(0, Math.round((goalProgress / GOAL_PERCENT) * GOAL_ACTIVE_BAR) - GOAL_PROGRESS_OFFSET_BARS)
 
   const panelBg = dark ? '#0a0a0a' : '#ffffff'
   const panelExitBg = dark ? '#fafafa' : '#0a0a0a'
@@ -757,7 +758,7 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
               <div className="flex-1 flex flex-col gap-2 px-3 pt-16 pb-3 w-full min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                 {/* Stat cards row */}
                 <div className="flex items-stretch gap-2 w-full">
-                  <motion.div className="relative flex-1 min-w-0" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? SHAKE.transition : {}}>
+                  <motion.div className="relative flex flex-1 min-w-0" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? SHAKE.transition : {}}>
                     {isEditing && <RemoveBtn dark={dark} />}
                     <InsightStatCard
                       icon="attach_money"
@@ -767,7 +768,7 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
                       description="has remained unused for over 4 months"
                     />
                   </motion.div>
-                  <motion.div className="relative flex-1 min-w-0" animate={isEditing ? { ...SHAKE.animate, rotate: SHAKE.animate.rotate.map(r => -r) } : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.08 } : {}}>
+                  <motion.div className="relative flex flex-1 min-w-0" animate={isEditing ? { ...SHAKE.animate, rotate: SHAKE.animate.rotate.map(r => -r) } : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.08 } : {}}>
                     {isEditing && <RemoveBtn dark={dark} />}
                     <InsightStatCard
                       icon="wallet"
@@ -790,8 +791,8 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
                 <div className={`rounded-[48px] overflow-hidden relative flex flex-col gap-4 w-full ${dark ? 'bg-[#fafafa]' : 'bg-[#0a0a0a]'}`}>
                   {/* Progress region backdrop — grows with the percentage */}
                   <div
-                    className={`absolute left-0 bottom-0 ${dark ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}
-                    style={{ height: 220, width: fillWidth }}
+                    className={`absolute left-0 bottom-0 rounded-r-[4px] ${dark ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}
+                    style={{ height: 200, width: fillWidth }}
                   />
                   <div className="relative flex flex-col gap-2 pt-6 px-6 w-full">
                     <div className="flex items-start justify-between w-full">
@@ -819,7 +820,7 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
                         />
                       ))}
                     </div>
-                    <div className="bg-info h-6" style={{ width: fillWidth }} />
+                    <div className="bg-info h-6 rounded-r-[4px]" style={{ width: fillWidth }} />
                   </div>
                 </div>
                 </motion.div>
