@@ -3,9 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence, LayoutGroup, animate } from 'framer-motion'
-import dynamic from 'next/dynamic'
-
-const WealthScreen = dynamic(() => import('@/app/screens/wealth/page'), { ssr: false })
+import WealthScreen from '@/app/screens/wealth/page'
 
 /* ─── Data ─────────────────────────────────────────────────────────── */
 
@@ -661,57 +659,111 @@ const GOAL_PROGRESS_OFFSET_BARS = 2
 const GOAL_PERCENT = 45
 const GOAL_FILL_WIDTH = 201
 
-const INSIGHT_STARS = [
-  { src: '/icons-home/insight-star-1.svg', size: 16, left: 101, top: 3,  delay: 0    },
-  { src: '/icons-home/insight-star-2.svg', size: 8,  left: 97,  top: 45, delay: 0.12 },
-  { src: '/icons-home/insight-star-3.svg', size: 12, left: 145, top: 21, delay: 0.24 },
+const GLITTER_SPARKLES = [
+  { left: '12%', top: '18%', size: 6, dx: -5, dy: -8, delay: 0.00, color: '#fde68a' },
+  { left: '22%', top: '30%', size: 3, dx: -3, dy: -6, delay: 0.10, color: '#ffffff' },
+  { left: '34%', top: '12%', size: 5, dx: -2, dy: -9, delay: 0.18, color: '#facc15' },
+  { left: '48%', top: '24%', size: 4, dx: 2,  dy: -8, delay: 0.28, color: '#ffffff' },
+  { left: '66%', top: '15%', size: 7, dx: 6,  dy: -7, delay: 0.38, color: '#fde047' },
+  { left: '82%', top: '34%', size: 4, dx: 5,  dy: -2, delay: 0.48, color: '#ffffff' },
+  { left: '17%', top: '58%', size: 5, dx: -6, dy: 4,  delay: 0.58, color: '#fef3c7' },
+  { left: '31%', top: '72%', size: 3, dx: -3, dy: 7,  delay: 0.68, color: '#ffffff' },
+  { left: '52%', top: '58%', size: 6, dx: 3,  dy: -5, delay: 0.78, color: '#fde68a' },
+  { left: '70%', top: '72%', size: 4, dx: 5,  dy: 5,  delay: 0.88, color: '#ffffff' },
+  { left: '86%', top: '64%', size: 6, dx: 7,  dy: 4,  delay: 0.98, color: '#facc15' },
+  { left: '42%', top: '86%', size: 4, dx: -2, dy: 7,  delay: 1.08, color: '#ffffff' },
 ]
 
-/* Sparkle burst — rises, rotates, then fades out. Plays once on mount. */
-function InsightStarBurst() {
+function GlitterBurst({ playKey = 0 }) {
   return (
-    <>
-      {INSIGHT_STARS.map((s, i) => (
-        <motion.img
-          key={i}
-          src={s.src}
-          alt=""
-          className="absolute pointer-events-none"
-          style={{ left: s.left, top: s.top, width: s.size, height: s.size }}
-          initial={{ opacity: 0, y: 6, rotate: 0, scale: 0.8 }}
-          animate={{ opacity: [0, 1, 1, 0], y: [6, -6, -14, -22], rotate: [0, 20, 35, 50], scale: [0.8, 1, 1, 0.9] }}
-          transition={{ duration: 1.4, times: [0, 0.2, 0.7, 1], ease: 'easeOut', delay: s.delay }}
+    <div className="absolute inset-0 pointer-events-none z-20">
+      {GLITTER_SPARKLES.map((s, i) => (
+        <motion.span
+          key={`${playKey}-${i}`}
+          className="absolute"
+          style={{
+            left: s.left,
+            top: s.top,
+            width: s.size,
+            height: s.size,
+            backgroundColor: s.color,
+            clipPath: 'polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%)',
+            filter: 'drop-shadow(0 0 5px rgba(250, 204, 21, 0.85)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.55))',
+          }}
+          initial={{ opacity: 0, x: 0, y: 0, scale: 0.2, rotate: 0 }}
+          animate={{
+            opacity: [0, 0.9, 0.25, 0.85, 0.18, 0.7, 0],
+            x: [0, s.dx * 0.2, s.dx * 0.38, s.dx * 0.56, s.dx * 0.74, s.dx * 0.9, s.dx],
+            y: [0, s.dy * 0.2, s.dy * 0.38, s.dy * 0.56, s.dy * 0.74, s.dy * 0.9, s.dy],
+            scale: [0.25, 1, 0.45, 0.95, 0.35, 0.8, 0.2],
+            rotate: [0, 25, 60, 95, 130, 160, 180],
+          }}
+          transition={{ duration: 2.8, times: [0, 0.14, 0.28, 0.45, 0.62, 0.8, 1], ease: 'easeOut', delay: s.delay }}
         />
       ))}
-    </>
+    </div>
   )
 }
 
-function CoffeeInsightCard({ dark = false }) {
+function GlitterMist({ playKey = 0 }) {
   return (
-    <div className={`relative flex-1 border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 overflow-hidden ${
+    <motion.div
+      key={`mist-${playKey}`}
+      className="absolute inset-0 pointer-events-none z-20"
+      style={{
+        backgroundImage: [
+          'radial-gradient(circle at 14% 20%, rgba(250,204,21,0.95) 0 1.5px, transparent 2.5px)',
+          'radial-gradient(circle at 30% 36%, rgba(255,255,255,0.95) 0 1px, transparent 2px)',
+          'radial-gradient(circle at 44% 18%, rgba(253,230,138,0.9) 0 1.5px, transparent 2.5px)',
+          'radial-gradient(circle at 62% 44%, rgba(255,255,255,0.9) 0 1px, transparent 2px)',
+          'radial-gradient(circle at 78% 28%, rgba(250,204,21,0.9) 0 1.5px, transparent 2.5px)',
+          'radial-gradient(circle at 22% 72%, rgba(255,255,255,0.95) 0 1px, transparent 2px)',
+          'radial-gradient(circle at 54% 76%, rgba(253,230,138,0.9) 0 1.5px, transparent 2.5px)',
+          'radial-gradient(circle at 86% 68%, rgba(255,255,255,0.95) 0 1px, transparent 2px)',
+        ].join(', '),
+        filter: 'drop-shadow(0 0 4px rgba(250, 204, 21, 0.75)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.4))',
+      }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: [0, 0.95, 0.18, 0.85, 0.12, 0.7, 0], scale: [0.98, 1, 1.005, 1.01, 1.005, 1, 0.99] }}
+      transition={{ duration: 3.2, times: [0, 0.14, 0.3, 0.48, 0.64, 0.82, 1], ease: 'easeOut' }}
+    />
+  )
+}
+
+function CoffeeInsightCard({ dark = false, effectKey = null }) {
+  const showEffect = effectKey !== null && effectKey !== undefined
+
+  return (
+    <motion.div
+      animate={showEffect ? { scale: [1, 1.01, 0.998, 1], rotate: [0, -0.12, 0.1, 0] } : { scale: 1, rotate: 0 }}
+      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+      className={`relative flex-1 border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 overflow-hidden ${
       dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
-    }`}>
-      {/* Diagonal shine — sweeps from outside the top-left corner to outside the bottom-right, once, to draw the eye to the new card */}
-      <motion.div
-        className="absolute pointer-events-none"
-        style={{ left: 22, top: 14 }}
-        initial={{ x: -160, y: -160, opacity: 0 }}
-        animate={{ x: 160, y: 160, opacity: [0, 1, 1, 0] }}
-        transition={{ duration: 1.1, ease: 'easeInOut', times: [0, 0.15, 0.85, 1] }}
-      >
-        <div className="rotate-45 blur-md bg-white/40" style={{ width: 46, height: 260 }} />
-      </motion.div>
+    }`}
+    >
+      {showEffect && (
+        <motion.div
+          key={`shine-${effectKey}`}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background: 'linear-gradient(110deg, transparent 0%, transparent 34%, rgba(255,255,255,0.68) 45%, rgba(253,230,138,0.58) 50%, rgba(255,255,255,0.68) 55%, transparent 66%, transparent 100%)',
+          }}
+          initial={{ x: '-120%', opacity: 0 }}
+          animate={{ x: '120%', opacity: [0, 1, 1, 0] }}
+          transition={{ duration: 1.15, ease: 'easeInOut', times: [0, 0.18, 0.78, 1] }}
+        />
+      )}
+      {showEffect && <GlitterMist playKey={effectKey} />}
+      {showEffect && <GlitterBurst playKey={effectKey} />}
       <div className={`relative rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
         <Icon name="coffee" size={24} className={dark ? 'text-white' : 'text-content-primary'} />
-        <InsightStarBurst />
       </div>
       <div className="relative w-full flex flex-col gap-1">
         <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">You have spent</p>
         <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] ${dark ? 'text-white' : 'text-black'}`}>1.4m</p>
         <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">on daily coffee this month</p>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -720,17 +772,21 @@ const SHAKE = {
   transition: { repeat: Infinity, duration: 0.9, ease: 'easeInOut' },
 }
 
-function RemoveBtn({ dark }) {
+function RemoveBtn({ dark, onClick }) {
   return (
-    <div className={`absolute -top-3 -left-3 z-10 rounded-full px-2 py-1 flex items-center justify-center border ${
+    <button
+      type="button"
+      onClick={onClick}
+      className={`absolute -top-3 -left-3 z-10 rounded-full px-2 py-1 flex items-center justify-center border ${
       dark ? 'bg-[#fafafa] border-[#0a0a0a]' : 'bg-black border-white'
-    }`}>
+    }`}
+    >
       <Icon name="check_indeterminate_small" size={20} className={dark ? 'text-[#0a0a0a]' : 'text-white'} />
-    </div>
+    </button>
   )
 }
 
-function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false, insightAdded = false }) {
+function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = true, light = false, insightAdded = false, insightAnimationKey = 0 }) {
   // The overlay always contrasts against the app's own theme: dark app → light panel,
   // light app → dark panel.
   const dark = light
@@ -738,6 +794,7 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
 
   // One shared progress value (0 → 45) drives the percent text, fill widths, and active tick
   const [goalProgress, setGoalProgress] = useState(0)
+  const [visibleCoffeeEffectKey, setVisibleCoffeeEffectKey] = useState(null)
   useEffect(() => {
     if (!showCard) return
     const controls = animate(0, GOAL_PERCENT, {
@@ -749,11 +806,28 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
     return () => controls.stop()
   }, [showCard])
 
+  useEffect(() => {
+    if (!showCard || !insightAdded) {
+      const id = window.setTimeout(() => setVisibleCoffeeEffectKey(null), 0)
+      return () => window.clearTimeout(id)
+    }
+
+    setVisibleCoffeeEffectKey(null)
+    const id = window.setTimeout(() => {
+      setVisibleCoffeeEffectKey(`${insightAnimationKey}-${Date.now()}`)
+    }, 260)
+    return () => window.clearTimeout(id)
+  }, [showCard, insightAdded, insightAnimationKey])
+
   const fillWidth = (goalProgress / GOAL_PERCENT) * GOAL_FILL_WIDTH * ((GOAL_ACTIVE_BAR - GOAL_PROGRESS_OFFSET_BARS) / GOAL_ACTIVE_BAR)
   const activeBar = Math.max(0, Math.round((goalProgress / GOAL_PERCENT) * GOAL_ACTIVE_BAR) - GOAL_PROGRESS_OFFSET_BARS)
 
   const panelBg = dark ? '#0a0a0a' : '#ffffff'
   const panelExitBg = dark ? '#fafafa' : '#0a0a0a'
+  const removeCoffeeInsight = () => {
+    onRemoveInsight?.()
+    setIsEditing(false)
+  }
 
   return (
     <>
@@ -862,11 +936,20 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
                 </motion.div>
 
                 {/* Add new insight */}
+                <AnimatePresence mode="popLayout" initial={false}>
                 {insightAdded ? (
-                  <div className="flex items-stretch gap-2 w-full">
+                  <motion.div
+                    key="coffee-added"
+                    layout
+                    initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 16, scale: 0.96 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+                    className="flex items-stretch gap-2 w-full"
+                  >
                     <motion.div className="relative w-1/2 min-w-0" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.12 } : {}}>
-                      {isEditing && <RemoveBtn dark={dark} />}
-                      <CoffeeInsightCard dark={dark} />
+                      {isEditing && <RemoveBtn dark={dark} onClick={removeCoffeeInsight} />}
+                      <CoffeeInsightCard dark={dark} effectKey={visibleCoffeeEffectKey} />
                     </motion.div>
                     <button
                       onClick={onAddInsight}
@@ -875,16 +958,23 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
                       <Image src="/tri.png" alt="" width={24} height={24} />
                       <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] text-center ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
                     </button>
-                  </div>
+                  </motion.div>
                 ) : (
-                  <button
+                  <motion.button
+                    key="coffee-empty"
+                    layout
+                    initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 0.96 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 32 }}
                     onClick={onAddInsight}
                     className={`border border-dashed rounded-[48px] p-6 flex items-center justify-center gap-2 w-full ${dark ? 'border-[#fafafa]' : 'border-[#0a0a0a]'}`}
                   >
                     <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
                     <Image src="/tri.png" alt="" width={24} height={24} />
-                  </button>
+                  </motion.button>
                 )}
+                </AnimatePresence>
               </div>
 
               {/* Footer — Edit / Close */}
@@ -1721,6 +1811,7 @@ export default function HomeScreen({
   const [menuOpen,            setMenuOpen]            = useState(false)
   const [showInsightChat,     setShowInsightChat]     = useState(false)
   const [insightAdded,        setInsightAdded]        = useState(false)
+  const [insightAnimationKey, setInsightAnimationKey] = useState(0)
   const [balanceSplitActive,  setBalanceSplitActive]  = useState(false)
   const [balanceCornerActive, setBalanceCornerActive] = useState(false)
   const balanceCornerTimerRef = useRef(null)
@@ -2042,9 +2133,11 @@ export default function HomeScreen({
           <BalanceOverlay
             onClose={closeOverlay}
             onAddInsight={() => { closeOverlay(); setShowInsightChat(true) }}
+            onRemoveInsight={() => setInsightAdded(false)}
             showCard={showOverlay}
             light={light}
             insightAdded={insightAdded}
+            insightAnimationKey={insightAnimationKey}
           />
         )}
       </AnimatePresence>
@@ -2103,7 +2196,12 @@ export default function HomeScreen({
           <InsightChatScreen
             onClose={() => setShowInsightChat(false)}
             onOpenSearch={() => setShowSearch(true)}
-            onViewInsight={() => { setInsightAdded(true); setShowInsightChat(false); openOverlay() }}
+            onViewInsight={() => {
+              setInsightAdded(true)
+              setInsightAnimationKey(k => k + 1)
+              setShowInsightChat(false)
+              openOverlay()
+            }}
             light={light}
           />
         )}
