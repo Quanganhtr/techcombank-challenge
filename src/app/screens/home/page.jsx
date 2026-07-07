@@ -42,13 +42,9 @@ function TypewriterInputText({ text }) {
   const [displayText, setDisplayText] = useState('')
 
   useEffect(() => {
-    if (!text) {
-      setDisplayText('')
-      return undefined
-    }
+    if (!text) return undefined
 
     const chars = Array.from(text)
-    setDisplayText('')
     let index = 0
     const id = setInterval(() => {
       index += 1
@@ -765,7 +761,7 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { duration: 0.3 } }}
-        exit={{ opacity: 0, transition: { duration: 0.15, delay: 0.3 } }}
+        exit={{ opacity: 0, transition: { duration: 0.18, delay: 0.22 } }}
         className="absolute inset-0 z-50"
         onClick={onClose}
       >
@@ -778,10 +774,10 @@ function BalanceOverlay({ onClose, onAddInsight, showCard = true, light = false,
             initial={{ width: 24, height: 24, y: 120, opacity: 1, backgroundColor: panelBg }}
             animate={{ width: 424, height: insightAdded ? 868 : 768, y: 0, opacity: 1, backgroundColor: panelBg }}
             exit={{
-              width: 160, height: 160, y: 96, opacity: 0, backgroundColor: panelBg,
+              width: 96, height: 96, y: 132, opacity: 0, backgroundColor: panelExitBg,
               transition: {
-                type: 'spring', stiffness: 360, damping: 38,
-                opacity: { duration: 0.12, ease: 'easeOut' },
+                type: 'spring', stiffness: 380, damping: 40,
+                opacity: { duration: 0.12, ease: 'easeOut', delay: 0.12 },
               },
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
@@ -1725,6 +1721,9 @@ export default function HomeScreen({
   const [menuOpen,            setMenuOpen]            = useState(false)
   const [showInsightChat,     setShowInsightChat]     = useState(false)
   const [insightAdded,        setInsightAdded]        = useState(false)
+  const [balanceSplitActive,  setBalanceSplitActive]  = useState(false)
+  const [balanceCornerActive, setBalanceCornerActive] = useState(false)
+  const balanceCornerTimerRef = useRef(null)
 
   // Suggestion taps / Ask AI send used to open a scripted demo chat (TriChatScreen);
   // that screen has been removed, so these now just close back to the current screen.
@@ -1737,9 +1736,28 @@ export default function HomeScreen({
   const showOverlay     = extOverlay     !== undefined ? extOverlay     : internalOverlay
   const showTri         = extTri         !== undefined ? extTri         : showTriScreen
   const light           = theme === 'light'
+  const balanceSplitShown = showOverlay || balanceSplitActive
+  const balanceCornerShown = showOverlay || balanceCornerActive
 
-  const openOverlay      = () => { if (extOverlay === undefined) setInternalOverlay(true) }
-  const closeOverlay     = () => { extClose            ? extClose()            : setInternalOverlay(false) }
+  const openOverlay      = () => {
+    if (balanceCornerTimerRef.current) window.clearTimeout(balanceCornerTimerRef.current)
+    setBalanceSplitActive(true)
+    setBalanceCornerActive(true)
+    if (extOverlay === undefined) setInternalOverlay(true)
+  }
+  const closeOverlay     = () => {
+    extClose ? extClose() : setInternalOverlay(false)
+    setBalanceSplitActive(false)
+    if (balanceCornerTimerRef.current) window.clearTimeout(balanceCornerTimerRef.current)
+    balanceCornerTimerRef.current = window.setTimeout(() => {
+      setBalanceCornerActive(false)
+      balanceCornerTimerRef.current = null
+    }, 280)
+  }
+
+  useEffect(() => () => {
+    if (balanceCornerTimerRef.current) window.clearTimeout(balanceCornerTimerRef.current)
+  }, [])
 
   useEffect(() => {
     if (!onTesterNoteChange) return
@@ -1841,12 +1859,19 @@ export default function HomeScreen({
           <motion.div
             initial={false}
             animate={{
-              y: showOverlay ? -160 : menuOpen ? -140 : 0,
+              y: balanceSplitShown ? -160 : menuOpen ? -140 : 0,
               opacity: menuOpen ? 0.5 : 1,
-              borderBottomLeftRadius: showOverlay ? 60 : 0,
-              borderBottomRightRadius: showOverlay ? 60 : 0,
+              borderBottomLeftRadius: balanceCornerShown ? 64 : 0,
+              borderBottomRightRadius: balanceCornerShown ? 64 : 0,
+              borderBottomWidth: balanceCornerShown ? 1 : 0,
             }}
-            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+            transition={{
+              y: { type: 'spring', stiffness: 300, damping: 32 },
+              opacity: { duration: 0.18 },
+              borderBottomLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+              borderBottomRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+              borderBottomWidth: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
+            }}
             className={`backdrop-blur-lg border border-b-0 rounded-t-[60px] shrink-0 ${
               light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
             }`}
@@ -1856,15 +1881,25 @@ export default function HomeScreen({
           <motion.div
             initial={false}
             animate={{
-              y: showOverlay ? 649 : menuOpen ? -140 : 0,
+              y: balanceSplitShown ? 649 : menuOpen ? -140 : 0,
               opacity: menuOpen ? 0.5 : 1,
-              paddingTop: showOverlay ? 24 : 0,
-              borderTopLeftRadius: showOverlay ? 60 : 0,
-              borderTopRightRadius: showOverlay ? 60 : 0,
+              paddingTop: balanceSplitShown ? 24 : 0,
+              marginTop: balanceSplitShown ? 0 : -8,
+              borderTopLeftRadius: balanceCornerShown ? 64 : 0,
+              borderTopRightRadius: balanceCornerShown ? 64 : 0,
+              borderTopWidth: balanceCornerShown ? 1 : 0,
             }}
-            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-            style={{ zIndex: showOverlay ? 20 : 'auto' }}
-            className={`flex-1 -mt-2 backdrop-blur-lg border border-t-0 rounded-b-[60px] flex flex-col justify-end overflow-hidden min-h-0 ${
+            transition={{
+              y: { type: 'spring', stiffness: 300, damping: 32 },
+              opacity: { duration: 0.18 },
+              paddingTop: { type: 'spring', stiffness: 300, damping: 32 },
+              marginTop: { type: 'spring', stiffness: 300, damping: 32 },
+              borderTopLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+              borderTopRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+              borderTopWidth: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
+            }}
+            style={{ zIndex: balanceSplitShown || balanceCornerShown ? 20 : 'auto' }}
+            className={`flex-1 backdrop-blur-lg border border-t-0 rounded-b-[60px] flex flex-col justify-end overflow-hidden min-h-0 ${
               light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
             }`}
           >

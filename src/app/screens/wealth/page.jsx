@@ -101,13 +101,9 @@ function TypewriterInputText({ text }) {
   const [displayText, setDisplayText] = useState('')
 
   useEffect(() => {
-    if (!text) {
-      setDisplayText('')
-      return undefined
-    }
+    if (!text) return undefined
 
     const chars = Array.from(text)
-    setDisplayText('')
     let index = 0
     const id = setInterval(() => {
       index += 1
@@ -1066,9 +1062,30 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
   const [assetsScrolled, setAssetsScrolled] = useState(false)
   const [fabOpen, setFabOpen] = useState(false)       // invest panel mounted
   const [bodyPushed, setBodyPushed] = useState(false)  // body compressed + dimmed
+  const [investCornerActive, setInvestCornerActive] = useState(false)
+  const investCornerTimerRef = useRef(null)
 
-  const openInvest  = () => { setFabOpen(true); setBodyPushed(true); onInvestOpen?.() }
-  const closeInvest = () => { setFabOpen(false); setBodyPushed(false); onInvestClose?.() }
+  const openInvest  = () => {
+    if (investCornerTimerRef.current) window.clearTimeout(investCornerTimerRef.current)
+    setFabOpen(true)
+    setBodyPushed(true)
+    setInvestCornerActive(true)
+    onInvestOpen?.()
+  }
+  const closeInvest = () => {
+    setFabOpen(false)
+    setBodyPushed(false)
+    if (investCornerTimerRef.current) window.clearTimeout(investCornerTimerRef.current)
+    investCornerTimerRef.current = window.setTimeout(() => {
+      setInvestCornerActive(false)
+      investCornerTimerRef.current = null
+    }, 280)
+    onInvestClose?.()
+  }
+
+  useEffect(() => () => {
+    if (investCornerTimerRef.current) window.clearTimeout(investCornerTimerRef.current)
+  }, [])
 
   /* ── Drag-to-chat: drag an item's handle onto the Ask AI field to add a chip ──
      chip shape: { ticker, avatar: { type: 'image', src, bg } | { type: 'icon', icon } } */
@@ -1116,6 +1133,8 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
       items: ['Tap Explore to switch tabs.', 'Tap the chart arrow to collapse or expand the chart.', 'Drag asset handles into Ask AI (For full context, let visit the Explore first.)', 'Tap Buy to open the invest panel.'],
     })
   }, [askChatOpen, fabOpen, navTab, onTesterNoteChange])
+
+  const investCornerShown = fabOpen || investCornerActive
 
   const startDrag = (e, chip) => {
     e.preventDefault()
@@ -1191,14 +1210,29 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         />
       )}
 
-      {/* Layout column */}
-      <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-8">
+      {/* Layout column — exits left when the Ask AI chat opens, matching Home */}
+      <motion.div
+        initial={false}
+        animate={{ x: askChatOpen ? -448 : 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+        className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-8"
+      >
 
         {/* Main content card — slides up + dims when the menu sheet is open */}
         <motion.div
           initial={false}
-          animate={{ y: menuOpen ? -140 : 0, opacity: (menuOpen || bodyPushed) ? 0.5 : 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+          animate={{
+            y: menuOpen ? -140 : 0,
+            opacity: (menuOpen || bodyPushed) ? 0.5 : 1,
+            borderBottomLeftRadius: investCornerShown ? 64 : 60,
+            borderBottomRightRadius: investCornerShown ? 64 : 60,
+          }}
+          transition={{
+            y: { type: 'spring', stiffness: 300, damping: 32 },
+            opacity: { duration: 0.18 },
+            borderBottomLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+            borderBottomRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+          }}
           className={`relative flex-1 backdrop-blur-lg border rounded-[60px] overflow-hidden flex flex-col justify-end min-h-0 ${
             light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
           }`}
@@ -1465,9 +1499,15 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
             menu sheet (356) or the invest panel (252), matching the Home transition */}
         <motion.div
           initial={false}
-          animate={{ height: menuOpen ? 560 : bodyPushed ? 252 : 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30, delay: (menuOpen || bodyPushed) ? 0.05 : 0 }}
-          className="shrink-0 -mt-2"
+          animate={{
+            height: menuOpen ? 560 : bodyPushed ? 252 : 0,
+            marginTop: (menuOpen || bodyPushed || investCornerShown) ? 0 : -8,
+          }}
+          transition={{
+            height: { type: 'spring', stiffness: 300, damping: 30, delay: (menuOpen || bodyPushed) ? 0.05 : 0 },
+            marginTop: { type: 'spring', stiffness: 300, damping: 32 },
+          }}
+          className="shrink-0"
         />
 
         {/* Footer — dots menu + Ask AI; stays put, dims while invest panel is open */}
@@ -1522,7 +1562,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
             <Image src="/tri.png" alt="" width={24} height={24} className="shrink-0" />
           </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Drag ghost — floating pill following the pointer, above everything */}
       {ghost && (
@@ -1574,7 +1614,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { duration: 0.3 } }}
-            exit={{ opacity: 0, transition: { duration: 0.16 } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, delay: 0.24 } }}
             className="absolute inset-0 z-40"
             onClick={closeInvest}
           >
@@ -1583,23 +1623,26 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         )}
       </AnimatePresence>
 
-      {/* Invest panel — scales up from a 24px dot on the right (like Home's balance overlay) */}
+      {/* Invest panel — scales from the closed Invest button footprint, then collapses back to it */}
       <AnimatePresence>
         {fabOpen && (
           <motion.div
-            initial={{ width: 24, height: 24, right: 24, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#ffffff' }}
-            animate={{ width: 432, height: 256, right: 4, x: 0, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#fafafa' }}
+            initial={{ width: 136, height: 64, right: 24, bottom: 104, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#ffffff' }}
+            animate={{ width: 432, height: 256, right: 4, bottom: 104, opacity: 1, backgroundColor: light ? '#0a0a0a' : '#fafafa' }}
             exit={{
-              x: 448, opacity: 1,
-              transition: { type: 'spring', stiffness: 420, damping: 38 },
+              width: 136, height: 64, right: 24, bottom: 104, opacity: 0, backgroundColor: light ? '#0a0a0a' : '#ffffff',
+              transition: {
+                type: 'spring', stiffness: 360, damping: 38,
+                opacity: { duration: 0.12, ease: 'easeOut', delay: 0.12 },
+              },
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
             className={`absolute z-50 overflow-hidden rounded-[60px] backdrop-blur-lg border ${light ? 'border-[#262626]' : 'border-[#171717]'}`}
-            style={{ bottom: 104 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Content layer — fixed width so text doesn't reflow while scaling */}
             <motion.div
+              exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }}
               className="flex flex-col h-full px-3"
               style={{ width: 432 }}
             >
