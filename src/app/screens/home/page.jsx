@@ -1724,6 +1724,8 @@ export default function HomeScreen({
   const [balanceSplitActive,  setBalanceSplitActive]  = useState(false)
   const [balanceCornerActive, setBalanceCornerActive] = useState(false)
   const balanceCornerTimerRef = useRef(null)
+  const [pageTransition,      setPageTransition]      = useState(null)
+  const pageTransitionTimerRef = useRef(null)
 
   // Suggestion taps / Ask AI send used to open a scripted demo chat (TriChatScreen);
   // that screen has been removed, so these now just close back to the current screen.
@@ -1738,6 +1740,39 @@ export default function HomeScreen({
   const light           = theme === 'light'
   const balanceSplitShown = showOverlay || balanceSplitActive
   const balanceCornerShown = showOverlay || balanceCornerActive
+  const showingWealth = navActive === 'investment' || pageTransition?.from === 'investment' || pageTransition?.to === 'investment'
+  const homePageX = pageTransition?.to === 'investment' || (navActive === 'investment' && pageTransition?.to !== 'home') ? -448 : 0
+  const wealthPageX = pageTransition?.to === 'home' ? 448 : 0
+  const screenBackgroundSrc = navActive === 'investment'
+    ? (light ? '/background-my-wealth-light.png' : '/background-my-wealth-dark.png')
+    : (light ? '/background-light.png' : '/background-dark2.png')
+
+  const closeMenuToCurrentPage = () => {
+    if (pageTransitionTimerRef.current) window.clearTimeout(pageTransitionTimerRef.current)
+    setMenuOpen(false)
+    pageTransitionTimerRef.current = window.setTimeout(() => {
+      setPageTransition(null)
+      pageTransitionTimerRef.current = null
+    }, 460)
+  }
+
+  const navigateFromMenu = (target) => {
+    if (target === navActive) {
+      closeMenuToCurrentPage()
+      return
+    }
+
+    if (pageTransitionTimerRef.current) window.clearTimeout(pageTransitionTimerRef.current)
+    setPageTransition({ from: navActive, to: target })
+    setNavActive(target)
+    pageTransitionTimerRef.current = window.setTimeout(() => {
+      setMenuOpen(false)
+      pageTransitionTimerRef.current = window.setTimeout(() => {
+        setPageTransition(null)
+        pageTransitionTimerRef.current = null
+      }, 460)
+    }, 320)
+  }
 
   const openOverlay      = () => {
     if (balanceCornerTimerRef.current) window.clearTimeout(balanceCornerTimerRef.current)
@@ -1757,6 +1792,7 @@ export default function HomeScreen({
 
   useEffect(() => () => {
     if (balanceCornerTimerRef.current) window.clearTimeout(balanceCornerTimerRef.current)
+    if (pageTransitionTimerRef.current) window.clearTimeout(pageTransitionTimerRef.current)
   }, [])
 
   useEffect(() => {
@@ -1827,7 +1863,7 @@ export default function HomeScreen({
     <div className={`w-[440px] h-[956px] overflow-hidden relative rounded-[64px] ${light ? 'bg-white' : 'bg-black'}`}>
 
       <Image
-        src={light ? '/background-light.png' : '/background-dark2.png'}
+        src={screenBackgroundSrc}
         alt=""
         fill
         priority
@@ -1853,6 +1889,13 @@ export default function HomeScreen({
 
         {/* Outer padding container */}
         <div className="flex-1 flex flex-col gap-2 px-1 pt-1 pb-8 min-h-0">
+
+          <motion.div
+            initial={false}
+            animate={{ x: homePageX }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+            className="flex-1 flex flex-col gap-2 min-h-0"
+          >
 
           {/* Inner dark card — split into header + rest so the Insight overlay can
               separate them: header exits up, rest sinks to the bottom (172px visible) */}
@@ -1920,6 +1963,8 @@ export default function HomeScreen({
             className="shrink-0 -mt-2"
           />
 
+          </motion.div>
+
           {/* Bottom bar */}
           <BottomBar
             triMode={showTri}
@@ -1957,8 +2002,8 @@ export default function HomeScreen({
       <AnimatePresence>
         {menuOpen && (
           <MenuSheet
-            onClose={() => { setMenuOpen(false); setNavActive('home') }}
-            onNavigateWealth={() => { setMenuOpen(false); setNavActive('investment') }}
+            onClose={() => navigateFromMenu('home')}
+            onNavigateWealth={() => navigateFromMenu('investment')}
             onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
             light={light}
             activeNav={navActive}
@@ -2006,10 +2051,13 @@ export default function HomeScreen({
 
       {/* Wealth screen */}
       <AnimatePresence>
-        {navActive === 'investment' && (
-          <div className="absolute inset-0 overflow-hidden" style={{ zIndex: (wealthAnalyzeOpen || wealthInvestOpen || wealthAskChatOpen) ? 80 : 20 }}>
+        {showingWealth && (
+          <div
+            className="absolute inset-0 overflow-hidden"
+            style={{ zIndex: (wealthAnalyzeOpen || wealthInvestOpen || wealthAskChatOpen) ? 80 : 20 }}
+          >
             <WealthScreen
-              onNavigate={(tab) => setNavActive(tab)}
+              onNavigate={(tab) => tab === 'home' ? navigateFromMenu('home') : setNavActive(tab)}
               embedded={true}
               onOpenSearch={() => setShowSearch(true)}
               onAnalyzeOpen={() => setWealthAnalyzeOpen(true)}
@@ -2022,6 +2070,9 @@ export default function HomeScreen({
               onOpenMenu={() => setMenuOpen(true)}
               light={light}
               onTesterNoteChange={onTesterNoteChange}
+              pageContentX={wealthPageX}
+              pageContentInitialX={pageTransition?.to === 'investment' ? 448 : 0}
+              pageTransitioning={!!pageTransition}
             />
           </div>
         )}

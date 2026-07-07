@@ -965,9 +965,11 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                           </div>
                           <button
                             onClick={onClose}
-                            className="backdrop-blur-sm border rounded-[60px] px-6 py-4 w-full bg-white border-black"
+                            className={`backdrop-blur-sm border rounded-[60px] px-6 py-4 w-full ${
+                              light ? 'bg-black border-black' : 'bg-white border-white'
+                            }`}
                           >
-                            <span className="text-[14px] font-medium leading-5 text-black tracking-[0.28px]">Confirm</span>
+                            <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] ${light ? 'text-white' : 'text-black'}`}>Confirm</span>
                           </button>
                         </div>
                       )}
@@ -1053,7 +1055,7 @@ const FAB_ACTIONS = [
   { label: 'Top up',   icon: 'add_box' },
 ]
 
-export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, onAskChatOpen, onAskChatClose, menuOpen = false, onOpenMenu, light = false, onTesterNoteChange } = {}) {
+export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, onAskChatOpen, onAskChatClose, menuOpen = false, onOpenMenu, light = false, onTesterNoteChange, pageContentX = 0, pageContentInitialX = 0, pageTransitioning = false } = {}) {
   const [hidden, setHidden] = useState(false)
   const [navTab, setNavTab] = useState(defaultTab) // 'wealth' | 'explore'
   const [showAnalyze, setShowAnalyze] = useState(false)
@@ -1178,17 +1180,19 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
   ]
 
   return (
-    <div ref={rootRef} className={`overflow-hidden relative ${light ? 'bg-white' : 'bg-black'} ${
+    <div ref={rootRef} className={`overflow-hidden relative ${pageTransitioning ? 'bg-transparent' : (light ? 'bg-white' : 'bg-black')} ${
       embedded ? 'w-full h-full' : 'w-[440px] h-[956px] rounded-[64px]'
     }`}>
 
-      <Image
-        src={light ? '/background-my-wealth-light.png' : '/background-my-wealth-dark.png'}
-        alt=""
-        fill
-        unoptimized
-        className="object-cover"
-      />
+      {!pageTransitioning && (
+        <Image
+          src={light ? '/background-my-wealth-light.png' : '/background-my-wealth-dark.png'}
+          alt=""
+          fill
+          unoptimized
+          className="object-cover"
+        />
+      )}
 
       {/* Status bar — standalone only */}
       {!embedded && (
@@ -1197,14 +1201,11 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         </div>
       )}
 
-      {/* Dark tint — light theme's card just fades to 50% opacity (still reads light/washed,
-          and leaves the outer padding gap raw white); this covers the full root so it
-          actually goes dark when the menu opens, same visual language as the Insight/Invest
-          overlay backdrops */}
+      {/* Dark tint for the Invest push state. Menu dimming is handled by the shared menu layer. */}
       {light && (
         <motion.div
           initial={false}
-          animate={{ opacity: (menuOpen || bodyPushed) ? 1 : 0 }}
+          animate={{ opacity: bodyPushed ? 1 : 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 32 }}
           className="absolute inset-0 bg-black/60 rounded-[64px] pointer-events-none z-30"
         />
@@ -1217,6 +1218,13 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         transition={{ type: 'spring', stiffness: 300, damping: 32 }}
         className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-8"
       >
+
+        <motion.div
+          initial={{ x: pageContentInitialX }}
+          animate={{ x: pageContentX }}
+          transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+          className="flex-1 flex flex-col gap-2 min-h-0"
+        >
 
         {/* Main content card — slides up + dims when the menu sheet is open */}
         <motion.div
@@ -1510,12 +1518,14 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           className="shrink-0"
         />
 
+        </motion.div>
+
         {/* Footer — dots menu + Ask AI; stays put, dims while invest panel is open */}
         <motion.div
           initial={false}
           animate={{ opacity: bodyPushed ? 0.5 : 1 }}
           transition={{ duration: 0.25 }}
-          className="flex gap-2 items-end px-3 shrink-0"
+          className={`flex gap-2 items-end px-3 shrink-0 ${pageTransitioning ? 'pointer-events-none' : ''}`}
         >
           <button
             onClick={() => onOpenMenu ? onOpenMenu() : onNavigate?.('home')}
