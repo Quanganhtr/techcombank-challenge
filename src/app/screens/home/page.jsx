@@ -101,8 +101,8 @@ function StatusBar({ dark = false }) {
 function TopNav({ onOpenSearch, light = false }) {
   const btnCls = light
     ? 'bg-white border border-[#e5e5e5] rounded-full px-6 py-3 flex items-center justify-center'
-    : 'bg-[#0a0a0a] border border-[#262626] rounded-full px-6 py-3 flex items-center justify-center'
-  const iconCls = light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'
+    : 'bg-[#111111] border border-[#262626] rounded-full px-6 py-3 flex items-center justify-center'
+  const iconCls = light ? 'text-[#111111]' : 'text-[#d4d4d4]'
   return (
     <div className="flex items-center justify-between pl-6 pr-3 pb-3 pt-16 shrink-0">
       <div className="h-8 relative shrink-0" style={{ width: 48 }}>
@@ -133,7 +133,7 @@ function BalanceSection({ onOpenOverlay, light = false }) {
       </div>
       <div className="flex items-center gap-4 w-full">
         <div className="flex items-baseline gap-1">
-          <span className={`t-h1 tabular-nums ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+          <span className={`t-h1 tabular-nums ${light ? 'text-[#111111]' : 'text-white'}`}>
             {hidden ? '••••••••' : '90,008,897'}
           </span>
           <span className="t-h3 text-[#737373]">đ</span>
@@ -163,7 +163,7 @@ function BannerAndActions({ light = false }) {
     if (light) {
       // Light theme inverts the pill roles: dark pills go light, the light pill goes black
       return variant === 'light'
-        ? 'bg-[#0a0a0a]'
+        ? 'bg-[#111111]'
         : variant === 'dashed'
           ? 'border border-dashed border-[#d4d4d4]'
           : 'bg-[#f5f5f5]'
@@ -172,11 +172,11 @@ function BannerAndActions({ light = false }) {
       ? 'bg-[#fafafa]'
       : variant === 'dashed'
         ? 'border border-dashed border-[#262626]'
-        : 'bg-[#0a0a0a] border border-[#262626]'
+        : 'bg-[#111111] border border-[#262626]'
   }
   const labelCls = (variant) => {
-    if (light) return variant === 'light' ? 'text-[#fafafa]' : 'text-[#0a0a0a]'
-    return variant === 'light' ? 'text-[#0a0a0a]' : 'text-[#fafafa]'
+    if (light) return variant === 'light' ? 'text-[#fafafa]' : 'text-[#111111]'
+    return variant === 'light' ? 'text-[#111111]' : 'text-[#fafafa]'
   }
 
   return (
@@ -210,7 +210,7 @@ function BannerAndActions({ light = false }) {
             <p className="t-label-lg text-black">Auto Earning</p>
             <p className="t-body-md text-black">Double Points, Redeem vouchers for food and shopping</p>
           </div>
-          <button className="bg-[#0a0a0a] border border-[#262626] rounded-full px-5 py-2">
+          <button className="bg-[#111111] border border-[#262626] rounded-full px-5 py-2">
             <span className="t-label text-[#fafafa] whitespace-nowrap">Explore now</span>
           </button>
         </div>
@@ -241,7 +241,7 @@ function TransactionItem({ item, isLast, light = false }) {
             />
           </div>
           <div className="flex flex-col gap-0.5 pb-0.5">
-            <p className={`t-label whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{item.name}</p>
+            <p className={`t-label whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{item.name}</p>
             <div className="flex items-center gap-1 t-caption text-[#737373]">
               <span>{item.type}</span>
               <span>·</span>
@@ -249,7 +249,7 @@ function TransactionItem({ item, isLast, light = false }) {
             </div>
           </div>
         </div>
-        <p className={`t-number whitespace-nowrap ${isIncome ? (light ? 'text-success' : 'text-green-400') : light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>
+        <p className={`t-number whitespace-nowrap ${isIncome ? (light ? 'text-success' : 'text-green-400') : light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>
           {item.amount}
         </p>
       </div>
@@ -267,7 +267,7 @@ const TX_FILTERS = ['All', 'Income', 'Transfer', 'Card Payment', 'Withdrawal']
 function TransactionSection({ menuOpen = false, light = false }) {
   const [activeFilter, setActiveFilter] = useState('All')
   const [scrolled, setScrolled] = useState(false)
-  const cardBg = light ? '#ffffff' : '#0a0a0a'
+  const cardBg = light ? '#ffffff' : '#111111'
 
   return (
     <div
@@ -275,11 +275,11 @@ function TransactionSection({ menuOpen = false, light = false }) {
       style={{ minHeight: menuOpen ? 372 : 0 }}
     >
       <div className={`backdrop-blur-lg border rounded-[48px] h-full flex flex-col overflow-hidden relative ${
-        light ? 'bg-white border-[#ececec]' : 'bg-[#0a0a0a] border-[#262626]'
+        light ? 'bg-white border-[#ececec]' : 'bg-[#111111] border-[#262626]'
       }`}>
         {/* Header */}
         <div className="flex items-center justify-between pt-6 px-6 shrink-0">
-          <p className={`t-label-lg whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>Transaction History</p>
+          <p className={`t-label-lg whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>Transaction History</p>
         </div>
 
         {/* Filter chips */}
@@ -291,11 +291,11 @@ function TransactionSection({ menuOpen = false, light = false }) {
                 onClick={() => setActiveFilter(f)}
                 className={`rounded-full h-9 px-4 flex items-center shrink-0 border-2 ${
                   light
-                    ? `bg-[#f5f5f5] ${f === activeFilter ? 'border-[#0a0a0a] bg-white' : 'border-transparent'}`
+                    ? `bg-[#f5f5f5] ${f === activeFilter ? 'border-[#111111] bg-white' : 'border-transparent'}`
                     : `bg-[#171717] ${f === activeFilter ? 'border-[#fafafa]' : 'border-transparent'}`
                 }`}
               >
-                <span className={`t-label whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>
+                <span className={`t-label whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>
                   {f}
                 </span>
               </button>
@@ -405,10 +405,10 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
           onClick={onOpenTri}
           className={`flex-1 flex items-center justify-between backdrop-blur-sm border rounded-[36px] pl-8 pr-5 py-5 transition-shadow duration-200 ${
-            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#404040]'
+            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#404040]'
           } ${triHovered ? 'shadow-[0_0_0_4px_rgba(237,28,36,0.25)]' : ''}`}
         >
-          <span className={`t-body-md whitespace-nowrap ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Ask anything...</span>
+          <span className={`t-body-md whitespace-nowrap ${light ? 'text-[#111111]' : 'text-white'}`}>Ask anything...</span>
           <div className="size-6 flex items-center justify-center shrink-0">
             <Image src="/tri.png" alt="" width={24} height={24} />
           </div>
@@ -431,7 +431,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
         </button>
         <button
           onClick={onOpenKeyboard}
-          className="flex-1 flex items-center justify-between bg-[#0a0a0a] backdrop-blur-sm border border-[#fafafa] rounded-[36px] pl-8 pr-5 py-5"
+          className="flex-1 flex items-center justify-between bg-[#111111] backdrop-blur-sm border border-[#fafafa] rounded-[36px] pl-8 pr-5 py-5"
         >
           <span className="t-caption text-white whitespace-nowrap">Ask AI anything...</span>
           <div className="size-6 flex items-center justify-center shrink-0">
@@ -451,7 +451,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
         transition={{ ...fade, delay: triMode && keyboardOpen ? 0.05 : 0 }}
         className="absolute inset-0 flex items-center gap-2"
       >
-        <div className="flex-1 flex items-center justify-between bg-[#0a0a0a] backdrop-blur-sm border border-[#fafafa] rounded-[36px] pl-8 pr-5 py-5">
+        <div className="flex-1 flex items-center justify-between bg-[#111111] backdrop-blur-sm border border-[#fafafa] rounded-[36px] pl-8 pr-5 py-5">
           <span className="t-caption text-white flex items-center gap-px">
             Freeze my card
             <BlinkingCursor />
@@ -462,7 +462,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
         </div>
         <button
           onClick={onCloseKeyboard}
-          className="bg-[#0a0a0a] border border-[#262626] rounded-full p-3 flex items-center justify-center shrink-0"
+          className="bg-[#111111] border border-[#262626] rounded-full p-3 flex items-center justify-center shrink-0"
         >
           <Icon name="close" size={24} className="text-white" />
         </button>
@@ -504,7 +504,7 @@ function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, ac
       layoutId="menu-surface"
       style={{ borderRadius: 60, top: 160 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className={`absolute left-1 right-1 bottom-2 z-50 flex flex-col overflow-hidden ${dark ? 'bg-[#0a0a0a]' : 'bg-white'}`}
+      className={`absolute left-1 right-1 bottom-2 z-50 flex flex-col overflow-hidden ${dark ? 'bg-[#111111]' : 'bg-white'}`}
     >
       <div className="flex-1 flex flex-col gap-2 p-3 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
 
@@ -556,9 +556,9 @@ function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, ac
               >
                 {icon === 'logo'
                   ? <TcbLogoIcon size={20} className="text-cinnabar-500" />
-                  : <Icon name={icon} size={20} className={active ? 'text-cinnabar-500' : (dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]')} />
+                  : <Icon name={icon} size={20} className={active ? 'text-cinnabar-500' : (dark ? 'text-[#fafafa]' : 'text-[#111111]')} />
                 }
-                <span className={`t-label ${active ? 'text-cinnabar-500' : (dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]')}`}>{label}</span>
+                <span className={`t-label ${active ? 'text-cinnabar-500' : (dark ? 'text-[#fafafa]' : 'text-[#111111]')}`}>{label}</span>
               </button>
             )
           })}
@@ -574,17 +574,17 @@ function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, ac
                   i === 0 ? 'pt-6 pb-4' : i === MENU_QUICK_LINKS.length - 1 ? 'pt-4 pb-6' : 'py-4'
                 }`}
               >
-                <Icon name={icon} size={20} className={`shrink-0 ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`} />
-                <span className={`t-label whitespace-nowrap ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>{label}</span>
+                <Icon name={icon} size={20} className={`shrink-0 ${dark ? 'text-[#fafafa]' : 'text-[#111111]'}`} />
+                <span className={`t-label whitespace-nowrap ${dark ? 'text-[#fafafa]' : 'text-[#111111]'}`}>{label}</span>
               </button>
             ))}
           </div>
 
           <div className={`flex-1 min-w-0 border border-info rounded-[32px] overflow-hidden flex flex-col ${dark ? 'bg-[#171717]' : 'bg-[#f5f5f5]'}`}>
-            <p className={`t-label px-6 pt-6 pb-3 ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Find branches &amp; ATMs on map</p>
+            <p className={`t-label px-6 pt-6 pb-3 ${dark ? 'text-[#fafafa]' : 'text-[#111111]'}`}>Find branches &amp; ATMs on map</p>
             <div className="px-6"><div className="h-px bg-[#737373] opacity-10 rounded-full w-full" /></div>
             <div className="flex flex-col gap-2 px-6 py-3">
-              <p className={`t-label ${dark ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Book an appointment</p>
+              <p className={`t-label ${dark ? 'text-[#fafafa]' : 'text-[#111111]'}`}>Book an appointment</p>
               <p className="text-[12px] leading-4 text-[#737373]">For a smoother branch visit</p>
             </div>
             <div className="relative h-[79px] shrink-0">
@@ -676,19 +676,17 @@ const GLITTER_SPARKLES = [
 
 function GlitterBurst({ playKey = 0 }) {
   return (
-    <div className="absolute inset-0 pointer-events-none z-20">
+    <div className="absolute -inset-2 pointer-events-none z-20 overflow-visible">
       {GLITTER_SPARKLES.map((s, i) => (
         <motion.span
           key={`${playKey}-${i}`}
-          className="absolute"
+          className="absolute leading-none"
           style={{
             left: s.left,
             top: s.top,
-            width: s.size,
-            height: s.size,
-            backgroundColor: s.color,
-            clipPath: 'polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%)',
-            filter: 'drop-shadow(0 0 5px rgba(250, 204, 21, 0.85)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.55))',
+            color: s.color,
+            fontSize: s.size + 5,
+            textShadow: '0 0 8px rgba(250, 204, 21, 0.95), 0 0 2px rgba(0, 0, 0, 0.65)',
           }}
           initial={{ opacity: 0, x: 0, y: 0, scale: 0.2, rotate: 0 }}
           animate={{
@@ -699,7 +697,9 @@ function GlitterBurst({ playKey = 0 }) {
             rotate: [0, 25, 60, 95, 130, 160, 180],
           }}
           transition={{ duration: 2.8, times: [0, 0.14, 0.28, 0.45, 0.62, 0.8, 1], ease: 'easeOut', delay: s.delay }}
-        />
+        >
+          ✦
+        </motion.span>
       ))}
     </div>
   )
@@ -731,7 +731,17 @@ function GlitterMist({ playKey = 0 }) {
 }
 
 function CoffeeInsightCard({ dark = false, effectKey = null }) {
-  const showEffect = effectKey !== null && effectKey !== undefined
+  const [mountEffectKey, setMountEffectKey] = useState(null)
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setMountEffectKey(`mount-${Date.now()}`)
+    }, 320)
+    return () => window.clearTimeout(id)
+  }, [])
+
+  const activeEffectKey = effectKey ?? mountEffectKey
+  const showEffect = activeEffectKey !== null && activeEffectKey !== undefined
 
   return (
     <motion.div
@@ -743,7 +753,7 @@ function CoffeeInsightCard({ dark = false, effectKey = null }) {
     >
       {showEffect && (
         <motion.div
-          key={`shine-${effectKey}`}
+          key={`shine-${activeEffectKey}`}
           className="absolute inset-0 pointer-events-none z-10"
           style={{
             background: 'linear-gradient(110deg, transparent 0%, transparent 34%, rgba(255,255,255,0.68) 45%, rgba(253,230,138,0.58) 50%, rgba(255,255,255,0.68) 55%, transparent 66%, transparent 100%)',
@@ -753,8 +763,8 @@ function CoffeeInsightCard({ dark = false, effectKey = null }) {
           transition={{ duration: 1.15, ease: 'easeInOut', times: [0, 0.18, 0.78, 1] }}
         />
       )}
-      {showEffect && <GlitterMist playKey={effectKey} />}
-      {showEffect && <GlitterBurst playKey={effectKey} />}
+      {showEffect && <GlitterMist playKey={activeEffectKey} />}
+      {showEffect && <GlitterBurst playKey={activeEffectKey} />}
       <div className={`relative rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
         <Icon name="coffee" size={24} className={dark ? 'text-white' : 'text-content-primary'} />
       </div>
@@ -778,10 +788,10 @@ function RemoveBtn({ dark, onClick }) {
       type="button"
       onClick={onClick}
       className={`absolute -top-3 -left-3 z-10 rounded-full px-2 py-1 flex items-center justify-center border ${
-      dark ? 'bg-[#fafafa] border-[#0a0a0a]' : 'bg-black border-white'
+      dark ? 'bg-[#fafafa] border-[#111111]' : 'bg-black border-white'
     }`}
     >
-      <Icon name="check_indeterminate_small" size={20} className={dark ? 'text-[#0a0a0a]' : 'text-white'} />
+      <Icon name="check_indeterminate_small" size={20} className={dark ? 'text-[#111111]' : 'text-white'} />
     </button>
   )
 }
@@ -822,8 +832,8 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
   const fillWidth = (goalProgress / GOAL_PERCENT) * GOAL_FILL_WIDTH * ((GOAL_ACTIVE_BAR - GOAL_PROGRESS_OFFSET_BARS) / GOAL_ACTIVE_BAR)
   const activeBar = Math.max(0, Math.round((goalProgress / GOAL_PERCENT) * GOAL_ACTIVE_BAR) - GOAL_PROGRESS_OFFSET_BARS)
 
-  const panelBg = dark ? '#0a0a0a' : '#ffffff'
-  const panelExitBg = dark ? '#fafafa' : '#0a0a0a'
+  const panelBg = dark ? '#111111' : '#ffffff'
+  const panelExitBg = dark ? '#fafafa' : '#111111'
   const removeCoffeeInsight = () => {
     onRemoveInsight?.()
     setIsEditing(false)
@@ -898,7 +908,7 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
                 {/* Buying House Goal card — the accent block, opposite tone of the panel */}
                 <motion.div className="relative w-full" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.04 } : {}}>
                   {isEditing && <RemoveBtn dark={dark} />}
-                <div className={`rounded-[48px] overflow-hidden relative flex flex-col gap-4 w-full ${dark ? 'bg-[#fafafa]' : 'bg-[#0a0a0a]'}`}>
+                <div className={`rounded-[48px] overflow-hidden relative flex flex-col gap-4 w-full ${dark ? 'bg-[#fafafa]' : 'bg-[#111111]'}`}>
                   {/* Progress region backdrop — grows with the percentage */}
                   <div
                     className={`absolute left-0 bottom-0 rounded-r-[4px] ${dark ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}
@@ -907,16 +917,16 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
                   <div className="relative flex flex-col gap-2 pt-6 px-6 w-full">
                     <div className="flex items-start justify-between w-full">
                       <div className="flex flex-col gap-1">
-                        <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>Buying House Goal</p>
+                        <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-[#111111]' : 'text-[#fafafa]'}`}>Buying House Goal</p>
                         <span className="text-[24px] font-bold leading-8 text-info tracking-[0.48px] tabular-nums">
                           {Math.round(goalProgress)}%
                         </span>
                       </div>
                       <div className={`rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#e5e5e5]' : 'bg-[#262626]'}`}>
-                        <Icon name="add_home" size={24} className={dark ? 'text-[#0a0a0a]' : 'text-[#fafafa]'} />
+                        <Icon name="add_home" size={24} className={dark ? 'text-[#111111]' : 'text-[#fafafa]'} />
                       </div>
                     </div>
-                    <p className={`t-body-md w-full ${dark ? 'text-[#0a0a0a]' : 'text-[#fafafa]'}`}>
+                    <p className={`t-body-md w-full ${dark ? 'text-[#111111]' : 'text-[#fafafa]'}`}>
                       Almost halfway to your goal.
                     </p>
                   </div>
@@ -953,7 +963,7 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
                     </motion.div>
                     <button
                       onClick={onAddInsight}
-                      className={`w-1/2 min-w-0 border border-dashed rounded-[48px] p-6 flex flex-col items-center justify-center gap-2 ${dark ? 'border-[#fafafa]' : 'border-[#0a0a0a]'}`}
+                      className={`w-1/2 min-w-0 border border-dashed rounded-[48px] p-6 flex flex-col items-center justify-center gap-2 ${dark ? 'border-[#fafafa]' : 'border-[#111111]'}`}
                     >
                       <Image src="/tri.png" alt="" width={24} height={24} />
                       <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] text-center ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
@@ -968,7 +978,7 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
                     exit={{ opacity: 0, y: -12, scale: 0.96 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 32 }}
                     onClick={onAddInsight}
-                    className={`border border-dashed rounded-[48px] p-6 flex items-center justify-center gap-2 w-full ${dark ? 'border-[#fafafa]' : 'border-[#0a0a0a]'}`}
+                    className={`border border-dashed rounded-[48px] p-6 flex items-center justify-center gap-2 w-full ${dark ? 'border-[#fafafa]' : 'border-[#111111]'}`}
                   >
                     <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
                     <Image src="/tri.png" alt="" width={24} height={24} />
@@ -1030,7 +1040,7 @@ function TransactionOverlay({ onClose, showCard = true, light = false }) {
             className="absolute inset-x-4 bottom-10 z-60"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className={`rounded-4xl flex flex-col gap-4 p-4 ${dark ? 'bg-[#0a0a0a]' : 'bg-surface'}`}>
+            <div className={`rounded-4xl flex flex-col gap-4 p-4 ${dark ? 'bg-[#111111]' : 'bg-surface'}`}>
               <div className="flex items-center justify-between">
                 <span className={`text-[24px] font-bold leading-8 ${dark ? 'text-white' : 'text-content-primary'}`}>Analyze</span>
                 <button onClick={onClose} className={`size-10 rounded-full flex items-center justify-center shrink-0 ${dark ? 'bg-[#171717]' : 'bg-surface-sunken'}`}>
@@ -1078,7 +1088,7 @@ function TransactionOverlay({ onClose, showCard = true, light = false }) {
                 ))}
                 <button onClick={onClose} className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full ${dark ? 'bg-white' : 'bg-surface-overlay'}`}>
                   <Image src="/tri.png" alt="AI" width={20} height={20} />
-                  <span className={`text-[14px] font-medium ${dark ? 'text-[#0a0a0a]' : 'text-content-inverse'}`}>Ask a follow-up</span>
+                  <span className={`text-[14px] font-medium ${dark ? 'text-[#111111]' : 'text-content-inverse'}`}>Ask a follow-up</span>
                 </button>
               </div>
             </div>
@@ -1119,23 +1129,23 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
 
         {/* Main content card */}
         <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col items-center min-h-0 ${
-          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
         }`}>
 
           {/* Header */}
           <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
             <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
             }`}>
-              <Icon name="history" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+              <Icon name="history" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
             </button>
             <div className="flex items-center gap-1">
               <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
               }`}>
-                <Icon name="search" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+                <Icon name="search" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
               </button>
-              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
+              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#111111]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
                 <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
               </button>
             </div>
@@ -1144,7 +1154,7 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
           {/* Greeting + suggestion cards */}
           <div className="backdrop-blur-[6px] flex-1 w-full flex flex-col items-center justify-end overflow-hidden min-h-0">
             <div className="flex flex-col gap-2.5 p-4 shrink-0 w-full whitespace-nowrap">
-              <p className={`t-h3 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>Hey Quang!</p>
+              <p className={`t-h3 ${light ? 'text-[#111111]' : 'text-white'}`}>Hey Quang!</p>
               <p className="t-label text-[#737373]">What&apos;s been on your mind lately?</p>
             </div>
 
@@ -1169,7 +1179,7 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
                     ) : (
                       <img src={icon} alt="" className="size-6" />
                     )}
-                    <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{label}</p>
+                    <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{label}</p>
                   </div>
                 </button>
               ))}
@@ -1260,23 +1270,23 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
 
         {/* Main content card */}
         <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col min-h-0 ${
-          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
         }`}>
 
           {/* Header */}
           <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
             <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
             }`}>
-              <Icon name="history" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+              <Icon name="history" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
             </button>
             <div className="flex items-center gap-1">
               <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#0a0a0a] border-[#262626]'
+                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
               }`}>
-                <Icon name="search" size={24} className={light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'} />
+                <Icon name="search" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
               </button>
-              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
+              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#111111]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
                 <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
               </button>
             </div>
@@ -1295,20 +1305,20 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
                   ) : (
                     <div className={`rounded-3xl px-4 py-3 max-w-full flex items-center gap-2.5 ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}>
                       {m.content.bullets ? (
-                        <div className={`text-[16px] leading-6 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>
+                        <div className={`text-[16px] leading-6 ${light ? 'text-[#111111]' : 'text-white'}`}>
                           {m.content.lines.map((line, li) => <p key={li}>{line}</p>)}
                           <ul className="list-disc pl-6">
                             {m.content.bullets.map((b, bi) => <li key={bi}>{b}</li>)}
                           </ul>
                         </div>
                       ) : (
-                        <p className={`text-[16px] leading-6 ${light ? 'text-[#0a0a0a]' : 'text-white'}`}>{m.content.text}</p>
+                        <p className={`text-[16px] leading-6 ${light ? 'text-[#111111]' : 'text-white'}`}>{m.content.text}</p>
                       )}
                       {m.content?.view && (
                         <button
                           onClick={onViewInsight}
                           className={`border rounded-[60px] px-6 py-3 backdrop-blur-sm shrink-0 ${
-                            light ? 'bg-[#0a0a0a] border-black text-white' : 'bg-white border-black text-black'
+                            light ? 'bg-[#111111] border-black text-white' : 'bg-white border-black text-black'
                           }`}
                         >
                           <span className="text-[14px] font-medium leading-5 tracking-[0.28px]">View</span>
@@ -1335,7 +1345,7 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
 
           {/* Top fade — sits over the message list, not part of the scroll content */}
           <div className={`absolute top-0 inset-x-0 h-14 pointer-events-none z-10 ${
-            light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#0a0a0a] to-transparent'
+            light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#111111] to-transparent'
           }`} />
           </div>
         </div>
@@ -1353,7 +1363,7 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
           }`}>
             <Icon name="add" size={24} className="text-black shrink-0" />
             <div className="flex-1 flex items-center min-w-0">
-              <span className="flex-1 t-body text-[#0a0a0a] text-left min-w-0 break-words">
+              <span className="flex-1 t-body text-[#111111] text-left min-w-0 break-words">
                 {inputText ? (
                   <TypewriterInputText text={inputText} />
                 ) : (
@@ -1563,8 +1573,8 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
   }, [autoType])
 
   const iconPillBg = light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'
-  const iconPillFg = light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'
-  const primaryText = light ? 'text-[#0a0a0a]' : 'text-white'
+  const iconPillFg = light ? 'text-[#111111]' : 'text-[#d4d4d4]'
+  const primaryText = light ? 'text-[#111111]' : 'text-white'
 
   return (
     <motion.div
@@ -1587,7 +1597,7 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
 
         {/* Main content card */}
         <div className={`relative flex-1 backdrop-blur-lg border rounded-[60px] overflow-hidden flex flex-col min-h-0 ${
-          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
         }`}>
 
           {/* Header */}
@@ -1682,7 +1692,7 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                           <Icon name="close" size={20} className="text-[#737373]" />
                         </button>
                       </div>
-                      <p className={`text-[14px] font-medium leading-5 mt-auto ${light ? 'text-[#0a0a0a]' : 'text-[#d4d4d4]'}`}>{card.label}</p>
+                      <p className={`text-[14px] font-medium leading-5 mt-auto ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{card.label}</p>
                     </div>
                   ))}
                 </div>
@@ -1723,7 +1733,7 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
 
           {/* Bottom fade */}
           <div className={`absolute bottom-0 left-0 right-0 h-14 pointer-events-none rounded-b-[60px] ${
-            light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#0a0a0a] to-transparent'
+            light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#111111] to-transparent'
           }`} />
         </div>
 
@@ -1745,7 +1755,7 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
               <div className="flex-1 flex items-center gap-1 min-w-0">
                 {typing ? (
                   <>
-                    <span className="text-[16px] leading-6 whitespace-nowrap text-[#0a0a0a]">{typedText}</span>
+                    <span className="text-[16px] leading-6 whitespace-nowrap text-[#111111]">{typedText}</span>
                     <BlinkingCursor />
                   </>
                 ) : (
@@ -1763,15 +1773,15 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                     onClick={e => { e.stopPropagation(); clearTyping() }}
                     className={`p-1 rounded-full flex items-center justify-center shrink-0 ${light ? 'bg-[#404040]' : 'bg-[#d4d4d4]'}`}
                   >
-                    <Icon name="close" size={16} className={light ? 'text-white' : 'text-[#0a0a0a]'} />
+                    <Icon name="close" size={16} className={light ? 'text-white' : 'text-[#111111]'} />
                   </motion.button>
                 )}
               </AnimatePresence>
-              <Icon name="search" size={24} className="text-[#0a0a0a] shrink-0" />
+              <Icon name="search" size={24} className="text-[#111111] shrink-0" />
             </div>
             <button
               onClick={onClose}
-              className={`rounded-[60px] px-6 py-4 flex items-center justify-center shrink-0 ${light ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]'}`}
+              className={`rounded-[60px] px-6 py-4 flex items-center justify-center shrink-0 ${light ? 'bg-[#111111]' : 'bg-[#fafafa]'}`}
             >
               <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
             </button>
@@ -2007,7 +2017,7 @@ export default function HomeScreen({
               borderBottomWidth: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
             }}
             className={`backdrop-blur-lg border border-b-0 rounded-t-[60px] shrink-0 ${
-              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
             }`}
           >
             <TopNav onOpenSearch={() => setShowSearch(true)} light={light} />
@@ -2034,7 +2044,7 @@ export default function HomeScreen({
             }}
             style={{ zIndex: balanceSplitShown || balanceCornerShown ? 20 : 'auto' }}
             className={`flex-1 backdrop-blur-lg border border-t-0 rounded-b-[60px] flex flex-col justify-end overflow-hidden min-h-0 ${
-              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#0a0a0a] border-[#171717]'
+              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
             }`}
           >
             <BalanceSection onOpenOverlay={openOverlay} light={light} />
