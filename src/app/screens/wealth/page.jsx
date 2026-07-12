@@ -72,8 +72,16 @@ const SPARKLINE_DOTS = [
 ]
 
 const BONDS = [
-  { id: 'vhm1', ticker: 'VHM12605', maturity: '30th July 2026', amount: '7,000,000đ', yieldStr: 'Est. Yield 10.8%' },
-  { id: 'vhm2', ticker: 'VHM12605', maturity: '30th Jun 2026',  amount: '5,000,000đ', yieldStr: 'Est. Yield 9.8%'  },
+  { id: 'vhm1', ticker: 'VHM12605', maturity: '30th July 2026', amount: '7,000,000', yieldStr: 'Est. Yield 10.8%' },
+  { id: 'vhm2', ticker: 'VHM12605', maturity: '30th Jun 2026',  amount: '5,000,000', yieldStr: 'Est. Yield 9.8%'  },
+]
+
+const ASSET_FILTERS = ['All', 'Equities', 'Bonds', 'Fund']
+
+const TOP_GAINS = [
+  { ticker: 'TCB', change: '+ 1.29%', spark: '/sparkline-up.svg',   logo: '/tcb-logo.png', logoBg: '#f3f4f6' },
+  { ticker: 'VIC', change: '+ 0.98%', spark: '/sparkline-wave.svg', logo: '/vic-logo.png', logoBg: '#f3f4f6' },
+  { ticker: 'MSN', change: '+ 0.41%', spark: '/sparkline-wave.svg', logo: '/msn-logo.png', logoBg: '#101828' },
 ]
 
 /* ─── Micro-components ──────────────────────────────────────────────── */
@@ -176,29 +184,32 @@ function AssetDivider() {
 
 function YieldBadge({ value, up = true, light = false }) {
   return (
-    <div className={`flex items-center gap-1 pl-1 pr-3 py-1 rounded-full shrink-0 ${
-      up ? (light ? 'bg-[#DCFCE7]' : 'bg-[#052e16]') : 'bg-[#460809]'
+    <div className={`flex items-center justify-center gap-1 pl-1 pr-3 py-1 rounded-full border shrink-0 ${
+      up ? (light ? 'border-[#00a63e]' : 'border-[#05df72]') : 'border-[#e7000b]'
     }`}>
-      <span className="material-symbols-outlined leading-none select-none text-[20px]" style={{ transform: up ? 'rotate(180deg)' : 'none', color: up ? (light ? '#00a63e' : '#4ade80') : '#e7000b' }}>
+      <span className="material-symbols-outlined leading-none select-none text-[20px]" style={{ transform: up ? 'rotate(180deg)' : 'none', color: up ? (light ? '#00a63e' : '#05df72') : '#e7000b' }}>
         arrow_drop_down
       </span>
-      <span className={`text-[14px] font-medium whitespace-nowrap ${up ? (light ? 'text-success' : 'text-green-400') : 'text-danger'}`}>{value}</span>
+      <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] whitespace-nowrap ${up ? (light ? 'text-success' : 'text-[#05df72]') : 'text-danger'}`}>{value}</span>
     </div>
   )
 }
 
-function SectionHeader({ title }) {
+function SectionHeader({ title, light = false }) {
   return (
-    <div className="flex items-center justify-between pl-6 pr-4 pt-5 pb-3 w-full shrink-0">
-      <p className="text-[14px] font-medium text-[#737373] leading-5">{title}</p>
-      <p className="text-[14px] font-medium text-info leading-5">See all</p>
+    <div className="flex items-center justify-between pl-5 pr-6 pt-4 pb-2 w-full shrink-0">
+      <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#404040]' : 'text-[#d4d4d4]'}`}>{title}</p>
+      <Icon name="chevron_right" size={24} className={light ? 'text-[#a1a1a1]' : 'text-[#737373]'} />
     </div>
   )
 }
 
 function IndexCard({ name, time, date, value, change, positive, onDragStart, light = false }) {
   return (
-    <div className={`flex flex-col h-40 w-[156px] shrink-0 items-start justify-between overflow-hidden p-4 rounded-3xl ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
+    <div
+      onPointerDown={(e) => onDragStart?.(e, { ticker: name, avatar: { type: 'icon', icon: 'trending_up' } })}
+      className={`flex flex-col h-40 w-[156px] shrink-0 items-start justify-between overflow-hidden p-4 rounded-3xl touch-none cursor-grab active:cursor-grabbing ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}
+    >
       <div className="flex flex-col gap-1 w-full">
         <p className={`text-[14px] font-medium leading-5 ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>{name}</p>
         <div className="flex gap-1 text-[12px] font-medium text-[#737373] leading-4">
@@ -210,12 +221,9 @@ function IndexCard({ name, time, date, value, change, positive, onDragStart, lig
           <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>{value}</p>
           <p className={`text-[14px] font-medium leading-5 ${positive ? (light ? 'text-success' : 'text-green-400') : 'text-danger'}`}>{change}</p>
         </div>
-        <button
-          onPointerDown={(e) => onDragStart?.(e, { ticker: name, avatar: { type: 'icon', icon: 'trending_up' } })}
-          className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
-        >
+        <span className="shrink-0">
           <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
-        </button>
+        </span>
       </div>
     </div>
   )
@@ -258,7 +266,6 @@ const EXPLORE_FILTERS = [
 
 function ExploreContent({ onDragStart, light = false }) {
   const [activeFilter, setActiveFilter] = useState('equities')
-  const [scrolled, setScrolled] = useState(false)
   const scrollRef = useRef(null)
   const chipsRef = useRef(null)
   const chipRefs = useRef({})
@@ -291,7 +298,6 @@ function ExploreContent({ onDragStart, light = false }) {
     const container = scrollRef.current
     if (!container) return
     const onScroll = () => {
-      setScrolled(container.scrollTop > 0)
       if (isProgrammaticScroll.current) return
       const containerTop = container.getBoundingClientRect().top
       let current = 'equities'
@@ -333,55 +339,52 @@ function ExploreContent({ onDragStart, light = false }) {
   ]
 
   return (
-    <div className="flex-1 min-h-0 flex px-3 pb-3 w-full">
-      {/* Inner list card */}
-      <div className={`relative flex-1 backdrop-blur-lg border rounded-[48px] overflow-hidden flex flex-col min-h-0 ${
-        light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
-      }`}>
-
-        {/* Filter chips — pinned above scroll, right gradient fade; padding lives
-            inside the scroll container so chips aren't clipped mid-scroll */}
-        <div className="relative shrink-0 pt-6">
-          <div ref={chipsRef} className="flex gap-1 items-center overflow-x-auto [&::-webkit-scrollbar]:hidden pl-6 pr-16">
-            {EXPLORE_FILTERS.map(f => (
-              <button
-                key={f.id}
-                ref={el => { chipRefs.current[f.id] = el }}
-                onClick={() => handleChipClick(f.id)}
-                className={`px-4 py-2 rounded-full border-2 shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'} ${
-                  activeFilter === f.id ? (light ? 'border-[#111111]' : 'border-[#fafafa]') : 'border-transparent'
-                }`}
-              >
-                <span className={`text-[14px] font-medium leading-5 whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>{f.label}</span>
-              </button>
-            ))}
-          </div>
-          {scrolled && (
-            <div className={`absolute top-full inset-x-0 h-14 pointer-events-none z-10 ${
-              light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#111111] to-transparent'
-            }`} />
-          )}
-          <div
-            className="absolute bottom-0 right-0 h-11 pointer-events-none"
-            style={{ width: 44, background: light ? 'linear-gradient(to left, #ffffff, rgba(255,255,255,0))' : 'linear-gradient(to left, #111111, rgba(10,10,10,0))' }}
-          />
+    <div className="flex-1 min-h-0 flex flex-col w-full">
+      {/* Filter chips — pinned above the scroll, sitting directly on the main
+          gradient card like the Figma design (no nested inner card) */}
+      <div className="relative shrink-0 pt-3">
+        <div ref={chipsRef} className="flex gap-1 items-center overflow-x-auto [&::-webkit-scrollbar]:hidden pl-5 pr-16">
+          {EXPLORE_FILTERS.map(f => (
+            <button
+              key={f.id}
+              ref={el => { chipRefs.current[f.id] = el }}
+              onClick={() => handleChipClick(f.id)}
+              className={`flex items-center px-4 py-2 rounded-full shrink-0 ${
+                activeFilter === f.id
+                  ? (light ? 'bg-[#111111]' : 'bg-[#fafafa]')
+                  : (light ? 'bg-white/60' : 'bg-[rgba(17,17,17,0.6)]')
+              }`}
+            >
+              <span className={`text-[14px] font-medium leading-5 whitespace-nowrap ${
+                activeFilter === f.id
+                  ? (light ? 'text-white' : 'text-[#111111]')
+                  : (light ? 'text-[#111111]' : 'text-[#fafafa]')
+              }`}>{f.label}</span>
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Scrollable content */}
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden pb-14">
+      {/* Scrollable content — top edge masked so rows fade out under the
+          pinned chips instead of a hard cut (works over the gradient bg) */}
+      <div
+        ref={scrollRef}
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden pb-44"
+        style={{
+          maskImage: 'linear-gradient(to bottom, transparent 0px, black 32px)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0px, black 32px)',
+        }}
+      >
 
           {/* Top equities */}
           <div ref={sectionRefs.equities} />
-          <SectionHeader title="Top equities" />
+          <SectionHeader title="Top equities" light={light} />
           {EQUITIES.map((eq, i) => (
             <div key={eq.ticker}>
-              <div className="flex gap-1 items-center pl-1 pr-4 py-3 w-full">
-                <button
-                  onPointerDown={(e) => onDragStart?.(e, { ticker: eq.ticker, avatar: { type: 'image', src: eq.logo, bg: eq.logoBg } })}
-                  className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
-                >
-                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
-                </button>
+              <div
+                onPointerDown={(e) => onDragStart?.(e, { ticker: eq.ticker, avatar: { type: 'image', src: eq.logo, bg: eq.logoBg } })}
+                className="flex gap-1 items-center justify-center pl-4 pr-2 py-3 w-full touch-none cursor-grab active:cursor-grabbing"
+              >
                 <div className="flex-1 flex items-start justify-between min-w-0">
                   <div className="flex-1 flex gap-4 items-center min-w-0">
                     <div className="size-11 rounded-full overflow-hidden shrink-0 relative" style={{ background: eq.logoBg }}>
@@ -397,6 +400,9 @@ function ExploreContent({ onDragStart, light = false }) {
                     <p className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>{eq.change}</p>
                   </div>
                 </div>
+                <span className="shrink-0">
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
+                </span>
               </div>
               {i < EQUITIES.length - 1 && <ExploreDivider />}
             </div>
@@ -404,20 +410,17 @@ function ExploreContent({ onDragStart, light = false }) {
 
           {/* Top bonds */}
           <div ref={sectionRefs.bonds} />
-          <SectionHeader title="Top bonds" />
+          <SectionHeader title="Top bonds" light={light} />
           {EXPLORE_BONDS.map((bond, i) => (
             <div key={bond.id}>
-              <div className="flex gap-1 items-center pl-1 pr-4 py-3 w-full">
-                <button
-                  onPointerDown={(e) => onDragStart?.(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
-                  className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
-                >
-                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
-                </button>
+              <div
+                onPointerDown={(e) => onDragStart?.(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
+                className="flex gap-1 items-center pl-5 pr-2 py-3 w-full touch-none cursor-grab active:cursor-grabbing"
+              >
                 <div className="flex-1 flex items-center justify-between min-w-0">
                   <div className="flex gap-4 items-center min-w-0">
-                    <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
-                      <Icon name="analytics" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
+                    <div className="rounded-full flex items-center justify-center shrink-0 size-11" style={{ background: '#bedbff' }}>
+                      <Image src="/invest-bonds.png" alt="" width={20} height={20} />
                     </div>
                     <div className="flex flex-col gap-1 min-w-0">
                       <p className={`text-[14px] font-medium leading-5 ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>{bond.ticker}</p>
@@ -426,6 +429,9 @@ function ExploreContent({ onDragStart, light = false }) {
                   </div>
                   <YieldBadge value={bond.yield} up={true} light={light} />
                 </div>
+                <span className="shrink-0">
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
+                </span>
               </div>
               {i < EXPLORE_BONDS.length - 1 && <ExploreDivider />}
             </div>
@@ -433,16 +439,13 @@ function ExploreContent({ onDragStart, light = false }) {
 
           {/* Top fund */}
           <div ref={sectionRefs.fund} />
-          <SectionHeader title="Top fund" />
+          <SectionHeader title="Top fund" light={light} />
           {FUNDS.map((fund, i) => (
             <div key={fund.ticker}>
-              <div className="flex gap-1 items-center pl-1 pr-4 py-3 w-full">
-                <button
-                  onPointerDown={(e) => onDragStart?.(e, { ticker: fund.ticker, avatar: { type: 'image', src: fund.logo, bg: '#f3f4f6' } })}
-                  className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
-                >
-                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
-                </button>
+              <div
+                onPointerDown={(e) => onDragStart?.(e, { ticker: fund.ticker, avatar: { type: 'image', src: fund.logo, bg: '#f3f4f6' } })}
+                className="flex gap-1 items-center pl-5 pr-2 py-3 w-full touch-none cursor-grab active:cursor-grabbing"
+              >
                 <div className="flex-1 flex items-center justify-between min-w-0">
                   <div className="flex gap-4 items-center min-w-0">
                     <div className="size-11 rounded-full bg-[#f3f4f6] overflow-hidden shrink-0 relative">
@@ -455,6 +458,9 @@ function ExploreContent({ onDragStart, light = false }) {
                   </div>
                   <YieldBadge value={fund.yield} up={true} light={light} />
                 </div>
+                <span className="shrink-0">
+                  <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
+                </span>
               </div>
               {i < FUNDS.length - 1 && <ExploreDivider />}
             </div>
@@ -462,31 +468,25 @@ function ExploreContent({ onDragStart, light = false }) {
 
           {/* Vietnam stock indices */}
           <div ref={sectionRefs.vietnam} />
-          <SectionHeader title="Vietnam stock indices" />
-          <div className="flex gap-2 items-start px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <SectionHeader title="Vietnam stock indices" light={light} />
+          <div className="flex gap-2 items-start px-5 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
             {VIETNAM_INDICES.map(idx => <IndexCard key={idx.name} {...idx} onDragStart={onDragStart} light={light} />)}
           </div>
 
           {/* Commodities */}
           <div ref={sectionRefs.commodities} />
-          <SectionHeader title="Commodities" />
-          <div className="flex gap-2 items-start px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <SectionHeader title="Commodities" light={light} />
+          <div className="flex gap-2 items-start px-5 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
             {COMMODITY_INDICES.map(idx => <IndexCard key={idx.name} {...idx} onDragStart={onDragStart} light={light} />)}
           </div>
 
           {/* Global stock indices */}
           <div ref={sectionRefs.global} />
-          <SectionHeader title="Global stock indices" />
-          <div className="flex gap-2 items-start px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <SectionHeader title="Global stock indices" light={light} />
+          <div className="flex gap-2 items-start px-5 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden">
             {GLOBAL_INDICES.map(idx => <IndexCard key={idx.name} {...idx} onDragStart={onDragStart} light={light} />)}
           </div>
         </div>
-
-        {/* Bottom fade */}
-        <div className={`absolute bottom-0 inset-x-0 h-14 pointer-events-none rounded-b-[48px] ${
-          light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#111111] to-transparent'
-        }`} />
-      </div>
     </div>
   )
 }
@@ -564,7 +564,7 @@ function BottomNav({ onNavigate }) {
           })}
         </div>
         <button className="size-14 rounded-full bg-surface-raised border border-border-strong flex items-center justify-center shrink-0 shadow-xl">
-          <Image src="/tri.png" alt="AI" width={24} height={24} />
+          <Image src="/ai.png" alt="AI" width={24} height={24} />
         </button>
       </div>
     </div>
@@ -679,7 +679,7 @@ function AnalyzeOverlay({ onClose, showCard = true, light = false }) {
           </button>
           <button className={`w-full rounded-full px-4 py-3 flex items-center justify-center gap-1 ${dark ? 'bg-white' : 'bg-surface-overlay'}`}>
             <div className="size-5 relative overflow-hidden shrink-0">
-              <Image src="/tri.png" alt="" fill className="object-contain" />
+              <Image src="/ai.png" alt="" fill className="object-contain" />
             </div>
             <span className={`text-[14px] font-medium ${dark ? 'text-[#111111]' : 'text-content-inverse'}`}>Ask AI</span>
           </button>
@@ -691,24 +691,26 @@ function AnalyzeOverlay({ onClose, showCard = true, light = false }) {
 }
 
 /* ─── Dark keyboard mock — shared visual for expanded compose screens ──── */
-function DarkKeyboardMock() {
+function DarkKeyboardMock({ light = false }) {
   const rows = [
     ['q','w','e','r','t','y','u','i','o','p'],
     ['a','s','d','f','g','h','j','k','l'],
     ['z','x','c','v','b','n','m'],
   ]
   const DK = ({ label, className = '' }) => (
-    <button className={`h-11 bg-[#3a3a3c] rounded-[10px] flex items-center justify-center text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)] ${className}`}>
+    <button className={`h-11 rounded-[10px] flex items-center justify-center text-[17px] ${
+      light ? 'bg-white text-black shadow-[0_1px_0_rgba(0,0,0,0.25)]' : 'bg-[#3a3a3c] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]'
+    } ${className}`}>
       {label}
     </button>
   )
   return (
     <div className="w-full shrink-0">
-      <div className="bg-[#1c1c1e] rounded-t-4xl rounded-b-[60px]">
-        <div className="flex items-center border-b border-[#2c2c2e] py-2">
+      <div className={`rounded-t-4xl rounded-b-[60px] ${light ? 'bg-[#d1d3d9]' : 'bg-[#1c1c1e] border border-neutral-900'}`}>
+        <div className={`flex items-center border-b py-2 ${light ? 'border-[#b9bcc3]' : 'border-[#2c2c2e]'}`}>
           {['"The"', 'the', 'to'].map((s, i) => (
-            <div key={s} className={`flex-1 flex items-center justify-center py-1 ${i < 2 ? 'border-r border-[#2c2c2e]' : ''}`}>
-              <span className="text-[15px] text-white">{s}</span>
+            <div key={s} className={`flex-1 flex items-center justify-center py-1 ${i < 2 ? (light ? 'border-r border-[#b9bcc3]' : 'border-r border-[#2c2c2e]') : ''}`}>
+              <span className={`text-[15px] ${light ? 'text-black' : 'text-white'}`}>{s}</span>
             </div>
           ))}
         </div>
@@ -720,21 +722,23 @@ function DarkKeyboardMock() {
             {rows[1].map(k => <DK key={k} label={k} className="w-9.25" />)}
           </div>
           <div className="flex justify-center gap-1.5">
-            <DK label="⇧" className="w-11 bg-[#636366]!" />
+            <DK label="⇧" className={`w-11 ${light ? 'bg-[#adb1b8]!' : 'bg-[#636366]!'}`} />
             {rows[2].map(k => <DK key={k} label={k} className="w-9.25" />)}
-            <DK label="⌫" className="w-11 bg-[#636366]!" />
+            <DK label="⌫" className={`w-11 ${light ? 'bg-[#adb1b8]!' : 'bg-[#636366]!'}`} />
           </div>
           <div className="flex gap-1.5">
-            <DK label="123" className="w-11 bg-[#636366]!" />
-            <button className="flex-1 h-11 bg-[#3a3a3c] rounded-[10px] text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]">space</button>
+            <DK label="123" className={`w-11 ${light ? 'bg-[#adb1b8]!' : 'bg-[#636366]!'}`} />
+            <button className={`flex-1 h-11 rounded-[10px] text-[17px] ${
+              light ? 'bg-white text-black shadow-[0_1px_0_rgba(0,0,0,0.25)]' : 'bg-[#3a3a3c] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]'
+            }`}>space</button>
             <button className="w-23 h-11 bg-[#007AFF] rounded-[10px] flex items-center justify-center shadow-[0_1px_0_rgba(0,0,0,0.5)]">
               <Icon name="keyboard_return" size={18} className="text-white" />
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between px-9 pt-2 pb-8">
-          <Icon name="emoji_emotions" size={26} className="text-[#636366]" />
-          <Icon name="mic" size={22} className="text-[#636366]" />
+          <Icon name="emoji_emotions" size={26} className={light ? 'text-[#8e9099]' : 'text-[#636366]'} />
+          <Icon name="mic" size={22} className={light ? 'text-[#8e9099]' : 'text-[#636366]'} />
         </div>
       </div>
     </div>
@@ -762,9 +766,9 @@ function ChipAvatar({ avatar, size = 24 }) {
 
 // Entry-screen suggestion tiles — same visual language as Home's TRI_ENTRY_SUGGESTIONS
 const WEALTH_ASK_SUGGESTIONS = [
-  { id: 1, rotate: -8, icon: '/icons-home/tri-suggestion-house.svg', label: 'Make a plan to buy house',                    message: 'Make a plan to buy house' },
-  { id: 2, rotate: 8,  icon: '/icons-home/tri-suggestion-plane.svg', label: 'Summarize my total spending on Bangkok Trip', message: 'Summarize my total spending on Bangkok Trip' },
-  { id: 3, rotate: -8, icon: 'freeze',                               label: 'Freeze my Credit card',                       message: 'Freeze my card' },
+  { id: 1, rotate: -8, icon: '/icons-home/tri-suggestion-house.png',  iconBg: '#bedbff', label: 'Make a plan to buy house',                    message: 'Make a plan to buy house' },
+  { id: 2, rotate: 8,  icon: '/icons-home/tri-suggestion-plane.png',  iconBg: '#d5d4f7', label: 'Summarize my total spending on Bangkok Trip', message: 'Summarize my total spending on Bangkok Trip' },
+  { id: 3, rotate: -8, icon: '/icons-home/tri-suggestion-freeze.png', iconBg: '#fff4cc', label: 'Freeze my Credit card',                       message: 'Freeze my card' },
 ]
 
 /* Scripted "compare & buy" demo — pre-fills each step when TCB + VIC are both
@@ -841,9 +845,17 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
       transition={{ type: 'spring', stiffness: 300, damping: 32 }}
       className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
     >
-      {/* Dotted pattern background — dark theme only */}
-      {!light && (
-        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      {/* Background — the Home gradient, reused here for both themes */}
+      {!light ? (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #292929 0%, #111111 100%)' }}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #a1a1aa 0%, #ffffff 70%)' }}
+        />
       )}
 
       {/* Status bar */}
@@ -855,24 +867,24 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
       <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1">
 
         {/* Main content card */}
-        <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col min-h-0 ${
+        <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[48px] rounded-br-[48px] overflow-hidden flex flex-col min-h-0 ${
           light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
         }`}>
           {/* Header */}
           <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
-            <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
+            <button className={`rounded-full px-5 py-2 flex items-center justify-center border ${
+              light ? 'border-neutral-300' : 'border-neutral-800'
             }`}>
               <Icon name="history" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
             </button>
             <div className="flex items-center gap-1">
-              <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
+              <button onClick={onOpenSearch} className={`rounded-full px-5 py-2 flex items-center justify-center border ${
+                light ? 'border-neutral-300' : 'border-neutral-800'
               }`}>
                 <Icon name="search" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
               </button>
-              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#111111]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
-                <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+              <button onClick={onClose} className={`rounded-full px-5 py-2 flex items-center justify-center border shrink-0 ${light ? 'border-neutral-300' : 'border-neutral-800'}`}>
+                <Icon name="close" size={24} className={light ? 'text-black' : 'text-white'} />
               </button>
             </div>
           </div>
@@ -885,7 +897,7 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                 <p className="t-label text-[#737373]">What&apos;s been on your mind lately?</p>
               </div>
               <div className="flex items-center pb-4 pt-3 px-4 shrink-0 w-full">
-                {WEALTH_ASK_SUGGESTIONS.map(({ id, rotate, icon, label, message }) => (
+                {WEALTH_ASK_SUGGESTIONS.map(({ id, rotate, icon, iconBg, label, message }) => (
                   <button
                     key={id}
                     onClick={() => setInputText(message)}
@@ -898,13 +910,9 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                       }`}
                       style={{ width: 117, height: 140, transform: `rotate(${rotate}deg)` }}
                     >
-                      {icon === 'freeze' ? (
-                        <div className="bg-cinnabar-400 rounded-lg size-6 flex items-center justify-center shrink-0">
-                          <div className="bg-cinnabar-200 rounded-full size-4" />
-                        </div>
-                      ) : (
-                        <img src={icon} alt="" className="size-6" />
-                      )}
+                      <div className="rounded-lg flex items-center justify-center shrink-0 size-6" style={{ background: iconBg }}>
+                        <Image src={icon} alt="" width={20} height={20} />
+                      </div>
                       <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{label}</p>
                     </div>
                   </button>
@@ -983,7 +991,7 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                         animate={{ rotate: 360, scale: [1, 1.18, 1] }}
                         transition={{ rotate: { duration: 1.6, repeat: Infinity, ease: 'linear' }, scale: { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } }}
                       >
-                        <Image src="/tri.png" alt="" width={28} height={28} />
+                        <Image src="/ai.png" alt="" width={28} height={28} />
                       </motion.div>
                     </div>
                   )}
@@ -999,16 +1007,36 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
         </div>
 
         {/* Ask anything input — chips row above, input row below */}
-        <div className={`border rounded-[32px] flex flex-col gap-2 pl-4 pr-2 pt-2 pb-2 shrink-0 mx-3 w-[calc(100%-24px)] ${
-          light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
+        <div className={`border backdrop-blur-sm rounded-[32px] flex flex-col gap-2 pl-4 pr-2 pt-2 pb-2 shrink-0 mx-3 w-[calc(100%-24px)] ${
+          light ? 'bg-white border-[#d4d4d4]' : 'bg-[#171717] border-[#fafafa]'
         }`}>
           {chatChips.length > 0 && (
             <div className="flex gap-1 items-start pt-2 w-full flex-wrap">
               {chatChips.map(chip => (
-                <div key={chip.ticker} className="bg-neutral-200 flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0">
+                <div
+                  key={chip.ticker}
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  data-ask-chip
+                  className="bg-neutral-200 flex gap-1 items-center pl-1 pr-2 py-1 rounded-full shrink-0"
+                >
                   <ChipAvatar avatar={chip.avatar} size={24} />
                   <span className="flex h-4 items-center text-[12px] font-medium leading-4 text-neutral-950 whitespace-nowrap">{chip.ticker}</span>
-                  <button onClick={() => onRemoveChip(chip.ticker)} className="flex items-center justify-center size-4 shrink-0">
+                  <button
+                    type="button"
+                    data-ask-chip
+                    onPointerDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      onRemoveChip(chip.ticker)
+                    }}
+                    onPointerUp={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    className="flex items-center justify-center size-4 shrink-0"
+                  >
                     <Icon name="close" size={16} className="text-neutral-950" />
                   </button>
                 </div>
@@ -1016,9 +1044,9 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
             </div>
           )}
           <div className="flex gap-2 items-center justify-center w-full">
-            <Icon name="add" size={24} className="text-black shrink-0" />
+            <Icon name="add" size={24} className={`shrink-0 ${light ? 'text-black' : 'text-white'}`} />
             <div className="flex-1 flex items-center min-w-0">
-              <span className="flex-1 text-[16px] leading-6 text-[#111111] text-left min-w-0 break-words">
+              <span className={`flex-1 text-[16px] leading-6 text-left min-w-0 break-words ${light ? 'text-[#111111]' : 'text-white'}`}>
                 {inputText ? (
                   <TypewriterInputText text={inputText} />
                 ) : (
@@ -1032,15 +1060,15 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
             <button
               onClick={handleSend}
               disabled={!canSend}
-              className="bg-info rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40"
+              className={`rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40 ${light ? 'bg-[#111111]' : 'bg-white'}`}
             >
-              <Icon name="arrow_upward" size={24} className="text-white" />
+              <Image src="/ai.png" alt="" width={24} height={24} />
             </button>
           </div>
         </div>
 
         {/* Dark keyboard — in flow */}
-        <DarkKeyboardMock />
+        <DarkKeyboardMock light={light} />
       </div>
     </motion.div>
   )
@@ -1055,13 +1083,15 @@ const FAB_ACTIONS = [
   { label: 'Top up',   icon: 'add_box' },
 ]
 
-export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, onAskChatOpen, onAskChatClose, menuOpen = false, onOpenMenu, light = false, onTesterNoteChange, pageContentX = 0, pageContentInitialX = 0, pageTransitioning = false } = {}) {
+export default function WealthScreen({ onNavigate, embedded = false, onOpenSearch, defaultTab = 'wealth', portfolioHovered = false, advisorHovered = false, analyzeOpen = false, onAnalyzeClose, onAnalyzeOpen, onInvestOpen, onInvestClose, onAskChatOpen, onAskChatClose, openAskChatOnMount = false, onOpenAskChatOnMountConsumed, menuOpen = false, onOpenMenu, light = false, onTesterNoteChange, pageContentX = 0, pageContentInitialX = 0, pageTransitioning = false, chatChips: controlledChatChips, setChatChips: setControlledChatChips } = {}) {
   const [hidden, setHidden] = useState(false)
   const [navTab, setNavTab] = useState(defaultTab) // 'wealth' | 'explore'
   const [showAnalyze, setShowAnalyze] = useState(false)
   const [timeFilter, setTimeFilter] = useState('1D')
   const [chartCollapsed, setChartCollapsed] = useState(false)
   const [assetsScrolled, setAssetsScrolled] = useState(false)
+  const [assetFilter, setAssetFilter] = useState('All')
+  const [topGainsOpen, setTopGainsOpen] = useState(true)
   const [fabOpen, setFabOpen] = useState(false)       // invest panel mounted
   const [bodyPushed, setBodyPushed] = useState(false)  // body compressed + dimmed
   const [investCornerActive, setInvestCornerActive] = useState(false)
@@ -1091,17 +1121,72 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
 
   /* ── Drag-to-chat: drag an item's handle onto the Ask AI field to add a chip ──
      chip shape: { ticker, avatar: { type: 'image', src, bg } | { type: 'icon', icon } } */
-  const [chatChips, setChatChips] = useState([])
+  const [localChatChips, setLocalChatChips] = useState([])
+  const chatChips = controlledChatChips ?? localChatChips
+  const setChatChips = setControlledChatChips ?? setLocalChatChips
   const [ghost, setGhost] = useState(null)        // { ticker, x, y } — floating pill following the pointer
   const [overAsk, setOverAsk] = useState(false)   // pointer currently over the Ask field
-  const [askChatOpen, setAskChatOpen] = useState(false) // expanded compose overlay
+  // Opens straight into the compose screen when Home jumps here with chips already
+  // attached — read once at mount (lazy initializer) so it can never re-fire on a
+  // later, unrelated navigation into this screen (this component fully unmounts
+  // between visits, so "once at mount" really does mean "once per visit").
+  const [askChatOpen, setAskChatOpen] = useState(() => openAskChatOnMount) // expanded compose overlay
   const rootRef = useRef(null)
   const askRef = useRef(null)
+  const wealthScrollRef = useRef(null)
+  const cardBRef = useRef(null)
+  const scrollBeforeMenuRef = useRef(0)
+  const menuWasOpenRef = useRef(false)
+
+  // When the menu opens, scroll the content up just enough that Card B's
+  // bottom edge sits 8px above the menu sheet's top edge — identical to Home.
+  useEffect(() => {
+    const scroller = wealthScrollRef.current
+    if (!scroller) return
+    if (menuOpen) {
+      // Only capture the "restore to" baseline on the actual open transition
+      // — this effect can re-run while menuOpen stays true (e.g. once
+      // pageTransitioning flips), and re-reading scrollTop at that point
+      // would capture an already-jumped position instead of the original one.
+      if (!menuWasOpenRef.current) scrollBeforeMenuRef.current = scroller.scrollTop
+      menuWasOpenRef.current = true
+      const applyScroll = (behavior) => {
+        const cardEl = cardBRef.current
+        const phoneEl = rootRef.current
+        if (!cardEl || !phoneEl) return
+        const cardRect = cardEl.getBoundingClientRect()
+        const phoneRect = phoneEl.getBoundingClientRect()
+        const menuTopY = phoneRect.top + 160
+        const delta = cardRect.bottom - (menuTopY - 8)
+        const maxScroll = scroller.scrollHeight - scroller.clientHeight
+        const target = Math.min(Math.max(scroller.scrollTop + delta, 0), Math.max(maxScroll, 0))
+        scroller.scrollTo({ top: target, behavior })
+      }
+      if (pageTransitioning) {
+        // Arriving here via menu navigation: the menu is already open, so
+        // jump straight to the scrolled-up position instead of animating
+        // into it — an animated scroll here would race the horizontal
+        // slide-in. The close-menu branch below still animates normally.
+        applyScroll('auto')
+      } else {
+        requestAnimationFrame(() => applyScroll('smooth'))
+      }
+    } else {
+      menuWasOpenRef.current = false
+      scroller.scrollTo({ top: scrollBeforeMenuRef.current, behavior: 'smooth' })
+    }
+  }, [menuOpen, pageTransitioning])
 
   useEffect(() => {
     if (askChatOpen) onAskChatOpen?.()
     else onAskChatClose?.()
   }, [askChatOpen, onAskChatClose, onAskChatOpen])
+
+  // Tell Home its one-shot request has been read, so it resets the flag and a
+  // later plain navigation into this screen doesn't also open the compose screen.
+  useEffect(() => {
+    if (openAskChatOnMount) onOpenAskChatOnMountConsumed?.()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!onTesterNoteChange) return
@@ -1147,7 +1232,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
       return !!a && ev.clientX >= a.left && ev.clientX <= a.right && ev.clientY >= a.top && ev.clientY <= a.bottom
     }
     const move = (ev) => {
-      setGhost({ ticker: chip.ticker, x: ev.clientX - root.left, y: ev.clientY - root.top })
+      setGhost({ ticker: chip.ticker, avatar: chip.avatar, x: ev.clientX - root.left, y: ev.clientY - root.top })
       setOverAsk(hit(ev))
     }
     const up = (ev) => {
@@ -1162,21 +1247,10 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
     window.addEventListener('pointerup', up)
   }
 
-  const tabsRowRef  = useRef(null)
-  const tabBtnRefs  = useRef({})
-  const [indicatorX, setIndicatorX] = useState(null)
-
-  useLayoutEffect(() => {
-    const el  = tabBtnRefs.current[navTab]
-    const row = tabsRowRef.current
-    if (!el || !row) return
-    setIndicatorX(el.offsetLeft + (el.offsetWidth - 20) / 2)
-  }, [navTab])
-
   const SUMMARY = [
-    { icon: 'candlestick_chart', label: 'Equities', value: '12,008,897đ', align: 'items-start'  },
-    { icon: 'analytics',         label: 'Bonds',    value: '10,000,000đ', align: 'items-center' },
-    { icon: 'layers',            label: 'Fund',     value: '2,000,000đ',  align: 'items-end'    },
+    { icon: '/invest-equities.png', label: 'Equities', value: '12,008,897', align: 'items-start'  },
+    { icon: '/invest-bonds.png',    label: 'Bonds',    value: '10,000,000', align: 'items-center' },
+    { icon: '/invest-funds.png',    label: 'Fund',     value: '2,000,000',  align: 'items-end'    },
   ]
 
   return (
@@ -1185,12 +1259,13 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
     }`}>
 
       {!pageTransitioning && (
-        <Image
-          src={light ? '/background-my-wealth-light.png' : '/background-my-wealth-dark.png'}
-          alt=""
-          fill
-          unoptimized
-          className="object-cover"
+        <div
+          className="absolute inset-0"
+          style={{
+            background: light
+              ? 'linear-gradient(180deg, #D5D4F7 0%, #f5f5f5 49%, #f5f5f5 100%)'
+              : 'linear-gradient(180deg, #D5D4F7 0%, #111111 58%, #111111 100%)',
+          }}
         />
       )}
 
@@ -1216,109 +1291,146 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         initial={false}
         animate={{ x: askChatOpen ? -448 : 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-        className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-8"
+        className="absolute inset-0 flex flex-col overflow-hidden"
       >
+
+        {/* Outer padding container — fills all the way down; the Ask bar floats
+            over it. No padding here: it lives on the scroll container below,
+            exactly like Home. */}
+        <div className="flex-1 flex flex-col min-h-0">
 
         <motion.div
           initial={{ x: pageContentInitialX }}
           animate={{ x: pageContentX }}
           transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-          className="flex-1 flex flex-col gap-2 min-h-0"
+          className="relative flex-1 flex flex-col min-h-0"
         >
 
-        {/* Main content card — slides up + dims when the menu sheet is open */}
+        {/* Scrollable content — fills the full available height like Home, instead
+            of being clipped to a fixed-height block. Card A (header + balance +
+            summary/chart) and Card B (My Assets) are separate cards with a 4px
+            gap, matching Home's structure; the whole thing scrolls as one unit
+            when it's taller than the screen. */}
         <motion.div
           initial={false}
           animate={{
-            y: menuOpen ? -140 : 0,
             opacity: (menuOpen || bodyPushed) ? 0.5 : 1,
-            borderBottomLeftRadius: investCornerShown ? 64 : 60,
-            borderBottomRightRadius: investCornerShown ? 64 : 60,
           }}
           transition={{
-            y: { type: 'spring', stiffness: 300, damping: 32 },
             opacity: { duration: 0.18 },
-            borderBottomLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
-            borderBottomRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
           }}
-          className={`relative flex-1 backdrop-blur-lg border rounded-[60px] overflow-hidden flex flex-col justify-end min-h-0 ${
-            light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
-          }`}
+          ref={wealthScrollRef}
+          className="flex-1 flex flex-col gap-1 min-h-0 overflow-y-auto px-1 pt-1 pb-1 [&::-webkit-scrollbar]:hidden"
         >
-          {/* Fixed-height content block pinned to the card bottom — when the menu
-              compresses the card, content rides up with it (top clips, like Home) */}
-          <div className="flex flex-col w-full shrink-0" style={{ height: 848 }}>
 
-          {/* Header — tabs + search */}
+          {/* Card A — header + balance + summary/chart (wealth tab), or header +
+              Explore content (explore tab, fills remaining height itself) */}
+          <motion.div
+            initial={false}
+            animate={{
+              borderBottomLeftRadius: navTab === 'wealth' ? (investCornerShown ? 64 : 48) : (investCornerShown ? 64 : 60),
+              borderBottomRightRadius: navTab === 'wealth' ? (investCornerShown ? 64 : 48) : (investCornerShown ? 64 : 60),
+            }}
+            transition={{
+              borderBottomLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+              borderBottomRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+            }}
+            style={{
+              background: light
+                ? 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, #ffffff 58%, #ffffff 100%)'
+                : 'linear-gradient(180deg, rgba(17,17,17,0.6) 0%, #111111 58%, #111111 100%)',
+            }}
+            className={`relative border rounded-t-[60px] overflow-hidden flex flex-col min-h-0 ${
+              navTab === 'explore' ? 'flex-1' : 'shrink-0'
+            } ${light ? 'border-[#f5f5f5]' : 'border-[#171717]'}`}
+          >
+
+          {/* Header — pill-segmented tabs + search */}
           <div className="flex items-center justify-between pl-6 pr-3 pb-3 pt-16 shrink-0">
-            <div ref={tabsRowRef} className="relative flex items-center gap-4">
+            <div className={`flex items-center p-0.5 rounded-full ${light ? 'bg-[rgba(17,17,17,0.12)]' : 'bg-[rgba(17,17,17,0.6)]'}`}>
               {WEALTH_TABS.map(tab => (
                 <button
                   key={tab.id}
-                  ref={el => { tabBtnRefs.current[tab.id] = el }}
                   onClick={() => setNavTab(tab.id)}
-                  className="flex flex-col gap-1 items-center pb-1"
+                  className={`flex flex-col items-center justify-center px-4 py-1.5 rounded-full ${
+                    navTab === tab.id ? (light ? 'bg-white' : 'bg-white/16') : ''
+                  }`}
                 >
-                  <span className={`text-[24px] leading-8 tracking-[0.48px] ${navTab === tab.id ? `font-bold ${light ? 'text-[#111111]' : 'text-white'}` : `font-semibold ${light ? 'text-[#a1a1a1]' : 'text-[#737373]'}`}`}>
+                  <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${
+                    navTab === tab.id ? (light ? 'text-[#111111]' : 'text-white') : (light ? 'text-[#525252]' : 'text-[#b2b2b2]')
+                  }`}>
                     {tab.label}
                   </span>
                 </button>
               ))}
-              {indicatorX !== null && (
-                <motion.div
-                  className={`absolute bottom-0 h-1 w-5 rounded-full ${light ? 'bg-[#111111]' : 'bg-white'}`}
-                  initial={false}
-                  animate={{ x: indicatorX }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-                />
-              )}
             </div>
             <button
               onClick={() => onOpenSearch?.()}
-              className={`rounded-full px-6 py-3 flex items-center justify-center shrink-0 border ${
-                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
-              }`}
+              className={`flex items-center justify-center px-5 py-2 rounded-full border shrink-0 ${light ? 'border-neutral-300' : 'border-neutral-800'}`}
             >
-              <Icon name="search" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
+              <Icon name="search" size={24} className={light ? 'text-[#111111]' : 'text-white'} />
             </button>
           </div>
 
           {/* ── My wealth tab ── */}
           {navTab === 'wealth' && (
             <>
-              {/* Balance */}
-              <div className="relative flex flex-col gap-2 px-6 py-3 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[14px] text-[#737373] leading-5">Total Investment</span>
-                  <button onClick={() => setHidden(v => !v)} className="flex items-center">
-                    <Icon name={hidden ? 'visibility_off' : 'visibility'} size={20} className="text-[#737373]" />
-                  </button>
+              {/* Balance — collapsed: left column (amount + change) + right column
+                  (mini sparkline + collapse chevron). Expanded: plain stacked
+                  layout, no inline sparkline (the full chart card is visible
+                  below instead). */}
+              {chartCollapsed ? (
+                <div className="flex gap-2 items-center px-6 pt-3 pb-10 shrink-0">
+                  <div className="flex-1 min-w-0 flex flex-col gap-2 items-start">
+                    <span className={`text-[14px] leading-5 ${light ? 'text-[#525252]' : 'text-[#a1a1a1]'}`}>Total Investment</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-baseline gap-1 font-mono">
+                        <span className={`text-[24px] leading-8 font-bold tracking-[0.48px] ${light ? 'text-[#525252]' : 'text-[#a1a1a1]'}`}>VND</span>
+                        <span className={`text-[24px] leading-8 font-bold tracking-[0.48px] tabular-nums ${light ? 'text-[#111111]' : 'text-white'}`}>
+                          {hidden ? '••••••••' : '24,008,897'}
+                        </span>
+                      </div>
+                      <button onClick={() => setHidden(v => !v)} className="flex items-center shrink-0">
+                        <Image src={hidden ? '/icons-home-v2/visibility-off.svg' : '/icons-home-v2/visibility.svg'} alt="" width={20} height={20} />
+                      </button>
+                    </div>
+                    <div className="flex gap-1 items-center text-[14px] font-medium leading-5 tracking-[0.28px]">
+                      <span className={light ? 'text-success' : 'text-green-400'}>+ 2,993,009 (9,78%)</span>
+                      <span className={light ? 'text-[#525252]' : 'text-[#a1a1a1]'}>Today</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end justify-between self-stretch shrink-0">
+                    <img src="/wealth-balance-spark.svg" alt="" className="w-24 h-10 object-contain" />
+                    <button
+                      onClick={() => setChartCollapsed(v => !v)}
+                      className={`rounded-full p-0.5 flex items-center justify-center ${light ? 'bg-[#e5e5e5]' : 'bg-[#262626]'}`}
+                    >
+                      <Icon name="keyboard_arrow_up" size={20} className={`rotate-180 ${light ? 'text-[#111111]' : 'text-white'}`} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-[36px] font-bold leading-10 font-mono tabular-nums ${light ? 'text-[#111111]' : 'text-white'}`}>
-                    {hidden ? '••••••••' : '24,008,897'}
-                  </span>
-                  <span className="text-[24px] font-bold text-[#737373] leading-8 tracking-[0.48px]">đ</span>
+              ) : (
+                <div className="flex flex-col gap-2 items-start justify-center px-6 pt-3 pb-6 shrink-0">
+                  <span className={`text-[14px] leading-5 ${light ? 'text-[#525252]' : 'text-[#a1a1a1]'}`}>Total Investment</span>
+                  <div className="flex flex-col gap-1 items-start w-full">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-baseline gap-1 font-mono">
+                        <span className={`text-[30px] leading-10 font-bold tabular-nums ${light ? 'text-[#525252]' : 'text-[#a1a1a1]'}`}>VND</span>
+                        <span className={`text-[30px] leading-10 font-bold tabular-nums ${light ? 'text-[#111111]' : 'text-white'}`}>
+                          {hidden ? '••••••••' : '24,008,897'}
+                        </span>
+                      </div>
+                      <button onClick={() => setHidden(v => !v)} className="flex items-center shrink-0">
+                        <Image src={hidden ? '/icons-home-v2/visibility-off.svg' : '/icons-home-v2/visibility.svg'} alt="" width={20} height={20} />
+                      </button>
+                    </div>
+                    <div className="flex gap-1 items-center text-[14px] font-medium leading-5 tracking-[0.28px]">
+                      <span className={light ? 'text-success' : 'text-green-400'}>+ 2,993,009 (9,78%)</span>
+                      <span className={light ? 'text-[#525252]' : 'text-[#a1a1a1]'}>Today</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-1 text-[14px] font-medium leading-5">
-                  <span className={light ? 'text-success' : 'text-green-400'}>+2,993,009đ (9,78%)</span>
-                  <span className="text-[#737373]">Today</span>
-                </div>
-                {chartCollapsed && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 4 }}
-                    transition={{ duration: 0.18, delay: 0.12, ease: 'easeOut' }}
-                    onClick={() => setChartCollapsed(false)}
-                    className={`absolute right-6 bottom-3 rounded-full px-5 py-2 flex items-center justify-center border ${
-                      light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
-                    }`}
-                  >
-                    <Icon name="keyboard_arrow_down" size={20} className={light ? 'text-[#111111]' : 'text-white'} />
-                  </motion.button>
-                )}
-              </div>
+              )}
 
               {/* Summary + chart card */}
               <AnimatePresence initial={false}>
@@ -1332,15 +1444,21 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                   opacity: { duration: 0.16, ease: 'easeOut' },
                   y: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
                 }}
-                className="px-3 pb-3 shrink-0 overflow-hidden"
+                className="px-1 pb-1 shrink-0 overflow-hidden"
               >
-                <div className={`border rounded-[48px] overflow-hidden ${light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'}`}>
+                <div className={`relative border rounded-[48px] overflow-hidden ${light ? 'bg-white border-[#f0f0f0]' : 'bg-[#171717] border-[#171717]'}`}>
+                  <img
+                    src={light ? '/wealth-summary-texture-light.svg' : '/wealth-summary-texture.svg'}
+                    alt=""
+                    className="absolute left-0 pointer-events-none w-full"
+                    style={{ top: 108, height: 201 }}
+                  />
                   {/* 3-column summary */}
-                  <div className="flex items-center justify-between p-6">
+                  <div className="relative flex items-center justify-between p-6">
                     {SUMMARY.map(item => (
                       <div key={item.label} className={`flex flex-col gap-2 justify-center ${item.align}`}>
                         <div className="flex gap-2 items-start">
-                          <Icon name={item.icon} size={20} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
+                          <Image src={item.icon} alt="" width={20} height={20} />
                           <span className="text-[14px] font-medium text-[#737373] leading-5">{item.label}</span>
                         </div>
                         <span className={`text-[14px] font-medium leading-5 tabular-nums ${light ? 'text-[#111111]' : 'text-white'}`}>{item.value}</span>
@@ -1353,25 +1471,21 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                     <img src="/wealth-chart.svg" alt="" className="w-full h-[92px] object-cover" />
                     <div className="flex items-center justify-between px-6 pb-6 pt-4">
                       {/* Time filter pills */}
-                      <div className={`rounded-full p-1 flex items-start overflow-hidden ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
+                      <div className={`relative rounded-full p-1 flex items-start overflow-hidden ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
                         {['1D', '1W', '1M', '1Y'].map(t => (
                           <button
                             key={t}
                             onClick={() => setTimeFilter(t)}
-                            className={`rounded-full px-4 py-1 ${timeFilter === t ? (light ? 'bg-[#111111]' : 'bg-[#fafafa]') : ''}`}
+                            className={`rounded-full px-4 py-1 border-2 ${timeFilter === t ? (light ? 'border-[#111111]' : 'border-[#fafafa]') : 'border-transparent'}`}
                           >
-                            <span className={`text-[14px] font-medium leading-5 ${
-                              timeFilter === t ? (light ? 'text-white' : 'text-[#111111]') : (light ? 'text-[#111111]' : 'text-[#fafafa]')
-                            }`}>{t}</span>
+                            <span className={`text-[14px] font-medium leading-5 ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>{t}</span>
                           </button>
                         ))}
                       </div>
                       {/* Collapse */}
                       <button
                         onClick={() => setChartCollapsed(true)}
-                        className={`rounded-full px-5 py-2 flex items-center justify-center border ${
-                          light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
-                        }`}
+                        className={`rounded-full p-0.5 flex items-center justify-center ${light ? 'bg-[#e5e5e5]' : 'bg-[#262626]'}`}
                       >
                         <Icon name="keyboard_arrow_up" size={20} className={light ? 'text-[#111111]' : 'text-white'} />
                       </button>
@@ -1381,100 +1495,6 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
               </motion.div>
               )}
               </AnimatePresence>
-
-              {/* My Assets card */}
-              <div className="flex-1 px-3 pb-3 min-h-0 flex">
-                <div className={`relative flex-1 backdrop-blur-lg border rounded-[48px] overflow-hidden flex flex-col min-h-0 ${
-                  light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
-                }`}>
-                  <div className="relative px-6 pt-6 shrink-0">
-                    <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>My Assets (3)</p>
-                    {assetsScrolled && (
-                      <div className={`absolute top-full inset-x-0 h-14 pointer-events-none z-10 ${
-                        light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#111111] to-transparent'
-                      }`} />
-                    )}
-                  </div>
-
-                  <div
-                    onScroll={(e) => setAssetsScrolled(e.currentTarget.scrollTop > 0)}
-                    className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0"
-                  >
-                    {/* Equities */}
-                    <div className="px-6 pt-3">
-                      <p className="text-[14px] font-medium text-[#737373] leading-5">Equities</p>
-                    </div>
-                    <div className="pl-1 pr-4 py-3 flex gap-1 items-center">
-                      <button
-                        onPointerDown={(e) => startDrag(e, { ticker: 'TCB', avatar: { type: 'image', src: '/tcb-logo.png', bg: '#f3f4f6' } })}
-                        className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
-                      >
-                        <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
-                      </button>
-                      <div className="flex-1 flex items-start justify-between min-w-0">
-                        <div className="flex gap-4 items-center">
-                          <div className="size-11 rounded-full bg-[#f3f4f6] overflow-hidden relative shrink-0">
-                            <Image src="/tcb-logo.png" alt="TCB" fill className="object-cover" />
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span className={`text-[14px] font-medium leading-5 ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>TCB</span>
-                            <span className="text-[12px] font-medium text-[#737373] leading-4">Qty: 400</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-1 items-end text-right">
-                          <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>12,008,897đ</span>
-                          <span className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>+149,000đ (+1.29%)</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="pl-[83px] pr-4 w-full">
-                      <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
-                    </div>
-
-                    {/* Bonds */}
-                    <div className="px-6 pt-3">
-                      <p className="text-[14px] font-medium text-[#737373] leading-5">Bonds</p>
-                    </div>
-                    {BONDS.map((bond, i) => (
-                      <div key={bond.id}>
-                        <div className="pl-1 pr-4 py-3 flex gap-1 items-center">
-                          <button
-                            onPointerDown={(e) => startDrag(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
-                            className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
-                          >
-                            <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
-                          </button>
-                          <div className="flex-1 flex items-start justify-between min-w-0">
-                            <div className="flex gap-4 items-center">
-                              <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
-                                <Icon name="analytics" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
-                              </div>
-                              <div className="flex flex-col gap-1">
-                                <span className={`text-[14px] font-medium leading-5 ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{bond.ticker}</span>
-                                <span className="text-[12px] font-medium text-[#737373] leading-4">Maturity: {bond.maturity}</span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-1 items-end text-right">
-                              <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{bond.amount}</span>
-                              <span className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>{bond.yieldStr}</span>
-                            </div>
-                          </div>
-                        </div>
-                        {i < BONDS.length - 1 && (
-                          <div className="pl-[83px] pr-4 w-full">
-                            <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Bottom fade */}
-                  <div className={`absolute bottom-0 inset-x-0 h-14 pointer-events-none rounded-b-[48px] ${
-                    light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#111111] to-transparent'
-                  }`} />
-                </div>
-              </div>
             </>
           )}
 
@@ -1484,35 +1504,211 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
               <ExploreContent onDragStart={startDrag} light={light} />
             </div>
           )}
-          </div>
+          </motion.div>
 
-          {/* Invest FAB — single shared button across both tabs */}
-          <button
-            onClick={() => fabOpen ? closeInvest() : openInvest()}
-            className={`absolute right-6 bottom-6 rounded-[60px] px-8 py-5 flex items-center gap-2 shadow-[0_20px_12.5px_rgba(0,0,0,0.1),0_10px_5px_rgba(0,0,0,0.04)] ${light ? 'bg-black' : 'bg-white'}`}
-          >
-            <motion.span
-              animate={{ rotate: fabOpen ? 45 : 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-              className={`material-symbols-outlined leading-none select-none ${light ? 'text-white' : 'text-black'}`}
-              style={{ fontSize: 24, display: 'block' }}
-            >
-              add
-            </motion.span>
-            <span className={`text-[14px] font-medium leading-5 ${light ? 'text-white' : 'text-black'}`}>Invest</span>
-          </button>
+          {/* Top gains card — separate card with a 4px gap, between Balance/summary
+              and My Assets (wealth tab only) */}
+          {navTab === 'wealth' && (
+            <div className={`relative shrink-0 border rounded-[48px] overflow-hidden flex flex-col ${
+              light ? 'bg-white border-[#f5f5f5]' : 'bg-[#111111] border-[#171717]'
+            }`}>
+              <div className="flex items-center justify-between pt-6 pb-2 px-6 shrink-0">
+                <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>Top gains</p>
+                <button
+                  onClick={() => setTopGainsOpen(v => !v)}
+                  className="flex items-center justify-center size-6"
+                >
+                  <Icon
+                    name="keyboard_arrow_up"
+                    size={24}
+                    className={`transition-transform duration-300 ${topGainsOpen ? 'rotate-90' : '-rotate-90'} ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}
+                  />
+                </button>
+              </div>
+              <AnimatePresence initial={false}>
+                {topGainsOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex gap-1 items-start p-2">
+                      {TOP_GAINS.map((item, i) => (
+                        <div
+                          key={item.ticker}
+                          onPointerDown={(e) => startDrag(e, { ticker: item.ticker, avatar: { type: 'image', src: item.logo, bg: item.logoBg } })}
+                          className={`flex-1 min-w-0 flex flex-col gap-5 items-start justify-center p-4 touch-none cursor-grab active:cursor-grabbing ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'} ${
+                            i === 0 ? 'rounded-tl-xl rounded-tr-xl rounded-bl-[40px] rounded-br-xl'
+                              : i === TOP_GAINS.length - 1 ? 'rounded-tl-xl rounded-tr-xl rounded-bl-xl rounded-br-[40px]'
+                              : 'rounded-xl'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between w-full">
+                            <div className="flex flex-col gap-1 items-start">
+                              <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>{item.ticker}</span>
+                              <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] ${light ? 'text-success' : 'text-green-400'}`}>{item.change}</span>
+                            </div>
+                            <Icon name="drag_indicator" size={16} className={light ? 'text-[#d4d4d4]' : 'text-[#404040]'} />
+                          </div>
+                          <img src={item.spark} alt="" className="w-full h-8 object-contain" />
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Card B — My Assets, separate card with a 4px gap above (wealth tab only).
+              Hugs its content (no fixed height / clipping) with 56px bottom padding. */}
+          {navTab === 'wealth' && (
+                <div ref={cardBRef} className={`relative shrink-0 backdrop-blur-lg border rounded-[48px] flex flex-col ${
+                  light ? 'bg-white border-[#f5f5f5]' : 'bg-[#111111] border-[#171717]'
+                }`}>
+                  <div className="relative flex items-center justify-start pt-6 pb-2 px-6 shrink-0">
+                    <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>My Assets (3)</p>
+                    {assetsScrolled && (
+                      <div className={`absolute top-full inset-x-0 h-14 pointer-events-none z-10 ${
+                        light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#111111] to-transparent'
+                      }`} />
+                    )}
+                  </div>
+
+                  {/* Filter chips */}
+                  <div className="relative flex gap-3 pt-4 shrink-0">
+                    <div className="flex-1 flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden pl-5 pr-5">
+                      {ASSET_FILTERS.map(f => (
+                        <button
+                          key={f}
+                          onClick={() => setAssetFilter(f)}
+                          className={`rounded-full h-9 px-4 flex items-center shrink-0 border-2 ${
+                            light
+                              ? `bg-[#f5f5f5] ${f === assetFilter ? 'border-[#111111] bg-white' : 'border-transparent'}`
+                              : `bg-[#171717] ${f === assetFilter ? 'border-[#fafafa]' : 'border-transparent'}`
+                          }`}
+                        >
+                          <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#fafafa]'}`}>
+                            {f}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 pt-3 pb-14">
+                    <div
+                      onPointerDown={(e) => startDrag(e, { ticker: 'TCB', avatar: { type: 'image', src: '/tcb-logo.png', bg: '#f3f4f6' } })}
+                      className="pl-4 pr-2 py-3 flex gap-2 items-center touch-none cursor-grab active:cursor-grabbing"
+                    >
+                      <div className="flex-1 flex items-center justify-between min-w-0">
+                        <div className="flex gap-4 items-center">
+                          <div className="size-11 rounded-full bg-[#f3f4f6] overflow-hidden relative shrink-0">
+                            <Image src="/tcb-logo.png" alt="TCB" fill className="object-cover" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>TCB</span>
+                            <span className="text-[12px] font-medium text-[#737373] leading-4">Qty: 400</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1 items-end text-right">
+                          <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>12,008,897</span>
+                          <span className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>+149,000đ (+1.29%)</span>
+                        </div>
+                      </div>
+                      <span className="shrink-0">
+                        <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
+                      </span>
+                    </div>
+                    <div className="pl-[76px] pr-4 w-full">
+                      <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
+                    </div>
+
+                    {BONDS.map((bond, i) => (
+                      <div key={bond.id}>
+                        <div
+                          onPointerDown={(e) => startDrag(e, { ticker: bond.ticker, avatar: { type: 'icon', icon: 'analytics' } })}
+                          className="pl-4 pr-2 py-3 flex gap-2 items-center touch-none cursor-grab active:cursor-grabbing"
+                        >
+                          <div className="flex-1 flex items-center justify-between min-w-0">
+                            <div className="flex gap-4 items-center">
+                              <div className="rounded-full flex items-center justify-center shrink-0 size-11" style={{ background: '#bedbff' }}>
+                                <Image src="/invest-bonds.png" alt="" width={20} height={20} />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{bond.ticker}</span>
+                                <span className="text-[12px] font-medium text-[#737373] leading-4">Maturity: {bond.maturity}</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1 items-end text-right">
+                              <span className={`text-[14px] font-semibold leading-6 font-mono tabular-nums ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{bond.amount}</span>
+                              <span className={`text-[12px] font-medium leading-4 ${light ? 'text-success' : 'text-green-400'}`}>{bond.yieldStr}</span>
+                            </div>
+                          </div>
+                          <span className="shrink-0">
+                            <Icon name="drag_indicator" size={16} className={light ? "text-[#d4d4d4]" : "text-[#262626]"} />
+                          </span>
+                        </div>
+                        {i < BONDS.length - 1 && (
+                          <div className="pl-[76px] pr-4 w-full">
+                            <div className="bg-[#737373] h-px opacity-10 rounded-full w-full" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+          )}
+
+          {/* Footer clearance — keeps Card B's bottom edge from scrolling fully
+              behind the floating Ask bar; natural scroll end settles it 8px
+              above the bar, matching Home. */}
+          {navTab === 'wealth' && <div className="shrink-0" style={{ height: 116 }} />}
+
+          {/* Scroll headroom — guarantees there's enough scrollable distance for
+              the menu-open effect above to bring Card B up into position, even
+              when it's near the bottom of the content already. Sized instantly
+              (no spring) so it's already in the layout before that effect
+              measures scrollHeight. Identical to Home. Wealth tab only — on
+              Explore, Card A is flex-1 and this would just squeeze it down. */}
+          {navTab === 'wealth' && <div className="shrink-0" style={{ height: menuOpen ? 900 : 0 }} />}
+
         </motion.div>
 
+        {/* Invest FAB — single shared button across both tabs, anchored to the
+            tab-content area (outside the scroll wrapper so it stays fixed) */}
+        <motion.button
+          onClick={() => fabOpen ? closeInvest() : openInvest()}
+          initial={false}
+          animate={{ opacity: fabOpen ? 0 : 1, pointerEvents: fabOpen ? 'none' : 'auto' }}
+          transition={{ duration: 0.18 }}
+          className={`absolute right-6 z-55 rounded-[60px] px-8 py-5 flex items-center gap-2 shadow-[0_20px_12.5px_rgba(0,0,0,0.1),0_10px_5px_rgba(0,0,0,0.04)] ${light ? 'bg-black' : 'bg-white'}`}
+          style={{ bottom: 112 }}
+        >
+          <motion.span
+            animate={{ rotate: fabOpen ? 45 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            className={`material-symbols-outlined leading-none select-none ${light ? 'text-white' : 'text-black'}`}
+            style={{ fontSize: 24, display: 'block' }}
+          >
+            add
+          </motion.span>
+          <span className={`text-[14px] font-medium leading-5 ${light ? 'text-white' : 'text-black'}`}>Invest</span>
+        </motion.button>
+
         {/* Push spacer — compresses the card so its bottom lands 8px above the
-            menu sheet (356) or the invest panel (252), matching the Home transition */}
+            invest panel (252). Menu positioning is now handled by the scroll
+            effect above, matching Home. */}
         <motion.div
           initial={false}
           animate={{
-            height: menuOpen ? 560 : bodyPushed ? 252 : 0,
-            marginTop: (menuOpen || bodyPushed || investCornerShown) ? 0 : -8,
+            height: bodyPushed ? 252 : 0,
+            marginTop: (bodyPushed || investCornerShown) ? 0 : -8,
           }}
           transition={{
-            height: { type: 'spring', stiffness: 300, damping: 30, delay: (menuOpen || bodyPushed) ? 0.05 : 0 },
+            height: { type: 'spring', stiffness: 300, damping: 30, delay: bodyPushed ? 0.05 : 0 },
             marginTop: { type: 'spring', stiffness: 300, damping: 32 },
           }}
           className="shrink-0"
@@ -1520,16 +1716,26 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
 
         </motion.div>
 
-        {/* Footer — dots menu + Ask AI; stays put, dims while invest panel is open */}
+        </div>
+
+        {/* Floating Ask bar — overlays the content with a gradient scrim fading up
+            from the solid background, identical to Home's floating footer */}
         <motion.div
           initial={false}
           animate={{ opacity: bodyPushed ? 0.5 : 1 }}
           transition={{ duration: 0.25 }}
-          className={`flex gap-2 items-end px-3 shrink-0 ${pageTransitioning ? 'pointer-events-none' : ''}`}
+          className={`absolute inset-x-0 bottom-0 z-50 pt-4 px-8 pb-8 rounded-b-[64px] ${pageTransitioning ? 'pointer-events-none' : ''}`}
+          style={{
+            background: light
+              ? 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, #ffffff 53%)'
+              : 'linear-gradient(to bottom, rgba(17,17,17,0) 0%, #111111 53%)',
+          }}
         >
+        <div className="relative shrink-0 w-full flex items-center gap-2" style={{ height: 64 }}>
           <button
             onClick={() => onOpenMenu ? onOpenMenu() : onNavigate?.('home')}
-            className={`rounded-[60px] px-8 py-5 flex items-center justify-center shrink-0 ${light ? 'bg-black' : 'bg-white'}`}
+            className={`px-8 py-5 flex items-center justify-center shrink-0 ${light ? 'bg-black' : 'bg-white'}`}
+            style={{ borderRadius: 36 }}
           >
             <div className="relative size-6">
               {[[4, 4], [16, 4], [4, 16], [16, 16]].map(([x, y], i) => (
@@ -1542,11 +1748,20 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
             initial={false}
             animate={{ borderColor: overAsk ? (light ? '#111111' : '#fafafa') : (light ? '#e5e5e5' : '#404040'), scale: overAsk ? 1.02 : 1 }}
             transition={{ duration: 0.15 }}
-            onClick={() => setAskChatOpen(true)}
-            className={`flex-1 backdrop-blur-[4px] border rounded-[60px] pl-5 pr-5 py-5 flex items-center justify-between min-w-0 cursor-pointer ${light ? 'bg-white' : 'bg-black'}`}
+            onClick={(e) => {
+              // Deterministic guard: if the click originated from inside the chip
+              // pill (or its remove button), don't open — checking the actual DOM
+              // target here is immune to event-timing/animation races, unlike the
+              // old stopPropagation+ref approach which could misfire.
+              if (e.target.closest('[data-ask-chip]')) return
+              setAskChatOpen(true)
+            }}
+            className={`flex-1 backdrop-blur-sm border-2 rounded-[36px] pl-8 pr-5 py-5 flex items-center justify-between gap-2 min-w-0 cursor-pointer ${light ? 'bg-white' : 'bg-black'}`}
           >
-            <div className="flex-1 flex items-center justify-between gap-2 min-w-0 px-3">
-              <span className={`text-[14px] leading-5 whitespace-nowrap ${light ? 'text-[#111111]' : 'text-white'}`}>Ask anything...</span>
+            <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+              <span className={`t-body-md whitespace-nowrap text-left min-w-0 ${light ? 'text-[#111111]' : 'text-white'}`}>
+                Ask anything...
+              </span>
               <AnimatePresence>
                 {chatChips.length > 0 && (
                   <motion.div
@@ -1554,13 +1769,19 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                    data-ask-chip
                     className={`flex items-center h-6 gap-1 rounded-full pl-2 pr-1 shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}
                   >
                     <span className={`flex h-4 items-center text-[12px] font-medium leading-4 whitespace-nowrap ${light ? 'text-[#111111]' : 'text-white'}`}>
                       {chatChips.length} attached
                     </span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setChatChips([]) }}
+                      type="button"
+                      data-ask-chip
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setChatChips([])
+                      }}
                       className="flex items-center justify-center size-4"
                     >
                       <Icon name="close" size={16} className={light ? 'text-[#111111]' : 'text-white'} />
@@ -1569,8 +1790,11 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                 )}
               </AnimatePresence>
             </div>
-            <Image src="/tri.png" alt="" width={24} height={24} className="shrink-0" />
+            <div className="size-6 flex items-center justify-center shrink-0">
+              <Image src="/ai.png" alt="" width={24} height={24} />
+            </div>
           </motion.div>
+        </div>
         </motion.div>
       </motion.div>
 
@@ -1583,12 +1807,19 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
           <motion.div
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: overAsk ? 0.9 : 1, opacity: 1 }}
-            className={`flex items-center gap-1.5 border rounded-full pl-2 pr-3 py-1.5 shadow-[0_12px_24px_rgba(0,0,0,0.6)] ${
-              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#262626] border-[#404040]'
-            }`}
+            className="flex items-center gap-2 bg-white rounded-full pl-1 pr-4 py-1 shadow-[0_12px_24px_rgba(0,0,0,0.6)]"
           >
-            <Icon name="drag_indicator" size={14} className="text-[#737373]" />
-            <span className={`text-[12px] font-medium leading-4 whitespace-nowrap ${light ? 'text-[#111111]' : 'text-white'}`}>{ghost.ticker}</span>
+            {ghost.avatar?.type === 'image' ? (
+              <div className="size-11 rounded-full overflow-hidden relative shrink-0" style={{ background: ghost.avatar.bg || '#f3f4f6' }}>
+                <Image src={ghost.avatar.src} alt="" fill className="object-cover" />
+              </div>
+            ) : (
+              <div className="size-11 rounded-full bg-[#f3f4f6] flex items-center justify-center shrink-0">
+                <Icon name={ghost.avatar?.icon || 'trending_up'} size={24} className="text-[#111111]" />
+              </div>
+            )}
+            <span className="text-[16px] font-semibold leading-6 tracking-[0.32px] text-black whitespace-nowrap">{ghost.ticker}</span>
+            <Icon name="drag_indicator" size={16} className="text-[#a1a1a1]" />
           </motion.div>
         </div>
       )}
@@ -1633,62 +1864,55 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
         )}
       </AnimatePresence>
 
-      {/* Invest panel — scales from the closed Invest button footprint, then collapses back to it */}
+      {/* Invest panel — slides up from the bottom edge, 4px inset all round */}
       <AnimatePresence>
         {fabOpen && (
           <motion.div
-            initial={{ width: 136, height: 64, right: 24, bottom: 104, opacity: 1, backgroundColor: light ? '#111111' : '#ffffff' }}
-            animate={{ width: 432, height: 256, right: 4, bottom: 104, opacity: 1, backgroundColor: light ? '#111111' : '#fafafa' }}
+            initial={{ y: '100%', opacity: 1 }}
+            animate={{ y: 0, opacity: 1 }}
             exit={{
-              width: 136, height: 64, right: 24, bottom: 104, opacity: 0, backgroundColor: light ? '#111111' : '#ffffff',
-              transition: {
-                type: 'spring', stiffness: 360, damping: 38,
-                opacity: { duration: 0.12, ease: 'easeOut', delay: 0.12 },
-              },
+              y: '100%', opacity: 1,
+              transition: { type: 'spring', stiffness: 360, damping: 38 },
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-            className={`absolute z-50 overflow-hidden rounded-[60px] backdrop-blur-lg border ${light ? 'border-[#262626]' : 'border-[#171717]'}`}
+            className={`absolute z-[60] overflow-hidden rounded-[60px] backdrop-blur-lg border flex flex-col ${
+              light ? 'bg-[#111111] border-[#262626]' : 'bg-[#fafafa] border-[#171717]'
+            }`}
+            style={{ left: 4, right: 4, bottom: 4 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Content layer — fixed width so text doesn't reflow while scaling */}
-            <motion.div
-              exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }}
-              className="flex flex-col h-full px-3"
-              style={{ width: 432 }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 pt-6 pb-3 w-full shrink-0">
-                <div className="flex flex-col gap-1 pl-3">
-                  <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#fafafa]' : 'text-[#111111]'}`}>Invest</p>
-                  <p className="text-[14px] text-[#737373] leading-5">Select a product.</p>
-                </div>
-                <button
-                  onClick={closeInvest}
-                  className={`backdrop-blur-[4px] rounded-[60px] px-6 py-4 shrink-0 border ${
-                    light ? 'bg-black border-white' : 'bg-white border-black'
-                  }`}
-                >
-                  <span className={`text-[14px] font-medium leading-5 ${light ? 'text-white' : 'text-black'}`}>Close</span>
-                </button>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 w-full shrink-0">
+              <div className="flex flex-col gap-1 pl-3">
+                <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${light ? 'text-[#fafafa]' : 'text-[#0a0a0a]'}`}>Invest</p>
+                <p className="text-[14px] text-[#737373] leading-5">Select a product.</p>
               </div>
+              <button
+                onClick={closeInvest}
+                className={`backdrop-blur-[4px] rounded-[60px] px-6 py-4 shrink-0 border ${
+                  light ? 'bg-black border-white' : 'bg-white border-black'
+                }`}
+              >
+                <span className={`text-[14px] font-medium leading-5 ${light ? 'text-white' : 'text-black'}`}>Close</span>
+              </button>
+            </div>
 
-              {/* Products */}
-              <div className="flex gap-2 items-center justify-center px-3 pt-3 pb-3 w-full">
-                {[
-                  { label: 'Equities', icon: 'candlestick_chart', bg: '#d5d4f7', iconLight: false },
-                  { label: 'Bonds',    icon: 'analytics',         bg: '#ccf5ff', iconLight: false },
-                  { label: 'Funds',    icon: 'layers',            bg: '#fff4cc', iconLight: false },
-                  { label: 'Top up',   icon: 'bar_chart',         bg: light ? '#262626' : '#e5e5e5', iconLight: light },
-                ].map(item => (
-                  <div key={item.label} className="flex-1 flex flex-col gap-1 items-center justify-center min-w-0">
-                    <div className="size-24 rounded-full flex items-center justify-center" style={{ background: item.bg }}>
-                      <Icon name={item.icon} size={24} className={item.iconLight ? 'text-white' : 'text-black'} />
-                    </div>
-                    <p className={`text-[14px] font-medium leading-5 text-center whitespace-nowrap ${light ? 'text-white' : 'text-black'}`}>{item.label}</p>
+            {/* Products */}
+            <div className="flex gap-2 items-center justify-center px-6 pt-3 pb-8 w-full">
+              {[
+                { label: 'Equities', icon: '/invest-equities.png', bg: '#d5d4f7' },
+                { label: 'Bonds',    icon: '/invest-bonds.png',    bg: '#bedbff' },
+                { label: 'Funds',    icon: '/invest-funds.png',    bg: '#fff4cc' },
+                { label: 'Top up',   icon: '/invest-topup.png',    bg: light ? '#262626' : '#e5e5e5' },
+              ].map(item => (
+                <div key={item.label} className="flex-1 flex flex-col gap-1 items-center justify-center min-w-0">
+                  <div className="rounded-full flex items-center justify-center" style={{ background: item.bg, width: 90, height: 90 }}>
+                    <Image src={item.icon} alt="" width={40} height={40} />
                   </div>
-                ))}
-              </div>
-            </motion.div>
+                  <p className={`text-[14px] font-medium leading-5 text-center whitespace-nowrap ${light ? 'text-white' : 'text-black'}`}>{item.label}</p>
+                </div>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

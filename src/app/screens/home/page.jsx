@@ -7,11 +7,22 @@ import WealthScreen from '@/app/screens/wealth/page'
 
 /* ─── Data ─────────────────────────────────────────────────────────── */
 
-const TRANSACTIONS = [
-  { id: 1, name: 'Shopee Pay',   type: 'Card Payment', time: '07:45', amount: '-50,000đ',     dir: 'out' },
-  { id: 2, name: 'Hoang Thu Ha', type: 'Income',       time: '07:00', amount: '+20,000,000đ', dir: 'in'  },
-  { id: 3, name: 'HKD Mai Khoi', type: 'Transfer',     time: '09:00', amount: '-50,000đ',     dir: 'out' },
-  { id: 4, name: 'Starbucks',    type: 'Card Payment', time: '08:30', amount: '-50,000đ',     dir: 'out' },
+const TRANSACTION_GROUPS = [
+  {
+    date: 'Thursday, 9 Jul 2026',
+    items: [
+      { id: 1, name: 'MOCA CREDIT',           detail: 'Giao dich thanh toan/Purchase - So The/Card No:...3140 MOCA CREDIT', time: '07:45', amount: '- 50,000',      dir: 'out' },
+      { id: 2, name: 'Incoming money',        detail: 'Doi diem nhan tien',                                                 time: '07:45', amount: '+ 20,000,000',  dir: 'in'  },
+    ],
+  },
+  {
+    date: 'Thursday, 9 Jul 2026',
+    items: [
+      { id: 3, name: 'PAYOO-HIGHLANDS 00116', detail: 'Giao dich thanh toan/Purchase - So The/Card No:...3140 MOCA CREDIT', time: '07:32', amount: '- 120,000',     dir: 'out' },
+      { id: 4, name: 'Outgoing Money',        detail: 'Giao dich thanh toan/Purchase - So The/Card No:...3140 MOCA CREDIT', time: '07:45', amount: '-USD 11.11',    dir: 'out' },
+      { id: 5, name: 'CLEVERFOOD',            detail: 'Giao dich thanh toan/Purchase - So The/Card No:...3140 MOCA CREDIT', time: '07:45', amount: '- 50,000đ',     dir: 'out' },
+    ],
+  },
 ]
 
 /* ─── Micro-components ─────────────────────────────────────────────── */
@@ -61,6 +72,17 @@ function TypewriterInputText({ text }) {
   )
 }
 
+function mixHex(hexA, hexB, t) {
+  const a = parseInt(hexA.slice(1), 16)
+  const b = parseInt(hexB.slice(1), 16)
+  const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255
+  const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255
+  const r = Math.round(ar + (br - ar) * t)
+  const g = Math.round(ag + (bg - ag) * t)
+  const bl = Math.round(ab + (bb - ab) * t)
+  return `rgb(${r}, ${g}, ${bl})`
+}
+
 function Icon({ name, size = 24, className = '' }) {
   return (
     <span
@@ -99,14 +121,12 @@ function StatusBar({ dark = false }) {
 /* ─── Home sub-components ───────────────────────────────────────────── */
 
 function TopNav({ onOpenSearch, light = false }) {
-  const btnCls = light
-    ? 'bg-white border border-[#e5e5e5] rounded-full px-6 py-3 flex items-center justify-center'
-    : 'bg-[#111111] border border-[#262626] rounded-full px-6 py-3 flex items-center justify-center'
-  const iconCls = light ? 'text-[#111111]' : 'text-[#d4d4d4]'
+  const btnCls = `flex items-center justify-center px-5 py-2 rounded-full border ${light ? 'border-neutral-300' : 'border-neutral-800'}`
+  const iconCls = light ? 'text-[#111111]' : 'text-white'
   return (
     <div className="flex items-center justify-between pl-6 pr-3 pb-3 pt-16 shrink-0">
       <div className="h-8 relative shrink-0" style={{ width: 48 }}>
-        <Image src={light ? '/logo.svg' : '/logo-new.svg'} alt="TCB" fill className="object-contain object-left" />
+        <Image src="/logo-new.svg" alt="TCB" fill className="object-contain object-left" />
       </div>
       <div className="flex items-center gap-1">
         <button className={btnCls}>
@@ -124,26 +144,32 @@ function BalanceSection({ onOpenOverlay, light = false }) {
   const [hidden, setHidden] = useState(false)
 
   return (
-    <div className="flex flex-col gap-2 px-6 py-3 shrink-0">
+    <div className="flex flex-col gap-0.5 px-6 pt-3 pb-6 shrink-0 items-center">
       <div className="flex items-center gap-2">
         <span className="t-body-md text-[#737373]">Current Balance</span>
-        <button onClick={() => setHidden(v => !v)} className="flex items-center">
-          <Icon name={hidden ? 'visibility_off' : 'visibility'} size={20} className="text-[#737373]" />
-        </button>
       </div>
-      <div className="flex items-center gap-4 w-full">
-        <div className="flex items-baseline gap-1">
-          <span className={`t-h1 tabular-nums ${light ? 'text-[#111111]' : 'text-white'}`}>
-            {hidden ? '••••••••' : '90,008,897'}
-          </span>
-          <span className="t-h3 text-[#737373]">đ</span>
+      <div className="flex flex-col gap-1 items-center w-full">
+        <div className="flex items-center gap-3">
+          <div className={`flex gap-1 font-mono ${hidden ? 'items-center' : 'items-baseline'}`}>
+            <span className="text-[30px] leading-10 font-bold tabular-nums text-[#737373]">VND</span>
+            {hidden ? (
+              <Image src="/icons-home-v2/hiding.svg" alt="" width={108} height={40} style={light ? { filter: 'invert(1)' } : undefined} />
+            ) : (
+              <span className={`text-[30px] leading-10 font-bold tabular-nums ${light ? 'text-[#111111]' : 'text-white'}`}>
+                10,090,008
+              </span>
+            )}
+          </div>
+          <button onClick={() => setHidden(v => !v)} className="flex items-center shrink-0">
+            <Image src={hidden ? '/icons-home-v2/visibility-off.svg' : '/icons-home-v2/visibility.svg'} alt="" width={20} height={20} />
+          </button>
         </div>
         <button
           onClick={onOpenOverlay}
-          className="relative bg-cinnabar-500 rounded-full px-4 py-2 flex items-center gap-2 overflow-hidden shrink-0"
+          className={`rounded-full px-3 py-1 flex items-center gap-1 shrink-0 ${light ? 'bg-black' : 'bg-white'}`}
         >
-          <img src="/insight-decor.svg" alt="" className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: 107, height: 40.9785 }} />
-          <span className="relative t-body-md text-white whitespace-nowrap">Insight</span>
+          <Image src="/insight-icon.png" alt="" width={20} height={20} className="shrink-0" />
+          <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] whitespace-nowrap ${light ? 'text-white' : 'text-black'}`}>Insight</span>
         </button>
       </div>
     </div>
@@ -151,78 +177,158 @@ function BalanceSection({ onOpenOverlay, light = false }) {
 }
 
 const HOME_ACTIONS = [
-  { icon: '/icons-home/pay-bills.svg',       lightIcon: '/icons-home/pay-bills-light.svg',   label: 'Pay bills', variant: 'dark'   },
-  { icon: '/icons-home/savings.svg',         lightIcon: '/icons-home/savings-light.svg',     label: 'Savings',   variant: 'dark'   },
-  { icon: '/icons-home/swap-horiz.svg',      lightIcon: '/icons-home/swap-horiz-light.svg',  label: 'Transfer',  variant: 'dark'   },
-  { icon: '/icons-home/qr-scanner.svg',      lightIcon: '/icons-home/qr-scanner-light.svg',  label: 'Scan QR',   variant: 'light'  },
-  { icon: '/icons-home/arrow-right-red.svg', lightIcon: '/icons-home/arrow-right-black.svg', label: 'More',      variant: 'dashed' },
+  { icon: '/banner-piggy.png',    label: 'Savings',  fit: 'object-bottom' },
+  { icon: '/action-transfer.png', label: 'Transfer', fit: 'object-bottom' },
+  { icon: '/action-qr.png',       label: 'Scan QR',  fit: 'object-contain' },
+  { icon: '/action-paybills.png', label: 'Pay bills', fit: 'object-cover' },
 ]
 
-function BannerAndActions({ light = false }) {
-  const pillCls = (variant) => {
-    if (light) {
-      // Light theme inverts the pill roles: dark pills go light, the light pill goes black
-      return variant === 'light'
-        ? 'bg-[#111111]'
-        : variant === 'dashed'
-          ? 'border border-dashed border-[#d4d4d4]'
-          : 'bg-[#f5f5f5]'
-    }
-    return variant === 'light'
-      ? 'bg-[#fafafa]'
-      : variant === 'dashed'
-        ? 'border border-dashed border-[#262626]'
-        : 'bg-[#111111] border border-[#262626]'
-  }
-  const labelCls = (variant) => {
-    if (light) return variant === 'light' ? 'text-[#fafafa]' : 'text-[#111111]'
-    return variant === 'light' ? 'text-[#111111]' : 'text-[#fafafa]'
-  }
+function ActionsRow({ light = false }) {
+  const cardCls = light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'
+  const labelCls = light ? 'text-[#111111]' : 'text-[#fafafa]'
 
   return (
-    <div className="flex items-center gap-3 p-3 shrink-0">
-      {/* Action pill buttons — left column, label left / icon right */}
-      <div className="flex-1 flex flex-col gap-1 min-w-0">
-        {HOME_ACTIONS.map(({ icon, lightIcon, label, variant }) => (
-          <button
-            key={label}
-            className={`rounded-full px-6 py-4 flex items-center justify-between w-full ${pillCls(variant)}`}
+    <div className="flex items-stretch gap-0.5 pt-2 pb-3 px-3 shrink-0">
+      {HOME_ACTIONS.map(({ icon, label, fit }, i) => (
+        <button
+          key={label}
+          className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-5 p-4 ${cardCls} ${
+            i === 0 ? 'rounded-tl-[40px] rounded-bl-[40px] rounded-tr-xl rounded-br-xl' : 'rounded-xl'
+          }`}
+        >
+          <div className="relative size-10 shrink-0">
+            <Image src={icon} alt="" fill className={`${fit} pointer-events-none`} />
+          </div>
+          <span className={`text-[12px] font-medium leading-4 whitespace-nowrap ${labelCls}`}>{label}</span>
+        </button>
+      ))}
+      <button className={`flex items-center justify-center p-4 self-stretch shrink-0 rounded-tr-[40px] rounded-br-[40px] rounded-tl-xl rounded-bl-xl ${cardCls}`}>
+        <Icon name="arrow_right_alt" size={24} className={labelCls} />
+      </button>
+    </div>
+  )
+}
+
+const UPOINT_TOTAL = 20
+const UPOINT_CURRENT = 2
+const UPOINT_MILESTONES = [
+  { at: 10, reward: '10,000' },
+  { at: 20, reward: '20,000' },
+]
+
+function UPointProgress({ light = false }) {
+  const tallTicks = new Set([0, UPOINT_CURRENT, ...UPOINT_MILESTONES.map(m => m.at)])
+  const labelTicks = [0, UPOINT_CURRENT, ...UPOINT_MILESTONES.map(m => m.at)]
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      {/* Labels — 0, current progress, and each milestone */}
+      <div className="relative w-full" style={{ height: 20 }}>
+        {labelTicks.map((at) => (
+          <div
+            key={at}
+            className="absolute -translate-x-1/2 flex items-center justify-center"
+            style={{ left: `${(at / UPOINT_TOTAL) * 100}%` }}
           >
-            <span className={`t-label whitespace-nowrap ${labelCls(variant)}`}>
-              {label}
-            </span>
-            <img src={light ? lightIcon : icon} alt="" className="size-6" />
-          </button>
+            {at === UPOINT_CURRENT ? (
+              <span className="bg-green-400 rounded-full flex items-center justify-center text-[14px] font-medium leading-5 tracking-[0.28px] text-black" style={{ width: 20, height: 20 }}>{at}</span>
+            ) : (
+              <span className="text-[14px] font-medium leading-5 tracking-[0.28px] text-[#737373]">{at}</span>
+            )}
+          </div>
         ))}
       </div>
 
-      {/* Auto Earning banner — right */}
-      <div
-        className="relative rounded-[48px] overflow-hidden flex flex-col items-center justify-between p-6 shrink-0"
-        style={{ width: 236, height: 296 }}
-      >
-        {/* Background */}
-        <Image src="/banner-auto-earning-bg.png" alt="" fill className="object-cover rounded-[48px]" />
-
-        {/* Copy + CTA */}
-        <div className="relative flex flex-col items-center gap-4 w-full">
-          <div className="flex flex-col gap-2 text-center text-black w-full">
-            <p className="t-label-lg text-black">Auto Earning</p>
-            <p className="t-body-md text-black">Double Points, Redeem vouchers for food and shopping</p>
-          </div>
-          <button className="bg-[#111111] border border-[#262626] rounded-full px-5 py-2">
-            <span className="t-label text-[#fafafa] whitespace-nowrap">Explore now</span>
-          </button>
-        </div>
-
-        {/* Pagination */}
-        <div className="relative backdrop-blur-[6px] bg-black/60 rounded-full p-1 flex items-start gap-0.5">
-          <div className="bg-[#fafafa] rounded-full" style={{ width: 16, height: 4 }} />
-          {[0, 1, 2].map(i => (
-            <div key={i} className="bg-white/50 rounded-full" style={{ width: 6, height: 4 }} />
-          ))}
-        </div>
+      {/* Tick ruler */}
+      <div className="flex items-end justify-between w-full">
+        {Array.from({ length: UPOINT_TOTAL + 1 }).map((_, i) => {
+          const active = i <= UPOINT_CURRENT
+          const tall = tallTicks.has(i)
+          return (
+            <div
+              key={i}
+              className={`rounded-full ${active ? 'bg-green-400' : light ? 'bg-[#d4d4d4]' : 'bg-[#404040]'}`}
+              style={{ width: 2, height: tall ? 12 : 6 }}
+            />
+          )
+        })}
       </div>
+
+      {/* Reward badges — aligned below their milestone tick */}
+      <div className="relative w-full" style={{ height: 20 }}>
+        {UPOINT_MILESTONES.map(({ at, reward }, i) => {
+          const isLast = i === UPOINT_MILESTONES.length - 1
+          return (
+          <div
+            key={at}
+            className={`absolute top-0 flex items-center gap-1 ${isLast ? '' : '-translate-x-1/2'}`}
+            style={isLast ? { right: 0 } : { left: `${(at / UPOINT_TOTAL) * 100}%` }}
+          >
+            <Image src="/upoint-icon.svg" alt="" width={20} height={20} />
+            <span className="text-[14px] font-medium leading-5 tracking-[0.28px] text-[#a1a1a1] whitespace-nowrap">{reward}</span>
+          </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function PromoBanners({ light = false }) {
+  const open = true
+
+  return (
+    <div className={`flex flex-col shrink-0 border rounded-[48px] overflow-hidden ${light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2.5 pt-6 pb-2 px-6 shrink-0">
+        <p className={`t-label-lg whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>All for you</p>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="promo-banners"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-1 p-2">
+              {/* Auto Earning — pink card with U-coin illustration */}
+              <div className="relative flex flex-col items-start justify-between overflow-hidden rounded-[40px] p-6 shrink-0" style={{ background: '#FF656B', height: 156 }}>
+                <div className="relative flex items-start justify-between w-full">
+                  <div className="flex flex-col gap-1 items-start text-black flex-1 min-w-0">
+                    <p className="text-[16px] font-semibold leading-6 tracking-[0.32px]">Auto Earning</p>
+                    <p className="text-[14px] leading-5">Double Points, Redeem vouchers for food and shopping</p>
+                  </div>
+                  <button className="bg-[#0a0a0a] border border-[#262626] rounded-full px-4 py-1 shrink-0">
+                    <span className="text-[14px] font-medium leading-5 text-[#fafafa] whitespace-nowrap">Explore now</span>
+                  </button>
+                </div>
+                <div className="relative backdrop-blur-[6px] bg-black/60 rounded-full p-1 flex items-start gap-0.5 shrink-0">
+                  <div className="bg-[#fafafa] rounded-full" style={{ width: 16, height: 4 }} />
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="bg-white/50 rounded-full" style={{ width: 6, height: 4 }} />
+                  ))}
+                </div>
+                <div className="absolute pointer-events-none" style={{ left: 260, top: 56, width: 156, height: 156 }}>
+                  <Image src="/banner-auto-earning-u.png" alt="" fill className="object-cover" />
+                </div>
+              </div>
+
+              {/* Scan QR & earn U-Point — dark info card with a progress ruler */}
+              <div className={`flex flex-col gap-4 items-start rounded-[40px] p-6 shrink-0 border ${light ? 'bg-[#f5f5f5] border-[#e5e5e5]' : 'bg-[#171717] border-[#1f1f1f]'}`}>
+                <div className="flex flex-col gap-1 w-full">
+                  <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] w-full ${light ? 'text-[#111111]' : 'text-white'}`}>Scan QR code &amp; earn U-Point</p>
+                  <p className="text-[14px] leading-5 text-[#737373] w-full">Make transactions of VND 35,000 or more via VNPAY or Techcombank QR code to receive U-Point rewards:</p>
+                </div>
+                <UPointProgress light={light} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -231,30 +337,32 @@ function TransactionItem({ item, isLast, light = false }) {
   const isIncome = item.dir === 'in'
   return (
     <>
-      <div className="flex items-start justify-between px-4 py-3">
-        <div className="flex items-center gap-4">
-          <div className={`rounded-full p-2.5 flex items-center justify-center shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
-            <Icon
-              name={isIncome ? 'arrow_downward' : 'arrow_upward'}
-              size={24}
-              className={isIncome ? (light ? 'text-success' : 'text-green-400') : (light ? 'text-[#737373]' : 'text-[#d4d4d4]')}
-            />
-          </div>
-          <div className="flex flex-col gap-0.5 pb-0.5">
-            <p className={`t-label whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{item.name}</p>
-            <div className="flex items-center gap-1 t-caption text-[#737373]">
-              <span>{item.type}</span>
-              <span>·</span>
-              <span>{item.time}</span>
+      <div className="flex flex-col gap-1 px-4 py-3">
+        <div className="flex gap-8 items-start w-full">
+          <div className="flex flex-1 min-w-0 items-center gap-4">
+            <div className={`rounded-full p-2.5 flex items-center justify-center shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#1f1f1f]'}`}>
+              <Icon
+                name={isIncome ? 'arrow_downward' : 'arrow_upward'}
+                size={24}
+                className={isIncome ? (light ? 'text-success' : 'text-green-400') : (light ? 'text-[#737373]' : 'text-[#d4d4d4]')}
+              />
+            </div>
+            <div className="flex flex-1 min-w-0 flex-col gap-1">
+              <p className={`t-label whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{item.name}</p>
+              <div className="flex items-start gap-1 t-caption text-[#737373] w-full">
+                <span className="shrink-0">{item.time}</span>
+                <span className="shrink-0">·</span>
+                <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{item.detail}</span>
+              </div>
             </div>
           </div>
+          <p className={`t-number whitespace-nowrap shrink-0 ${isIncome ? (light ? 'text-success' : 'text-green-400') : light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>
+            {item.amount}
+          </p>
         </div>
-        <p className={`t-number whitespace-nowrap ${isIncome ? (light ? 'text-success' : 'text-green-400') : light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>
-          {item.amount}
-        </p>
       </div>
       {!isLast && (
-        <div className="pl-[83px] pr-4">
+        <div className="pl-[76px] pr-4">
           <div className="h-px bg-[#737373] opacity-10 rounded-full" />
         </div>
       )}
@@ -266,25 +374,23 @@ const TX_FILTERS = ['All', 'Income', 'Transfer', 'Card Payment', 'Withdrawal']
 
 function TransactionSection({ menuOpen = false, light = false }) {
   const [activeFilter, setActiveFilter] = useState('All')
-  const [scrolled, setScrolled] = useState(false)
-  const cardBg = light ? '#ffffff' : '#111111'
 
   return (
     <div
-      className="flex-1 pb-3 px-3 overflow-hidden min-h-0"
+      className="shrink-0"
       style={{ minHeight: menuOpen ? 372 : 0 }}
     >
-      <div className={`backdrop-blur-lg border rounded-[48px] h-full flex flex-col overflow-hidden relative ${
+      <div className={`backdrop-blur-lg border rounded-t-[48px] rounded-b-[60px] flex flex-col relative ${
         light ? 'bg-white border-[#ececec]' : 'bg-[#111111] border-[#262626]'
       }`}>
         {/* Header */}
-        <div className="flex items-center justify-between pt-6 px-6 shrink-0">
+        <div className="flex items-center justify-start pt-6 pb-2 px-6 shrink-0">
           <p className={`t-label-lg whitespace-nowrap ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>Transaction History</p>
         </div>
 
         {/* Filter chips */}
         <div className="relative flex gap-3 pt-4 shrink-0">
-          <div className="flex-1 flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden pl-6 pr-6">
+          <div className="flex-1 flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden pl-5 pr-5">
             {TX_FILTERS.map(f => (
               <button
                 key={f}
@@ -301,33 +407,26 @@ function TransactionSection({ menuOpen = false, light = false }) {
               </button>
             ))}
           </div>
-          <div
-            className="absolute bottom-0 right-0 h-9 pointer-events-none"
-            style={{ width: 64, background: `linear-gradient(to left, ${cardBg}, ${light ? 'rgba(255,255,255,0)' : 'rgba(10,10,10,0)'})` }}
-          />
-          {scrolled && (
-            <div
-              className="absolute top-full inset-x-0 h-14 pointer-events-none z-10"
-              style={{ background: `linear-gradient(to bottom, ${cardBg}, ${light ? 'rgba(255,255,255,0)' : 'rgba(10,10,10,0)'})` }}
-            />
-          )}
         </div>
 
-        {/* Transaction list */}
-        <div
-          onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}
-          className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden pt-3"
-        >
-          {TRANSACTIONS.map((item, i) => (
-            <TransactionItem key={item.id} item={item} isLast={i === TRANSACTIONS.length - 1} light={light} />
+        {/* Transaction list — grouped by date */}
+        <div className="pt-3">
+          {TRANSACTION_GROUPS.map((group, gi) => (
+            <div key={gi}>
+              <div className="flex items-center justify-center pt-4 pb-2 px-5">
+                <p className="t-body-md text-[#404040] whitespace-nowrap">{group.date}</p>
+              </div>
+              {group.items.map((item, i) => (
+                <TransactionItem key={item.id} item={item} isLast={i === group.items.length - 1} light={light} />
+              ))}
+            </div>
           ))}
         </div>
 
-        {/* Bottom fade */}
-        <div
-          className="absolute bottom-0 inset-x-0 h-14 pointer-events-none"
-          style={{ background: `linear-gradient(to top, ${cardBg}, ${light ? 'rgba(255,255,255,0)' : 'rgba(10,10,10,0)'})` }}
-        />
+        {/* See all */}
+        <button className="shrink-0 flex items-center justify-center p-3 pb-6 w-full">
+          <span className={`rounded-full px-8 py-3 text-[14px] font-medium leading-5 whitespace-nowrap ${light ? 'bg-[#f5f5f5] text-black' : 'bg-[#1f1f1f] text-white'}`}>See all</span>
+        </button>
       </div>
     </div>
   )
@@ -363,18 +462,18 @@ function MenuToggleIcon({ open, light = false }) {
   )
 }
 
-function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, onOpenKeyboard, onCloseKeyboard, onSend, menuOpen, onOpenMenu, light = false }) {
+function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, onOpenKeyboard, onCloseKeyboard, onSend, menuOpen, onOpenMenu, light = false, attachedCount = 0, onClearAttached, interactive = true }) {
   const fade = { duration: 0.18, ease: 'easeInOut' }
 
   return (
-    <div className="relative shrink-0" style={{ height: 64 }}>
+    <div className="relative shrink-0 w-full" style={{ height: 64 }}>
 
       {/* Normal mode */}
       <motion.div
         initial={false}
-        animate={{ opacity: triMode ? 0 : 1, y: triMode ? 4 : 0, pointerEvents: triMode ? 'none' : 'auto' }}
+        animate={{ opacity: triMode ? 0 : 1, y: triMode ? 4 : 0, pointerEvents: (triMode || !interactive) ? 'none' : 'auto' }}
         transition={fade}
-        className="absolute inset-0 flex items-center px-3 gap-2"
+        className="absolute inset-0 flex items-center gap-2"
       >
         {/* Menu pill — morphs into the menu sheet via layoutId */}
         {!menuOpen && (
@@ -394,25 +493,60 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
         {menuOpen && <div className="shrink-0" style={{ width: 88, height: 64 }} />}
 
         {/* Ask AI input — physically shoved off the right edge when menu opens */}
-        <motion.button
+        <motion.div
           initial={false}
           animate={{
             x: menuOpen ? 380 : 0,
             rotate: menuOpen ? 4 : 0,
             opacity: menuOpen ? 0 : 1,
-            pointerEvents: menuOpen ? 'none' : 'auto',
+            // Framer sets this inline, which otherwise punches straight through
+            // the ancestor's `pointer-events-none` (applied while Wealth is
+            // showing) — an inline pointer-events value always wins over a
+            // class on a parent, so it must factor `interactive` in too.
+            pointerEvents: (menuOpen || !interactive) ? 'none' : 'auto',
           }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          onClick={onOpenTri}
-          className={`flex-1 flex items-center justify-between backdrop-blur-sm border rounded-[36px] pl-8 pr-5 py-5 transition-shadow duration-200 ${
-            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#404040]'
+          onClick={(e) => {
+            // Deterministic guard: bail if the click came from inside the chip
+            // pill — checking the actual DOM target is immune to event-timing
+            // races, unlike stopPropagation-based guards.
+            if (e.target.closest('[data-ask-chip]')) return
+            onOpenTri?.()
+          }}
+          className={`flex-1 flex items-center justify-between gap-2 backdrop-blur-sm border-2 rounded-[36px] pl-8 pr-5 py-5 transition-shadow duration-200 cursor-pointer ${
+            light ? 'bg-white border-[#e5e5e5]' : 'bg-black border-[#f5f5f5]'
           } ${triHovered ? 'shadow-[0_0_0_4px_rgba(237,28,36,0.25)]' : ''}`}
         >
-          <span className={`t-body-md whitespace-nowrap ${light ? 'text-[#111111]' : 'text-white'}`}>Ask anything...</span>
-          <div className="size-6 flex items-center justify-center shrink-0">
-            <Image src="/tri.png" alt="" width={24} height={24} />
+          <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+            <span className={`t-body-md whitespace-nowrap text-left min-w-0 ${light ? 'text-[#111111]' : 'text-white'}`}>
+              Ask anything...
+            </span>
+            {attachedCount > 0 && (
+              <div
+                data-ask-chip
+                className={`flex items-center h-6 gap-1 rounded-full pl-2 pr-1 shrink-0 ${light ? 'bg-[#f5f5f5]' : 'bg-[#262626]'}`}
+              >
+                <span className={`flex h-4 items-center text-[12px] font-medium leading-4 whitespace-nowrap ${light ? 'text-[#111111]' : 'text-white'}`}>
+                  {attachedCount} attached
+                </span>
+                <button
+                  type="button"
+                  data-ask-chip
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClearAttached?.()
+                  }}
+                  className="flex items-center justify-center size-4"
+                >
+                  <Icon name="close" size={16} className={light ? 'text-[#111111]' : 'text-white'} />
+                </button>
+              </div>
+            )}
           </div>
-        </motion.button>
+          <div className="size-6 flex items-center justify-center shrink-0">
+            <Image src="/ai.png" alt="" width={24} height={24} />
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* TRÍ base mode — input visible, not keyboard */}
@@ -435,7 +569,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
         >
           <span className="t-caption text-white whitespace-nowrap">Ask AI anything...</span>
           <div className="size-6 flex items-center justify-center shrink-0">
-            <Image src="/tri.png" alt="" width={24} height={24} />
+            <Image src="/ai.png" alt="" width={24} height={24} />
           </div>
         </button>
       </motion.div>
@@ -457,7 +591,7 @@ function BottomBar({ onOpenTri, triMode, onCloseTri, triHovered, keyboardOpen, o
             <BlinkingCursor />
           </span>
           <button onClick={onSend} className="size-6 flex items-center justify-center shrink-0">
-            <Image src="/tri.png" alt="" width={24} height={24} />
+            <Image src="/ai.png" alt="" width={24} height={24} />
           </button>
         </div>
         <button
@@ -504,7 +638,7 @@ function MenuSheet({ onClose, onNavigateWealth, onToggleTheme, light = false, ac
       layoutId="menu-surface"
       style={{ borderRadius: 60, top: 160 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className={`absolute left-1 right-1 bottom-2 z-50 flex flex-col overflow-hidden ${dark ? 'bg-[#111111]' : 'bg-white'}`}
+      className={`absolute left-1 right-1 bottom-1 z-50 flex flex-col overflow-hidden ${dark ? 'bg-[#111111]' : 'bg-white'}`}
     >
       <div className="flex-1 flex flex-col gap-2 p-3 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
 
@@ -636,28 +770,101 @@ function CountUp({ to, format = (v) => Math.round(v).toLocaleString('en-US'), du
   return <span className={`tabular-nums ${className}`}>{display}</span>
 }
 
-function InsightStatCard({ icon, label, value, description, dark = false }) {
+function InsightStatCard({ label, value, description, iconSrc, iconBg, iconClassName = '', dark = false }) {
   return (
-    <div className={`flex-1 h-full w-full border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 ${
-      dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
+    <div className={`flex-1 h-full w-full rounded-[40px] p-6 flex flex-col items-end justify-between gap-1 min-w-0 border ${
+      dark ? 'bg-[#171717] border-[#262626]' : 'bg-white border-[#e5e5e5]'
     }`}>
-      <div className={`rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
-        <Icon name={icon} size={24} className={dark ? 'text-white' : 'text-content-primary'} />
-      </div>
       <div className="w-full flex flex-col gap-1">
         <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">{label}</p>
         {value}
         <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">{description}</p>
       </div>
+      <div className="rounded-full p-2 flex items-center justify-center shrink-0" style={{ background: iconBg }}>
+        <Image src={iconSrc} alt="" width={32} height={32} className={iconClassName} />
+      </div>
     </div>
   )
 }
 
-const GOAL_BARS = 25
-const GOAL_ACTIVE_BAR = 12
-const GOAL_PROGRESS_OFFSET_BARS = 2
-const GOAL_PERCENT = 45
-const GOAL_FILL_WIDTH = 201
+const GOAL_TICKS = 20        // 21 tick marks → 20 intervals
+const GOAL_PERCENT = 50
+const GOAL_CURRENT_TICK = 10 // "2.5M" midpoint marker
+
+/* Isolated so its 60fps progress tween only re-renders this small subtree
+   (21 tick bars + a couple of text nodes) instead of the whole BalanceOverlay
+   — that used to re-render every stat card, the coffee card, and every button
+   on every animation frame, which was the source of the open-lag. */
+function GoalProgressCard({ dark = false, showCard = true }) {
+  const [goalProgress, setGoalProgress] = useState(0)
+  useEffect(() => {
+    if (!showCard) return
+    const controls = animate(0, GOAL_PERCENT, {
+      duration: 1.2,
+      delay: 0.25,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: setGoalProgress,
+    })
+    return () => controls.stop()
+  }, [showCard])
+
+  const litTicks = Math.round((goalProgress / 100) * GOAL_TICKS)
+  const atCurrent = litTicks >= GOAL_CURRENT_TICK
+
+  return (
+    <div className={`rounded-[40px] overflow-hidden relative flex flex-col justify-between p-6 w-full border border-[#bedbff] ${dark ? 'bg-white' : 'bg-[#111111]'}`} style={{ height: 200 }}>
+      {/* Header */}
+      <div className="flex flex-col gap-1 w-full">
+        <div className="flex items-start justify-between w-full">
+          <div className="flex flex-col gap-1">
+            <p className={`t-label ${dark ? 'text-black' : 'text-white'}`}>Buying House Goal</p>
+            <span className={`text-[24px] font-bold leading-8 tracking-[0.48px] tabular-nums ${dark ? 'text-black' : 'text-white'}`}>
+              {Math.round(goalProgress)}%
+            </span>
+          </div>
+          <div className="rounded-full p-2 bg-[#bedbff] flex items-center justify-center shrink-0">
+            <Image src="/insight-house.png" alt="" width={32} height={32} />
+          </div>
+        </div>
+        <p className={`text-[14px] font-medium leading-5 tracking-[0.28px] w-full ${dark ? 'text-[#737373]' : 'text-white'}`}>You are going half of the way</p>
+      </div>
+
+      {/* Tick ruler — labels above (0 / 2.5M pill / 5M), ticks below */}
+      <div className="flex flex-col gap-2 w-full pt-6">
+        <div className="relative w-full" style={{ height: 20 }}>
+          <div className="absolute -translate-x-1/2 flex items-center justify-center" style={{ left: 0 }}>
+            <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] px-1 ${dark ? 'text-black' : 'text-white'}`}>0</span>
+          </div>
+          <motion.div
+            initial={false}
+            animate={{ opacity: atCurrent ? 1 : 0, scale: atCurrent ? 1 : 0.6 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+            className="absolute -translate-x-1/2 flex items-center justify-center"
+            style={{ left: '50%' }}
+          >
+            <span className={`bg-blue-500 rounded-full px-2 text-[14px] font-medium leading-5 tracking-[0.28px] whitespace-nowrap ${dark ? 'text-black' : 'text-white'}`}>2.5M</span>
+          </motion.div>
+          <div className="absolute -translate-x-1/2 flex items-center justify-center" style={{ left: '100%' }}>
+            <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] px-1 ${dark ? 'text-black' : 'text-white'}`}>5M</span>
+          </div>
+        </div>
+        <div className="flex items-end justify-between w-full">
+          {Array.from({ length: GOAL_TICKS + 1 }).map((_, i) => {
+            const lit = i <= litTicks && goalProgress > 0.5
+            const tall = i === 0 || i === GOAL_CURRENT_TICK || i === GOAL_TICKS
+            return (
+              <div
+                key={i}
+                className={`rounded-full ${lit ? (dark ? 'bg-blue-600' : 'bg-blue-400') : (dark ? 'bg-neutral-400' : 'bg-neutral-600')}`}
+                style={{ width: 2, height: tall ? 12 : 6 }}
+              />
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const GLITTER_SPARKLES = [
   { left: '12%', top: '18%', size: 6, dx: -5, dy: -8, delay: 0.00, color: '#fde68a' },
@@ -747,9 +954,9 @@ function CoffeeInsightCard({ dark = false, effectKey = null }) {
     <motion.div
       animate={showEffect ? { scale: [1, 1.01, 0.998, 1], rotate: [0, -0.12, 0.1, 0] } : { scale: 1, rotate: 0 }}
       transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-      className={`relative flex-1 border rounded-[48px] p-6 flex flex-col items-start justify-center gap-3 min-w-0 overflow-hidden ${
-      dark ? 'bg-[#171717] border-[#262626]' : 'bg-[#f5f5f5] border-[#e5e5e5]'
-    }`}
+      className={`relative flex-1 rounded-[40px] p-6 flex flex-col items-end justify-between gap-1 min-w-0 overflow-hidden border ${
+        dark ? 'bg-[#171717] border-[#262626]' : 'bg-white border-[#e5e5e5]'
+      }`}
     >
       {showEffect && (
         <motion.div
@@ -765,13 +972,13 @@ function CoffeeInsightCard({ dark = false, effectKey = null }) {
       )}
       {showEffect && <GlitterMist playKey={activeEffectKey} />}
       {showEffect && <GlitterBurst playKey={activeEffectKey} />}
-      <div className={`relative rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#262626]' : 'bg-[#e5e5e5]'}`}>
-        <Icon name="coffee" size={24} className={dark ? 'text-white' : 'text-content-primary'} />
-      </div>
       <div className="relative w-full flex flex-col gap-1">
         <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">You have spent</p>
         <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] ${dark ? 'text-white' : 'text-black'}`}>1.4m</p>
         <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">on daily coffee this month</p>
+      </div>
+      <div className="relative rounded-full p-2 flex items-center justify-center shrink-0 bg-[#d5d4f7]">
+        <Image src="/insight-coffee-3d.png" alt="" width={32} height={32} />
       </div>
     </motion.div>
   )
@@ -801,20 +1008,7 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
   // light app → dark panel.
   const dark = light
   const [isEditing, setIsEditing] = useState(false)
-
-  // One shared progress value (0 → 45) drives the percent text, fill widths, and active tick
-  const [goalProgress, setGoalProgress] = useState(0)
   const [visibleCoffeeEffectKey, setVisibleCoffeeEffectKey] = useState(null)
-  useEffect(() => {
-    if (!showCard) return
-    const controls = animate(0, GOAL_PERCENT, {
-      duration: 1.2,
-      delay: 0.25,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: setGoalProgress,
-    })
-    return () => controls.stop()
-  }, [showCard])
 
   useEffect(() => {
     if (!showCard || !insightAdded) {
@@ -828,9 +1022,6 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
     }, 260)
     return () => window.clearTimeout(id)
   }, [showCard, insightAdded, insightAnimationKey])
-
-  const fillWidth = (goalProgress / GOAL_PERCENT) * GOAL_FILL_WIDTH * ((GOAL_ACTIVE_BAR - GOAL_PROGRESS_OFFSET_BARS) / GOAL_ACTIVE_BAR)
-  const activeBar = Math.max(0, Math.round((goalProgress / GOAL_PERCENT) * GOAL_ACTIVE_BAR) - GOAL_PROGRESS_OFFSET_BARS)
 
   const panelBg = dark ? '#111111' : '#ffffff'
   const panelExitBg = dark ? '#fafafa' : '#111111'
@@ -852,38 +1043,75 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
         <div className={`absolute inset-0 rounded-[64px] ${dark ? 'bg-black/60' : 'bg-black/60'}`} />
       </motion.div>
 
-      {/* Insight panel — unfolds (height-only) from the seam between header and body */}
+      {/* Insight panel — the dot expands out of the seam between the quick-action
+          row and the promo banners (seam center ≈ 220,380 in phone coords; panel
+          origin is left-1 top-1 = 4,4). Animated via clipPath (paint-only) instead
+          of width/height so the content tree isn't re-laid-out every frame. */}
       {showCard && (
           <motion.div
-            initial={{ width: 24, height: 24, y: 120, opacity: 1, backgroundColor: panelBg }}
-            animate={{ width: 424, height: insightAdded ? 868 : 768, y: 0, opacity: 1, backgroundColor: panelBg }}
+            initial={{
+              clipPath: `inset(360px 200px ${788 - 384}px 200px round 60px)`,
+              backgroundColor: panelBg,
+            }}
+            animate={{
+              clipPath: 'inset(0px 0px 0px 0px round 60px)',
+              height: 788,
+              backgroundColor: panelBg,
+            }}
             exit={{
-              width: 96, height: 96, y: 132, opacity: 0, backgroundColor: panelExitBg,
+              clipPath: `inset(324px 164px ${788 - 420}px 164px round 60px)`,
+              opacity: 0,
+              backgroundColor: panelExitBg,
               transition: {
-                type: 'spring', stiffness: 380, damping: 40,
-                opacity: { duration: 0.12, ease: 'easeOut', delay: 0.12 },
+                type: 'spring', stiffness: 380, damping: 40, delay: 0.14,
+                opacity: { duration: 0.12, ease: 'easeOut', delay: 0.26 },
               },
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-            className="absolute left-2 top-2 z-50 overflow-hidden rounded-[60px]"
+            style={{ width: 432 }}
+            className="absolute left-1 top-1 z-50 overflow-hidden rounded-[60px]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Content layer — fades out immediately so nothing lingers visible while the shell collapses */}
+            {/* Content layer — fades out after the cards drop, before the shell collapses */}
             <motion.div
-              exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }}
+              exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn', delay: 0.12 } }}
               className={`border-[0.75px] border-dashed rounded-[60px] flex flex-col overflow-hidden h-full ${dark ? 'border-[#262626]' : 'border-[#fafaf9]'}`}
-              style={{ width: 424 }}
+              style={{ width: 432 }}
             >
               {/* Content */}
               <div className="flex-1 flex flex-col gap-2 px-3 pt-16 pb-3 w-full min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                {/* Buying House Goal card — first, per design. Isolated into its own
+                    component so its 60fps progress tween doesn't re-render the rest
+                    of this overlay (see GoalProgressCard). */}
+                <motion.div
+                  initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 32, scale: 0.96, transition: { duration: 0.18, ease: 'easeIn', delay: 0.1 } }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.1 }}
+                  className="w-full"
+                >
+                <motion.div className="relative w-full" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.04 } : {}}>
+                  {isEditing && <RemoveBtn dark={dark} />}
+                  <GoalProgressCard dark={dark} showCard={showCard} />
+                </motion.div>
+                </motion.div>
+
                 {/* Stat cards row */}
-                <div className="flex items-stretch gap-2 w-full">
+                <motion.div
+                  initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 32, scale: 0.96, transition: { duration: 0.18, ease: 'easeIn', delay: 0.05 } }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.18 }}
+                  className="flex items-stretch gap-2 w-full"
+                >
                   <motion.div className="relative flex flex-1 min-w-0" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? SHAKE.transition : {}}>
                     {isEditing && <RemoveBtn dark={dark} />}
                     <InsightStatCard
-                      icon="attach_money"
                       label="You have"
                       dark={dark}
+                      iconSrc="/insight-cash.png"
+                      iconBg="#fff085"
+                      iconClassName="-scale-x-100"
                       value={<CountUp to={53} format={(v) => `${Math.round(v)}m`} className={`block text-[24px] font-bold leading-8 tracking-[0.48px] ${dark ? 'text-white' : 'text-black'}`} />}
                       description="has remained unused for over 4 months"
                     />
@@ -891,111 +1119,77 @@ function BalanceOverlay({ onClose, onAddInsight, onRemoveInsight, showCard = tru
                   <motion.div className="relative flex flex-1 min-w-0" animate={isEditing ? { ...SHAKE.animate, rotate: SHAKE.animate.rotate.map(r => -r) } : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.08 } : {}}>
                     {isEditing && <RemoveBtn dark={dark} />}
                     <InsightStatCard
-                      icon="wallet"
                       label="You already spent"
                       dark={dark}
+                      iconSrc="/insight-wallet.png"
+                      iconBg="#d9f99d"
                       value={
-                        <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] tabular-nums ${dark ? 'text-white' : 'text-black'}`}>
+                        <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] tabular-nums whitespace-nowrap ${dark ? 'text-white' : 'text-black'}`}>
                           <CountUp to={2.4} format={(v) => `${v.toFixed(1).replace('.', ',')}m`} duration={1.1} />
-                          {' / 20m'}
+                          <span className="text-[#737373]">{' / 20m'}</span>
                         </p>
                       }
                       description="of your monthly budget"
                     />
                   </motion.div>
-                </div>
-
-                {/* Buying House Goal card — the accent block, opposite tone of the panel */}
-                <motion.div className="relative w-full" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.04 } : {}}>
-                  {isEditing && <RemoveBtn dark={dark} />}
-                <div className={`rounded-[48px] overflow-hidden relative flex flex-col gap-4 w-full ${dark ? 'bg-[#fafafa]' : 'bg-[#111111]'}`}>
-                  {/* Progress region backdrop — grows with the percentage */}
-                  <div
-                    className={`absolute left-0 bottom-0 rounded-r-[4px] ${dark ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}
-                    style={{ height: 200, width: fillWidth }}
-                  />
-                  <div className="relative flex flex-col gap-2 pt-6 px-6 w-full">
-                    <div className="flex items-start justify-between w-full">
-                      <div className="flex flex-col gap-1">
-                        <p className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-[#111111]' : 'text-[#fafafa]'}`}>Buying House Goal</p>
-                        <span className="text-[24px] font-bold leading-8 text-info tracking-[0.48px] tabular-nums">
-                          {Math.round(goalProgress)}%
-                        </span>
-                      </div>
-                      <div className={`rounded-full size-12 flex items-center justify-center shrink-0 ${dark ? 'bg-[#e5e5e5]' : 'bg-[#262626]'}`}>
-                        <Icon name="add_home" size={24} className={dark ? 'text-[#111111]' : 'text-[#fafafa]'} />
-                      </div>
-                    </div>
-                    <p className={`t-body-md w-full ${dark ? 'text-[#111111]' : 'text-[#fafafa]'}`}>
-                      Almost halfway to your goal.
-                    </p>
-                  </div>
-                  {/* Tick bars + progress */}
-                  <div className="relative flex flex-col w-full">
-                    <div className="flex items-center justify-between w-full">
-                      {Array.from({ length: GOAL_BARS }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={`h-12 w-0.5 rounded-full ${i === activeBar && goalProgress > 0.5 ? 'bg-info' : (dark ? 'bg-[#e5e5e5]' : 'bg-[#262626]')}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="bg-info h-6 rounded-r-[4px]" style={{ width: fillWidth }} />
-                  </div>
-                </div>
                 </motion.div>
 
                 {/* Add new insight */}
-                <AnimatePresence mode="popLayout" initial={false}>
-                {insightAdded ? (
-                  <motion.div
-                    key="coffee-added"
-                    layout
-                    initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 16, scale: 0.96 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-                    className="flex items-stretch gap-2 w-full"
-                  >
-                    <motion.div className="relative w-1/2 min-w-0" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.12 } : {}}>
-                      {isEditing && <RemoveBtn dark={dark} onClick={removeCoffeeInsight} />}
-                      <CoffeeInsightCard dark={dark} effectKey={visibleCoffeeEffectKey} />
-                    </motion.div>
-                    <button
-                      onClick={onAddInsight}
-                      className={`w-1/2 min-w-0 border border-dashed rounded-[48px] p-6 flex flex-col items-center justify-center gap-2 ${dark ? 'border-[#fafafa]' : 'border-[#111111]'}`}
-                    >
-                      <Image src="/tri.png" alt="" width={24} height={24} />
-                      <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] text-center ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
-                    </button>
-                  </motion.div>
-                ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 32, scale: 0.96, transition: { duration: 0.18, ease: 'easeIn' } }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.26 }}
+                  className="flex items-stretch gap-2 w-full"
+                >
                   <motion.button
-                    key="coffee-empty"
                     layout
-                    initial={{ opacity: 0, y: -12, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -12, scale: 0.96 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 32 }}
                     onClick={onAddInsight}
-                    className={`border border-dashed rounded-[48px] p-6 flex items-center justify-center gap-2 w-full ${dark ? 'border-[#fafafa]' : 'border-[#111111]'}`}
+                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                    className={`w-[200px] shrink-0 min-w-0 border border-dashed rounded-[40px] p-6 flex flex-col items-center justify-center gap-2 ${insightAdded ? 'order-2' : 'order-1'} ${dark ? 'border-[#fafafa]' : 'border-[#0a0a0a]'}`}
                   >
-                    <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
-                    <Image src="/tri.png" alt="" width={24} height={24} />
+                    <Image src="/ai.png" alt="" width={40} height={40} />
+                    <span className={`text-[16px] font-semibold leading-6 tracking-[0.32px] text-center whitespace-nowrap ${dark ? 'text-white' : 'text-content-primary'}`}>Add new insight</span>
                   </motion.button>
-                )}
-                </AnimatePresence>
+                  <AnimatePresence mode="popLayout" initial={false}>
+                  {insightAdded ? (
+                    <motion.div
+                      key="coffee-added"
+                      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 16, scale: 0.96 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+                      className="relative flex-1 min-w-0 flex order-1"
+                    >
+                      <motion.div className="relative flex-1 min-w-0 flex" animate={isEditing ? SHAKE.animate : { rotate: 0 }} transition={isEditing ? { ...SHAKE.transition, delay: 0.12 } : {}}>
+                        {isEditing && <RemoveBtn dark={dark} onClick={removeCoffeeInsight} />}
+                        <CoffeeInsightCard dark={dark} effectKey={visibleCoffeeEffectKey} />
+                      </motion.div>
+                    </motion.div>
+                  ) : (
+                    /* Invisible coffee card — reserves the right half + row height, per design */
+                    <motion.div
+                      key="coffee-empty"
+                      exit={{ opacity: 0 }}
+                      className="flex-1 min-w-0 flex opacity-0 pointer-events-none order-2"
+                      aria-hidden="true"
+                    >
+                      <CoffeeInsightCard dark={dark} effectKey={null} />
+                    </motion.div>
+                  )}
+                  </AnimatePresence>
+                </motion.div>
               </div>
 
               {/* Footer — Edit / Close */}
               <div className={`flex items-center justify-between px-6 pt-3 pb-0 shrink-0 w-full bg-gradient-to-b ${
                 dark ? 'from-black/0 to-black' : 'from-white/0 to-white'
               }`}>
-                <button onClick={() => setIsEditing(v => !v)} className="bg-black border border-white rounded-[60px] px-8 py-5 backdrop-blur-sm">
-                  <span className="text-[14px] font-medium leading-5 text-white tracking-[0.28px]">{isEditing ? 'Done' : 'Edit'}</span>
+                <button onClick={() => setIsEditing(v => !v)} className={`border rounded-[60px] px-8 py-4 backdrop-blur-sm ${dark ? 'border-white' : 'border-black'}`}>
+                  <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] ${dark ? 'text-white' : 'text-black'}`}>{isEditing ? 'Done' : 'Edit'}</span>
                 </button>
-                <button onClick={onClose} className="bg-white border border-black rounded-[60px] px-8 py-5 backdrop-blur-sm">
-                  <span className="text-[14px] font-medium leading-5 text-black tracking-[0.28px]">Close</span>
+                <button onClick={onClose} className={`rounded-[60px] px-8 py-4 backdrop-blur-sm ${dark ? 'bg-white' : 'bg-black'}`}>
+                  <span className={`text-[14px] font-medium leading-5 tracking-[0.28px] ${dark ? 'text-black' : 'text-white'}`}>Close</span>
                 </button>
               </div>
               <div className="h-6 shrink-0" />
@@ -1087,7 +1281,7 @@ function TransactionOverlay({ onClose, showCard = true, light = false }) {
                   </button>
                 ))}
                 <button onClick={onClose} className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full ${dark ? 'bg-white' : 'bg-surface-overlay'}`}>
-                  <Image src="/tri.png" alt="AI" width={20} height={20} />
+                  <Image src="/ai.png" alt="AI" width={20} height={20} />
                   <span className={`text-[14px] font-medium ${dark ? 'text-[#111111]' : 'text-content-inverse'}`}>Ask a follow-up</span>
                 </button>
               </div>
@@ -1102,9 +1296,9 @@ function TransactionOverlay({ onClose, showCard = true, light = false }) {
 /* ─── TRÍ Screen ────────────────────────────────────────────────────── */
 
 const TRI_ENTRY_SUGGESTIONS = [
-  { id: 1, rotate: -8, icon: '/icons-home/tri-suggestion-house.svg', label: 'Make a plan to buy house',                    message: 'Make a plan to buy house' },
-  { id: 2, rotate: 8,  icon: '/icons-home/tri-suggestion-plane.svg', label: 'Summarize my total spending on Bangkok Trip', message: 'Summarize my total spending on Bangkok Trip' },
-  { id: 3, rotate: -8, icon: 'freeze',                               label: 'Freeze my Credit card',                       message: 'Freeze my card' },
+  { id: 1, rotate: -8, icon: '/icons-home/tri-suggestion-house.png',  iconBg: '#bedbff', label: 'Make a plan to buy house',                    message: 'Make a plan to buy house' },
+  { id: 2, rotate: 8,  icon: '/icons-home/tri-suggestion-plane.png',  iconBg: '#d5d4f7', label: 'Summarize my total spending on Bangkok Trip', message: 'Summarize my total spending on Bangkok Trip' },
+  { id: 3, rotate: -8, icon: '/icons-home/tri-suggestion-freeze.png', iconBg: '#fff4cc', label: 'Freeze my Credit card',                       message: 'Freeze my card' },
 ]
 
 function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
@@ -1114,9 +1308,17 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
       transition={{ type: 'spring', stiffness: 300, damping: 32 }}
       className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
     >
-      {/* Dotted pattern background — dark theme only */}
-      {!light && (
-        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      {/* Background — the Home gradient, reused here for both themes */}
+      {!light ? (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #292929 0%, #111111 100%)' }}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #a1a1aa 0%, #ffffff 70%)' }}
+        />
       )}
 
       {/* Status bar */}
@@ -1128,38 +1330,44 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
       <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1">
 
         {/* Main content card */}
-        <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col items-center min-h-0 ${
-          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
-        }`}>
+        <div className={`relative flex-1 border rounded-t-[64px] rounded-b-[48px] overflow-hidden flex flex-col items-center min-h-0 ${
+          light ? 'border-[#e5e5e5] shadow-[0_8px_24px_rgba(0,0,0,0.08)]' : 'border-[#171717]'
+        }`}
+        style={{
+          background: light
+            ? 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 40%)'
+            : 'linear-gradient(180deg, rgba(17,17,17,0.25) 0%, #111111 66%)',
+        }}
+        >
 
           {/* Header */}
           <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
-            <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
+            <button className={`rounded-full px-5 py-2 flex items-center justify-center border ${
+              light ? 'border-neutral-300' : 'border-neutral-800'
             }`}>
               <Icon name="history" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
             </button>
             <div className="flex items-center gap-1">
-              <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
+              <button onClick={onOpenSearch} className={`rounded-full px-5 py-2 flex items-center justify-center border ${
+                light ? 'border-neutral-300' : 'border-neutral-800'
               }`}>
                 <Icon name="search" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
               </button>
-              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#111111]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
-                <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+              <button onClick={onClose} className={`rounded-full px-5 py-2 flex items-center justify-center border shrink-0 ${light ? 'border-neutral-300' : 'border-neutral-800'}`}>
+                <Icon name="close" size={24} className={light ? 'text-black' : 'text-white'} />
               </button>
             </div>
           </div>
 
           {/* Greeting + suggestion cards */}
-          <div className="backdrop-blur-[6px] flex-1 w-full flex flex-col items-center justify-end overflow-hidden min-h-0">
+          <div className="flex-1 w-full flex flex-col items-center justify-end overflow-hidden min-h-0">
             <div className="flex flex-col gap-2.5 p-4 shrink-0 w-full whitespace-nowrap">
               <p className={`t-h3 ${light ? 'text-[#111111]' : 'text-white'}`}>Hey Quang!</p>
               <p className="t-label text-[#737373]">What&apos;s been on your mind lately?</p>
             </div>
 
             <div className="flex items-center pb-4 pt-3 px-4 shrink-0 w-full">
-              {TRI_ENTRY_SUGGESTIONS.map(({ id, rotate, icon, label, message }) => (
+              {TRI_ENTRY_SUGGESTIONS.map(({ id, rotate, icon, iconBg, label, message }) => (
                 <button
                   key={id}
                   onClick={() => onOpenChat?.(message)}
@@ -1172,13 +1380,9 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
                     }`}
                     style={{ width: 117, height: 140, transform: `rotate(${rotate}deg)` }}
                   >
-                    {icon === 'freeze' ? (
-                      <div className="bg-cinnabar-400 rounded-lg size-6 flex items-center justify-center shrink-0">
-                        <div className="bg-cinnabar-200 rounded-full size-4" />
-                      </div>
-                    ) : (
-                      <img src={icon} alt="" className="size-6" />
-                    )}
+                    <div className="rounded-lg flex items-center justify-center shrink-0 size-6" style={{ background: iconBg }}>
+                      <Image src={icon} alt="" width={20} height={20} />
+                    </div>
                     <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{label}</p>
                   </div>
                 </button>
@@ -1188,24 +1392,26 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
         </div>
 
         {/* Ask anything input */}
-        <button
-          onClick={() => onOpenChat?.('Freeze my card')}
-          className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 mx-3 w-[calc(100%-24px)] ${
-            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
-          }`}
-        >
-          <Icon name="add" size={24} className="text-black shrink-0" />
-          <div className="flex-1 flex items-center gap-1 min-w-0">
-            <BlinkingCursor />
-            <span className="flex-1 t-body text-[#a1a1a1] text-left">Ask anything</span>
-          </div>
-          <div className="bg-info rounded-full p-2 flex items-center justify-center shrink-0">
-            <Icon name="arrow_upward" size={24} className="text-white" />
-          </div>
-        </button>
+        <div className="flex gap-2 items-center px-3 w-full">
+          <button
+            onClick={() => onOpenChat?.('Freeze my card')}
+            className={`flex-1 backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] min-w-0 ${
+              light ? 'bg-white border-[#d4d4d4]' : 'bg-[#171717] border-[#fafafa]'
+            }`}
+          >
+            <Icon name="add" size={24} className={`shrink-0 ${light ? 'text-black' : 'text-white'}`} />
+            <div className="flex-1 flex items-center gap-1 min-w-0">
+              <BlinkingCursor />
+              <span className="flex-1 t-body text-[#a1a1a1] text-left">Ask anything</span>
+            </div>
+            <div className={`rounded-full p-2 flex items-center justify-center shrink-0 ${light ? 'bg-[#111111]' : 'bg-white'}`}>
+              <Image src="/ai.png" alt="" width={24} height={24} />
+            </div>
+          </button>
+        </div>
 
         {/* Dark keyboard — in flow */}
-        <DarkKeyboardMock />
+        <DarkKeyboardMock light={light} />
       </div>
     </motion.div>
   )
@@ -1255,9 +1461,17 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
       transition={{ type: 'spring', stiffness: 300, damping: 32 }}
       className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
     >
-      {/* Dotted pattern background — dark theme only */}
-      {!light && (
-        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      {/* Background — the Home gradient, reused here for both themes */}
+      {!light ? (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #292929 0%, #111111 100%)' }}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #a1a1aa 0%, #ffffff 70%)' }}
+        />
       )}
 
       {/* Status bar */}
@@ -1269,32 +1483,47 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
       <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1">
 
         {/* Main content card */}
-        <div className={`relative flex-1 backdrop-blur-lg border rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[32px] rounded-br-[32px] overflow-hidden flex flex-col min-h-0 ${
-          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
-        }`}>
+        <div className={`relative flex-1 border rounded-t-[64px] rounded-b-[48px] overflow-hidden flex flex-col min-h-0 ${
+          light ? 'border-[#e5e5e5] shadow-[0_8px_24px_rgba(0,0,0,0.08)]' : 'border-[#171717]'
+        }`}
+        style={{
+          background: light
+            ? 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 40%)'
+            : 'linear-gradient(180deg, rgba(17,17,17,0.25) 0%, #111111 66%)',
+        }}
+        >
 
           {/* Header */}
           <div className="flex items-center justify-between pb-3 pl-4 pr-3 pt-16 shrink-0 w-full">
-            <button className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-              light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
+            <button className={`rounded-full px-5 py-2 flex items-center justify-center border ${
+              light ? 'border-neutral-300' : 'border-neutral-800'
             }`}>
               <Icon name="history" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
             </button>
             <div className="flex items-center gap-1">
-              <button onClick={onOpenSearch} className={`rounded-full px-6 py-3 flex items-center justify-center border ${
-                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#111111] border-[#262626]'
+              <button onClick={onOpenSearch} className={`rounded-full px-5 py-2 flex items-center justify-center border ${
+                light ? 'border-neutral-300' : 'border-neutral-800'
               }`}>
                 <Icon name="search" size={24} className={light ? 'text-[#111111]' : 'text-[#d4d4d4]'} />
               </button>
-              <button onClick={onClose} className={`rounded-full px-6 py-3 flex items-center justify-center ${light ? 'bg-[#111111]' : 'bg-[#fafafa]'}`} style={{ width: 72 }}>
-                <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
+              <button onClick={onClose} className={`rounded-full px-5 py-2 flex items-center justify-center border shrink-0 ${light ? 'border-neutral-300' : 'border-neutral-800'}`}>
+                <Icon name="close" size={24} className={light ? 'text-black' : 'text-white'} />
               </button>
             </div>
           </div>
 
-          {/* Message list */}
+          {/* Message list — top edge masked so messages fade out under the header
+              instead of being hard-clipped, without an opaque overlay div (that
+              created a visible seam against the card's own translucent gradient) */}
           <div className="relative flex-1 min-h-0">
-          <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0 h-full">
+          <div
+            ref={scrollRef}
+            className="flex-1 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden min-h-0 h-full"
+            style={{
+              maskImage: 'linear-gradient(to bottom, transparent 0px, black 32px)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0px, black 32px)',
+            }}
+          >
             <div className="flex flex-col py-4 w-full mt-auto">
               {messages.map((m, i) => (
                 <div key={i} className={`flex w-full py-2 ${m.role === 'user' ? 'justify-end pl-24 pr-4' : 'justify-start pl-4 pr-24'}`}>
@@ -1336,17 +1565,12 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
                     animate={{ rotate: 360, scale: [1, 1.18, 1] }}
                     transition={{ rotate: { duration: 1.6, repeat: Infinity, ease: 'linear' }, scale: { duration: 0.9, repeat: Infinity, ease: 'easeInOut' } }}
                   >
-                    <Image src="/tri.png" alt="" width={28} height={28} />
+                    <Image src="/ai.png" alt="" width={28} height={28} />
                   </motion.div>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Top fade — sits over the message list, not part of the scroll content */}
-          <div className={`absolute top-0 inset-x-0 h-14 pointer-events-none z-10 ${
-            light ? 'bg-linear-to-b from-white to-transparent' : 'bg-linear-to-b from-[#111111] to-transparent'
-          }`} />
           </div>
         </div>
 
@@ -1358,33 +1582,35 @@ function InsightChatScreen({ onClose, onOpenSearch, onViewInsight, light = false
           className="flex flex-col gap-2 shrink-0"
         >
           {/* Ask anything input */}
-          <div className={`backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] shrink-0 mx-3 w-[calc(100%-24px)] ${
-            light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
-          }`}>
-            <Icon name="add" size={24} className="text-black shrink-0" />
-            <div className="flex-1 flex items-center min-w-0">
-              <span className="flex-1 t-body text-[#111111] text-left min-w-0 break-words">
-                {inputText ? (
-                  <TypewriterInputText text={inputText} />
-                ) : (
-                  <span className="flex items-center gap-1 text-[#a1a1a1]">
-                    <BlinkingCursor />
-                    <span>Ask anything</span>
-                  </span>
-                )}
-              </span>
+          <div className="flex gap-2 items-center px-3 w-full">
+            <div className={`flex-1 backdrop-blur-sm border flex items-center gap-2 pl-4 pr-2 py-2 rounded-[60px] min-w-0 ${
+              light ? 'bg-white border-[#d4d4d4]' : 'bg-[#171717] border-[#fafafa]'
+            }`}>
+              <Icon name="add" size={24} className={`shrink-0 ${light ? 'text-black' : 'text-white'}`} />
+              <div className="flex-1 flex items-center min-w-0">
+                <span className={`flex-1 t-body text-left min-w-0 break-words ${light ? 'text-[#111111]' : 'text-white'}`}>
+                  {inputText ? (
+                    <TypewriterInputText text={inputText} />
+                  ) : (
+                    <span className="flex items-center gap-1 text-[#a1a1a1]">
+                      <BlinkingCursor />
+                      <span>Ask anything</span>
+                    </span>
+                  )}
+                </span>
+              </div>
+              <button
+                onClick={handleSend}
+                disabled={!canSend}
+                className={`rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40 ${light ? 'bg-[#111111]' : 'bg-white'}`}
+              >
+                <Image src="/ai.png" alt="" width={24} height={24} />
+              </button>
             </div>
-            <button
-              onClick={handleSend}
-              disabled={!canSend}
-              className="bg-info rounded-full p-2 flex items-center justify-center shrink-0 disabled:opacity-40"
-            >
-              <Icon name="arrow_upward" size={24} className="text-white" />
-            </button>
           </div>
 
           {/* Dark keyboard — in flow */}
-          <DarkKeyboardMock />
+          <DarkKeyboardMock light={light} />
         </motion.div>
       </div>
     </motion.div>
@@ -1495,24 +1721,26 @@ function SearchResultDivider() {
   )
 }
 
-function DarkKeyboardMock() {
+function DarkKeyboardMock({ light = false }) {
   const rows = [
     ['q','w','e','r','t','y','u','i','o','p'],
     ['a','s','d','f','g','h','j','k','l'],
     ['z','x','c','v','b','n','m'],
   ]
   const DK = ({ label, className = '' }) => (
-    <button className={`h-11 bg-[#3a3a3c] rounded-[10px] flex items-center justify-center text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)] ${className}`}>
+    <button className={`h-11 rounded-[10px] flex items-center justify-center text-[17px] ${
+      light ? 'bg-white text-black shadow-[0_1px_0_rgba(0,0,0,0.25)]' : 'bg-[#3a3a3c] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]'
+    } ${className}`}>
       {label}
     </button>
   )
   return (
     <div className="w-full shrink-0">
-      <div className="bg-[#1c1c1e] rounded-t-4xl rounded-b-[60px]">
-        <div className="flex items-center border-b border-[#2c2c2e] py-2">
+      <div className={`rounded-t-4xl rounded-b-[60px] ${light ? 'bg-[#d1d3d9]' : 'bg-[#1c1c1e] border border-neutral-900'}`}>
+        <div className={`flex items-center border-b py-2 ${light ? 'border-[#b9bcc3]' : 'border-[#2c2c2e]'}`}>
           {['"The"', 'the', 'to'].map((s, i) => (
-            <div key={s} className={`flex-1 flex items-center justify-center py-1 ${i < 2 ? 'border-r border-[#2c2c2e]' : ''}`}>
-              <span className="text-[15px] text-white">{s}</span>
+            <div key={s} className={`flex-1 flex items-center justify-center py-1 ${i < 2 ? (light ? 'border-r border-[#b9bcc3]' : 'border-r border-[#2c2c2e]') : ''}`}>
+              <span className={`text-[15px] ${light ? 'text-black' : 'text-white'}`}>{s}</span>
             </div>
           ))}
         </div>
@@ -1524,21 +1752,23 @@ function DarkKeyboardMock() {
             {rows[1].map(k => <DK key={k} label={k} className="w-9.25" />)}
           </div>
           <div className="flex justify-center gap-1.5">
-            <DK label="⇧" className="w-11 bg-[#636366]!" />
+            <DK label="⇧" className={`w-11 ${light ? 'bg-[#adb1b8]!' : 'bg-[#636366]!'}`} />
             {rows[2].map(k => <DK key={k} label={k} className="w-9.25" />)}
-            <DK label="⌫" className="w-11 bg-[#636366]!" />
+            <DK label="⌫" className={`w-11 ${light ? 'bg-[#adb1b8]!' : 'bg-[#636366]!'}`} />
           </div>
           <div className="flex gap-1.5">
-            <DK label="123" className="w-11 bg-[#636366]!" />
-            <button className="flex-1 h-11 bg-[#3a3a3c] rounded-[10px] text-[17px] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]">space</button>
+            <DK label="123" className={`w-11 ${light ? 'bg-[#adb1b8]!' : 'bg-[#636366]!'}`} />
+            <button className={`flex-1 h-11 rounded-[10px] text-[17px] ${
+              light ? 'bg-white text-black shadow-[0_1px_0_rgba(0,0,0,0.25)]' : 'bg-[#3a3a3c] text-white shadow-[0_1px_0_rgba(0,0,0,0.5)]'
+            }`}>space</button>
             <button className="w-23 h-11 bg-[#007AFF] rounded-[10px] flex items-center justify-center shadow-[0_1px_0_rgba(0,0,0,0.5)]">
               <Icon name="keyboard_return" size={18} className="text-white" />
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between px-9 pt-2 pb-8">
-          <Icon name="emoji_emotions" size={26} className="text-[#636366]" />
-          <Icon name="mic" size={22} className="text-[#636366]" />
+          <Icon name="emoji_emotions" size={26} className={light ? 'text-[#8e9099]' : 'text-[#636366]'} />
+          <Icon name="mic" size={22} className={light ? 'text-[#8e9099]' : 'text-[#636366]'} />
         </div>
       </div>
     </div>
@@ -1582,9 +1812,17 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
       transition={SLIDE}
       className={`absolute inset-0 z-80 rounded-[64px] overflow-hidden flex flex-col ${light ? 'bg-white' : 'bg-black'}`}
     >
-      {/* Dotted pattern background — dark theme only */}
-      {!light && (
-        <Image src="/background-dark.png" alt="" fill unoptimized className="object-cover rounded-[64px]" />
+      {/* Background — the Home gradient, reused here for both themes */}
+      {!light ? (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #292929 0%, #111111 100%)' }}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 rounded-[64px]"
+          style={{ background: 'linear-gradient(180deg, #a1a1aa 0%, #ffffff 70%)' }}
+        />
       )}
 
       {/* Status bar */}
@@ -1596,15 +1834,27 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
       <div className="absolute inset-0 flex flex-col gap-2 px-1 pt-1 pb-1 pb-0">
 
         {/* Main content card */}
-        <div className={`relative flex-1 backdrop-blur-lg border rounded-[60px] overflow-hidden flex flex-col min-h-0 ${
-          light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
-        }`}>
+        <div className={`relative flex-1 border rounded-t-[64px] rounded-b-[48px] overflow-hidden flex flex-col min-h-0 ${
+          light ? 'border-[#e5e5e5] shadow-[0_8px_24px_rgba(0,0,0,0.08)]' : 'border-[#171717]'
+        }`}
+        style={{
+          background: light
+            ? 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 40%)'
+            : 'linear-gradient(180deg, rgba(17,17,17,0.25) 0%, #111111 66%)',
+        }}
+        >
 
           {/* Header */}
-          <div className="flex items-center px-4 pb-3 pt-16 shrink-0 w-full">
+          <div className="flex items-center justify-between px-4 pb-3 pt-16 shrink-0 w-full">
             <p className={`text-[24px] font-bold leading-8 tracking-[0.48px] ${primaryText}`}>
               {typing ? <>Result of &ldquo;{typedText}&rdquo;</> : 'Search'}
             </p>
+            <button
+              onClick={onClose}
+              className={`rounded-full px-5 py-2 flex items-center justify-center border shrink-0 ${light ? 'border-neutral-300' : 'border-neutral-800'}`}
+            >
+              <Icon name="close" size={24} className={primaryText} />
+            </button>
           </div>
 
           <AnimatePresence mode="wait" initial={false}>
@@ -1650,8 +1900,8 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                       onClick={() => onOpenChat?.(item.message)}
                       className="flex gap-4 items-center px-4 py-3 w-full text-left"
                     >
-                      <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${iconPillBg}`}>
-                        <Image src="/tri.png" alt="" width={24} height={24} />
+                      <div className="p-2.5 rounded-full flex items-center justify-center shrink-0 bg-cinnabar-200">
+                        <Image src="/ai.png" alt="" width={24} height={24} />
                       </div>
                       <span className={`flex-1 text-[14px] font-medium leading-5 ${primaryText}`}>{item.label}</span>
                       <Icon name="chevron_right" size={20} className="text-[#737373] shrink-0" />
@@ -1682,11 +1932,16 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                   {RECENT_CARDS.map(card => (
                     <div key={card.id} className={`shrink-0 w-[156px] rounded-[32px] px-4 py-4 flex flex-col gap-1 ${light ? 'bg-[#f5f5f5]' : 'bg-[#171717]'}`}>
                       <div className="flex items-start justify-between w-full">
-                        <div className={`p-2.5 rounded-full flex items-center justify-center ${iconPillBg}`}>
-                          {card.icon === 'tri'
-                            ? <Image src="/tri.png" alt="" width={24} height={24} />
-                            : <Icon name={card.icon} size={24} className={iconPillFg} />
-                          }
+                        <div className={`p-2.5 rounded-full flex items-center justify-center ${
+                          card.icon === 'tri' ? 'bg-cinnabar-200' : card.icon === 'savings' ? 'bg-lime-100' : iconPillBg
+                        }`}>
+                          {card.icon === 'tri' ? (
+                            <Image src="/ai.png" alt="" width={24} height={24} />
+                          ) : card.icon === 'savings' ? (
+                            <Image src="/invest-savings.png" alt="" width={24} height={24} />
+                          ) : (
+                            <Icon name={card.icon} size={24} className={iconPillFg} />
+                          )}
                         </div>
                         <button className="mt-0.5">
                           <Icon name="close" size={20} className="text-[#737373]" />
@@ -1707,8 +1962,16 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                 {SUGGESTED_STOCKS.map((stock, i) => (
                   <div key={stock.id}>
                     <div className="flex gap-4 items-center px-4 py-3">
-                      <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${iconPillBg}`}>
-                        <Icon name={stock.icon} size={24} className={iconPillFg} />
+                      <div className={`p-2.5 rounded-full flex items-center justify-center shrink-0 ${
+                        stock.icon === 'candlestick_chart' ? 'bg-[#d5d4f7]' : stock.icon === 'bar_chart' ? 'bg-[#fff4cc]' : iconPillBg
+                      }`}>
+                        {stock.icon === 'candlestick_chart' ? (
+                          <Image src="/invest-equities.png" alt="" width={24} height={24} />
+                        ) : stock.icon === 'bar_chart' ? (
+                          <Image src="/invest-funds.png" alt="" width={24} height={24} />
+                        ) : (
+                          <Icon name={stock.icon} size={24} className={iconPillFg} />
+                        )}
                       </div>
                       <div className="flex-1 flex flex-col gap-1 min-w-0">
                         <p className={`text-[14px] font-medium leading-5 ${primaryText}`}>{stock.ticker}</p>
@@ -1732,7 +1995,7 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
           </AnimatePresence>
 
           {/* Bottom fade */}
-          <div className={`absolute bottom-0 left-0 right-0 h-14 pointer-events-none rounded-b-[60px] ${
+          <div className={`absolute bottom-0 left-0 right-0 h-14 pointer-events-none rounded-b-[48px] ${
             light ? 'bg-linear-to-t from-white to-transparent' : 'bg-linear-to-t from-[#111111] to-transparent'
           }`} />
         </div>
@@ -1743,19 +2006,19 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
           transition={{ ...SLIDE, delay: 0.28 }}
           className="flex flex-col gap-2 shrink-0"
         >
-          {/* Search field + close */}
+          {/* Search field */}
           <div className="flex gap-2 items-center px-3 w-full">
             <div
               role="button"
               onClick={startTyping}
-              className={`flex-1 backdrop-blur-[4px] border rounded-[60px] pl-6 pr-4 py-4 flex items-center gap-4 min-w-0 cursor-text ${
-                light ? 'bg-white border-[#e5e5e5]' : 'bg-[#fafafa] border-[#fafafa]'
+              className={`flex-1 backdrop-blur-sm border rounded-[60px] pl-6 pr-4 py-4 flex items-center gap-4 min-w-0 cursor-text ${
+                light ? 'bg-white border-[#d4d4d4]' : 'bg-[#171717] border-[#fafafa]'
               }`}
             >
               <div className="flex-1 flex items-center gap-1 min-w-0">
                 {typing ? (
                   <>
-                    <span className="text-[16px] leading-6 whitespace-nowrap text-[#111111]">{typedText}</span>
+                    <span className={`text-[16px] leading-6 whitespace-nowrap ${light ? 'text-[#111111]' : 'text-white'}`}>{typedText}</span>
                     <BlinkingCursor />
                   </>
                 ) : (
@@ -1777,18 +2040,12 @@ export function SearchScreen({ onClose, onOpenChat, autoType = false, light = fa
                   </motion.button>
                 )}
               </AnimatePresence>
-              <Icon name="search" size={24} className="text-[#111111] shrink-0" />
+              <Icon name="search" size={24} className={`shrink-0 ${light ? 'text-[#111111]' : 'text-white'}`} />
             </div>
-            <button
-              onClick={onClose}
-              className={`rounded-[60px] px-6 py-4 flex items-center justify-center shrink-0 ${light ? 'bg-[#111111]' : 'bg-[#fafafa]'}`}
-            >
-              <Icon name="close" size={24} className={light ? 'text-white' : 'text-black'} />
-            </button>
           </div>
 
           {/* Dark keyboard — in flow */}
-          <DarkKeyboardMock />
+          <DarkKeyboardMock light={light} />
         </motion.div>
       </div>
     </motion.div>
@@ -1806,7 +2063,7 @@ export default function HomeScreen({
   onTriClose: extTriClose,
   triHovered = false,
   defaultTab = 'home',
-  defaultTheme = 'light',
+  defaultTheme = 'dark',
   onTesterNoteChange,
 } = {}) {
   const [theme,               setTheme]               = useState(defaultTheme)
@@ -1818,6 +2075,8 @@ export default function HomeScreen({
   const [wealthAnalyzeOpen,   setWealthAnalyzeOpen]   = useState(false)
   const [wealthInvestOpen,    setWealthInvestOpen]    = useState(false)
   const [wealthAskChatOpen,   setWealthAskChatOpen]   = useState(false)
+  const [wealthOpenAskOnMount, setWealthOpenAskOnMount] = useState(false)
+  const [wealthChatChips,     setWealthChatChips]     = useState([])
   const [menuOpen,            setMenuOpen]            = useState(false)
   const [showInsightChat,     setShowInsightChat]     = useState(false)
   const [insightAdded,        setInsightAdded]        = useState(false)
@@ -1827,6 +2086,40 @@ export default function HomeScreen({
   const balanceCornerTimerRef = useRef(null)
   const [pageTransition,      setPageTransition]      = useState(null)
   const pageTransitionTimerRef = useRef(null)
+  const [bgScrollY,           setBgScrollY]           = useState(0)
+  const MAX_BG_SCROLL = 120
+  const handleHomeScroll = (e) => {
+    setBgScrollY(Math.min(e.currentTarget.scrollTop, MAX_BG_SCROLL))
+  }
+  const phoneFrameRef = useRef(null)
+  const homeScrollRef = useRef(null)
+  const transactionCardRef = useRef(null)
+  const scrollBeforeMenuRef = useRef(0)
+
+  // When the menu opens, scroll the home content up just enough that the
+  // Transaction History card's bottom edge sits 8px above the menu sheet's
+  // top edge (the sheet is pinned at top:160 within the phone frame).
+  useEffect(() => {
+    const scroller = homeScrollRef.current
+    if (!scroller) return
+    if (menuOpen) {
+      scrollBeforeMenuRef.current = scroller.scrollTop
+      requestAnimationFrame(() => {
+        const cardEl = transactionCardRef.current
+        const phoneEl = phoneFrameRef.current
+        if (!cardEl || !phoneEl) return
+        const cardRect = cardEl.getBoundingClientRect()
+        const phoneRect = phoneEl.getBoundingClientRect()
+        const menuTopY = phoneRect.top + 160
+        const delta = cardRect.bottom - (menuTopY - 8)
+        const maxScroll = scroller.scrollHeight - scroller.clientHeight
+        const target = Math.min(Math.max(scroller.scrollTop + delta, 0), Math.max(maxScroll, 0))
+        scroller.scrollTo({ top: target, behavior: 'smooth' })
+      })
+    } else {
+      scroller.scrollTo({ top: scrollBeforeMenuRef.current, behavior: 'smooth' })
+    }
+  }, [menuOpen])
 
   // Suggestion taps / Ask AI send used to open a scripted demo chat (TriChatScreen);
   // that screen has been removed, so these now just close back to the current screen.
@@ -1841,12 +2134,17 @@ export default function HomeScreen({
   const light           = theme === 'light'
   const balanceSplitShown = showOverlay || balanceSplitActive
   const balanceCornerShown = showOverlay || balanceCornerActive
+  // Seam between the quick-action row and the promo banners (phone coords) —
+  // Group 1 slides up by this amount so its bottom edge reaches the screen top,
+  // and the Insight overlay's dot expands from this line.
+  const GROUP_SPLIT_SEAM_Y = 380
+  // Insight overlay panel: top-1 (4px) + its own height, then +8px gap below it —
+  // that's where the promos/transaction group settles when split.
+  const insightPanelHeight = 788
+  const groupTwoSplitY = (4 + insightPanelHeight + 8) - (GROUP_SPLIT_SEAM_Y + 4)
   const showingWealth = navActive === 'investment' || pageTransition?.from === 'investment' || pageTransition?.to === 'investment'
   const homePageX = pageTransition?.to === 'investment' || (navActive === 'investment' && pageTransition?.to !== 'home') ? -448 : 0
   const wealthPageX = pageTransition?.to === 'home' ? 448 : 0
-  const screenBackgroundSrc = navActive === 'investment'
-    ? (light ? '/background-my-wealth-light.png' : '/background-my-wealth-dark.png')
-    : (light ? '/background-light.png' : '/background-dark2.png')
 
   const closeMenuToCurrentPage = () => {
     if (pageTransitionTimerRef.current) window.clearTimeout(pageTransitionTimerRef.current)
@@ -1961,16 +2259,42 @@ export default function HomeScreen({
   }, [menuOpen, navActive, onTesterNoteChange, showInsightChat, showOverlay, showSearch, showTri, wealthInvestOpen])
 
   return (
-    <div className={`w-[440px] h-[956px] overflow-hidden relative rounded-[64px] ${light ? 'bg-white' : 'bg-black'}`}>
+    <div ref={phoneFrameRef} className={`w-[440px] h-[956px] overflow-hidden relative rounded-[64px] ${light ? 'bg-white' : 'bg-black'}`}>
 
-      <Image
-        src={screenBackgroundSrc}
-        alt=""
-        fill
-        priority
-        unoptimized
-        className="object-cover rounded-[64px]"
-      />
+      <motion.div
+        className="absolute inset-x-0 top-0 overflow-hidden"
+        style={{ height: `calc(100% + ${MAX_BG_SCROLL}px)` }}
+        animate={{ y: -bgScrollY }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+      >
+        {navActive === 'home' && !light ? (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(180deg, ${mixHex('#292929', '#7A7A7A', bgScrollY / MAX_BG_SCROLL)} 0%, #111111 100%)`,
+            }}
+          />
+        ) : navActive === 'home' && light ? (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(180deg, ${mixHex('#a1a1aa', '#9F9FA9', bgScrollY / MAX_BG_SCROLL)} 0%, #ffffff 70%)`,
+            }}
+          />
+        ) : (
+          // My Wealth's own gradient, reused here so the transition (which briefly
+          // hides Wealth's own background while pageTransitioning) shows the same
+          // colors instead of a mismatched dotted pattern image underneath.
+          <div
+            className="absolute inset-0"
+            style={{
+              background: light
+                ? 'linear-gradient(180deg, #D5D4F7 0%, #f5f5f5 49%, #f5f5f5 100%)'
+                : 'linear-gradient(180deg, #D5D4F7 0%, #111111 58%, #111111 100%)',
+            }}
+          />
+        )}
+      </motion.div>
 
       {/* Slideable home content — exits left when search opens */}
       <motion.div
@@ -1988,98 +2312,113 @@ export default function HomeScreen({
       <LayoutGroup id="home-menu">
       <div className="absolute inset-0 flex flex-col overflow-hidden">
 
-        {/* Outer padding container */}
-        <div className="flex-1 flex flex-col gap-2 px-1 pt-1 pb-8 min-h-0">
+        {/* Outer padding container — fills all the way down; the Ask bar floats over it.
+            No padding here: it lives on the scroll container below so it scrolls away
+            with the content instead of acting as a fixed clip boundary. */}
+        <div className="flex-1 flex flex-col min-h-0">
 
           <motion.div
             initial={false}
             animate={{ x: homePageX }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-            className="flex-1 flex flex-col gap-2 min-h-0"
+            onScroll={handleHomeScroll}
+            ref={homeScrollRef}
+            className="flex-1 flex flex-col gap-1 min-h-0 overflow-y-auto px-1 pt-1 pb-1 [&::-webkit-scrollbar]:hidden"
           >
 
-          {/* Inner dark card — split into header + rest so the Insight overlay can
-              separate them: header exits up, rest sinks to the bottom (172px visible) */}
+          {/* Zero-gap wrapper — keeps Group 1 and Group 2 flush at rest, since
+              they're siblings inside the outer gap-1 flex column which would
+              otherwise insert a 4px seam between them */}
+          <div className="shrink-0 flex flex-col">
+
+          {/* Group 1 — header + balance + quick actions, one seamless component
+              glued by this zero-gap flex-col. Moves up and out together when the
+              Insight overlay opens. */}
           <motion.div
             initial={false}
             animate={{
-              y: balanceSplitShown ? -160 : menuOpen ? -140 : 0,
+              y: balanceSplitShown ? -GROUP_SPLIT_SEAM_Y : 0,
               opacity: menuOpen ? 0.5 : 1,
-              borderBottomLeftRadius: balanceCornerShown ? 64 : 0,
-              borderBottomRightRadius: balanceCornerShown ? 64 : 0,
-              borderBottomWidth: balanceCornerShown ? 1 : 0,
             }}
             transition={{
               y: { type: 'spring', stiffness: 300, damping: 32 },
               opacity: { duration: 0.18 },
-              borderBottomLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
-              borderBottomRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
-              borderBottomWidth: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
             }}
-            className={`backdrop-blur-lg border border-b-0 rounded-t-[60px] shrink-0 ${
-              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
+            className={`shrink-0 flex flex-col rounded-t-[60px] rounded-b-[48px] ${
+              balanceSplitShown ? 'overflow-visible' : 'overflow-hidden'
             }`}
+            style={{
+              background: light
+                ? 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 66%)'
+                : 'linear-gradient(180deg, rgba(17,17,17,0.25) 0%, #111111 66%)',
+            }}
           >
-            <TopNav onOpenSearch={() => setShowSearch(true)} light={light} />
+            <div
+              className={`border border-b-0 rounded-t-[60px] shrink-0 ${
+                light ? 'border-[#f0f0f0]' : 'border-[#171717]'
+              }`}
+            >
+              <TopNav onOpenSearch={() => setShowSearch(true)} light={light} />
+            </div>
+            <div
+              className={`shrink-0 border border-t-0 border-b-0 flex flex-col ${
+                light ? 'border-[#f0f0f0]' : 'border-[#171717]'
+              }`}
+            >
+              <BalanceSection onOpenOverlay={openOverlay} light={light} />
+            </div>
+            <motion.div
+              initial={false}
+              animate={{
+                borderBottomLeftRadius: balanceCornerShown ? 60 : 48,
+                borderBottomRightRadius: balanceCornerShown ? 60 : 48,
+                borderBottomWidth: balanceCornerShown ? 1 : 0,
+              }}
+              transition={{
+                borderBottomLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+                borderBottomRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
+                borderBottomWidth: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
+              }}
+              className={`shrink-0 border border-t-0 rounded-b-[48px] flex flex-col overflow-hidden ${
+                light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
+              }`}
+            >
+              <ActionsRow light={light} />
+            </motion.div>
           </motion.div>
+
+          {/* Group 2 — promos and transaction history. Moves down together and
+              settles 8px below the Insight overlay's bottom edge when it opens. */}
           <motion.div
             initial={false}
             animate={{
-              y: balanceSplitShown ? 649 : menuOpen ? -140 : 0,
+              y: balanceSplitShown ? groupTwoSplitY : 0,
               opacity: menuOpen ? 0.5 : 1,
-              paddingTop: balanceSplitShown ? 24 : 0,
-              marginTop: balanceSplitShown ? 0 : -8,
-              borderTopLeftRadius: balanceCornerShown ? 64 : 0,
-              borderTopRightRadius: balanceCornerShown ? 64 : 0,
-              borderTopWidth: balanceCornerShown ? 1 : 0,
             }}
-            transition={{
-              y: { type: 'spring', stiffness: 300, damping: 32 },
-              opacity: { duration: 0.18 },
-              paddingTop: { type: 'spring', stiffness: 300, damping: 32 },
-              marginTop: { type: 'spring', stiffness: 300, damping: 32 },
-              borderTopLeftRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
-              borderTopRightRadius: { duration: 0.42, ease: [0.4, 0, 0.2, 1] },
-              borderTopWidth: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
-            }}
+            transition={{ y: { type: 'spring', stiffness: 300, damping: 32 }, opacity: { duration: 0.18 } }}
             style={{ zIndex: balanceSplitShown || balanceCornerShown ? 20 : 'auto' }}
-            className={`flex-1 backdrop-blur-lg border border-t-0 rounded-b-[60px] flex flex-col justify-end overflow-hidden min-h-0 ${
-              light ? 'bg-white border-[#f0f0f0]' : 'bg-[#111111] border-[#171717]'
-            }`}
+            className="shrink-0 flex flex-col gap-1 mt-1"
           >
-            <BalanceSection onOpenOverlay={openOverlay} light={light} />
-            <BannerAndActions light={light} />
-            <TransactionSection
-              menuOpen={menuOpen}
-              light={light}
-            />
+            <PromoBanners light={light} />
+            <div ref={transactionCardRef}>
+              <TransactionSection
+                menuOpen={menuOpen}
+                light={light}
+              />
+            </div>
+          </motion.div>
+          </div>
+          <div className="shrink-0" style={{ height: 96 }} />
+
+          {/* Scroll headroom — guarantees there's enough scrollable distance for the
+              menu-open effect above to bring the Transaction card up into position,
+              even when the card is near the bottom of the content already. Sized
+              instantly (no spring) so it's already in the layout before that
+              effect measures scrollHeight. */}
+          <div className="shrink-0" style={{ height: menuOpen ? 900 : 0 }} />
+
           </motion.div>
 
-          {/* Push spacer — compresses the card; the whole page (header + card)
-              also translates up 140px, so the spacer covers the remainder */}
-          <motion.div
-            initial={false}
-            animate={{ height: menuOpen ? 560 : 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30, delay: menuOpen ? 0.05 : 0 }}
-            className="shrink-0 -mt-2"
-          />
-
-          </motion.div>
-
-          {/* Bottom bar */}
-          <BottomBar
-            triMode={showTri}
-            onOpenTri={() => setShowTriScreen(true)}
-            onCloseTri={() => { setShowTriScreen(false); setKeyboardOpen(false) }}
-            keyboardOpen={keyboardOpen}
-            onOpenKeyboard={() => setKeyboardOpen(true)}
-            onCloseKeyboard={() => setKeyboardOpen(false)}
-            triHovered={triHovered}
-            onSend={closeTriFlow}
-            menuOpen={menuOpen}
-            onOpenMenu={() => setMenuOpen(true)}
-            light={light}
-          />
         </div>
 
         <motion.div
@@ -2089,6 +2428,57 @@ export default function HomeScreen({
           className="absolute inset-0 bg-black/60 rounded-[64px] pointer-events-none z-30"
         />
       </div>
+
+      {/* Floating Ask bar — overlays the content with a gradient scrim fading up from the
+          solid background, per Figma (footer sits at ~53% down its own gradient height).
+          Hidden while the Wealth screen is showing — it has its own bottom bar, and Home's
+          would otherwise render on top of it (two bottom bars visible at once). */}
+      <motion.div
+        initial={false}
+        animate={{
+          opacity: showingWealth ? 0 : 1,
+          y: balanceSplitShown ? 148 : 0,
+        }}
+        transition={{
+          opacity: { duration: 0.18 },
+          y: { type: 'spring', stiffness: 300, damping: 32 },
+        }}
+        className="absolute inset-x-0 bottom-0 z-50 pt-4 px-8 pb-8 rounded-b-[64px]"
+        style={{
+          background: light
+            ? 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, #ffffff 53%)'
+            : 'linear-gradient(to bottom, rgba(17,17,17,0) 0%, #111111 53%)',
+          pointerEvents: showingWealth || balanceSplitShown ? 'none' : 'auto',
+        }}
+      >
+        <div className={showingWealth ? 'pointer-events-none' : 'pointer-events-auto'}>
+          <BottomBar
+            triMode={showTri}
+            onOpenTri={() => {
+              if (wealthChatChips.length > 0) {
+                // Attached chips only make sense in Wealth's compare flow — jump there
+                // and open its Ask compose screen instead of the generic Tri landing.
+                setNavActive('investment')
+                setWealthOpenAskOnMount(true)
+              } else {
+                setShowTriScreen(true)
+              }
+            }}
+            onCloseTri={() => { setShowTriScreen(false); setKeyboardOpen(false) }}
+            keyboardOpen={keyboardOpen}
+            onOpenKeyboard={() => setKeyboardOpen(true)}
+            onCloseKeyboard={() => setKeyboardOpen(false)}
+            triHovered={triHovered}
+            onSend={closeTriFlow}
+            menuOpen={menuOpen}
+            onOpenMenu={() => setMenuOpen(true)}
+            light={light}
+            attachedCount={wealthChatChips.length}
+            onClearAttached={() => setWealthChatChips([])}
+            interactive={!showingWealth}
+          />
+        </div>
+      </motion.div>
 
       {/* Menu tap-to-close area — sits on the compressed card */}
       {menuOpen && (
@@ -2113,17 +2503,17 @@ export default function HomeScreen({
       </AnimatePresence>
 
       {/* Menu dots — single element that tracks the pill icon slot when closed
-          (pill at x16 + px-8 pad = 48) and the sheet footer slot when open
-          (sheet at x4 + px-8 pad = 36) */}
-      {!showTri && !showSearch && !showOverlay && !showInsightChat && !wealthInvestOpen && !wealthAskChatOpen && (
+          and the sheet footer slot when open. Hidden while Wealth is showing —
+          it manages its own menu button, and this tracker would otherwise sit
+          on top of it (a second, doubled-up dots icon). */}
+      {!showTri && !showSearch && !showOverlay && !showInsightChat && !wealthInvestOpen && !wealthAskChatOpen && (!showingWealth || menuOpen) && (
         <motion.button
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           onClick={() => setMenuOpen(v => !v)}
-          className="absolute z-60"
+          className="absolute z-90"
           initial={false}
-          animate={{ left: menuOpen ? 36 : 48 }}
+          animate={{ left: menuOpen ? 48 : 64, bottom: menuOpen ? 49 : 52 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          style={{ bottom: 52 }}
         >
           <MenuToggleIcon open={menuOpen} light={light} />
         </motion.button>
@@ -2169,6 +2559,8 @@ export default function HomeScreen({
               onInvestClose={() => setWealthInvestOpen(false)}
               onAskChatOpen={() => setWealthAskChatOpen(true)}
               onAskChatClose={() => setWealthAskChatOpen(false)}
+              openAskChatOnMount={wealthOpenAskOnMount}
+              onOpenAskChatOnMountConsumed={() => setWealthOpenAskOnMount(false)}
               menuOpen={menuOpen}
               onOpenMenu={() => setMenuOpen(true)}
               light={light}
@@ -2176,6 +2568,8 @@ export default function HomeScreen({
               pageContentX={wealthPageX}
               pageContentInitialX={pageTransition?.to === 'investment' ? 448 : 0}
               pageTransitioning={!!pageTransition}
+              chatChips={wealthChatChips}
+              setChatChips={setWealthChatChips}
             />
           </div>
         )}
