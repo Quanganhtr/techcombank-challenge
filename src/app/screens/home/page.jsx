@@ -773,7 +773,7 @@ function CountUp({ to, format = (v) => Math.round(v).toLocaleString('en-US'), du
 function InsightStatCard({ label, value, description, iconSrc, iconBg, iconClassName = '', dark = false }) {
   return (
     <div className={`flex-1 h-full w-full rounded-[40px] p-6 flex flex-col items-end justify-between gap-1 min-w-0 border ${
-      dark ? 'bg-[#171717] border-[#262626]' : 'bg-white border-[#e5e5e5]'
+      dark ? 'bg-[#171717] border-[#262626]' : 'bg-white border-neutral-500'
     }`}>
       <div className="w-full flex flex-col gap-1">
         <p className="text-[14px] font-medium leading-5 text-[#737373] tracking-[0.28px]">{label}</p>
@@ -955,7 +955,7 @@ function CoffeeInsightCard({ dark = false, effectKey = null }) {
       animate={showEffect ? { scale: [1, 1.01, 0.998, 1], rotate: [0, -0.12, 0.1, 0] } : { scale: 1, rotate: 0 }}
       transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
       className={`relative flex-1 rounded-[40px] p-6 flex flex-col items-end justify-between gap-1 min-w-0 overflow-hidden border ${
-        dark ? 'bg-[#171717] border-[#262626]' : 'bg-white border-[#e5e5e5]'
+        dark ? 'bg-[#171717] border-[#262626]' : 'bg-white border-neutral-500'
       }`}
     >
       {showEffect && (
