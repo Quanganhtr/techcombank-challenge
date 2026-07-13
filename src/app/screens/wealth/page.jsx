@@ -897,10 +897,9 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                 <p className="t-label text-[#737373]">What&apos;s been on your mind lately?</p>
               </div>
               <div className="flex items-center pb-4 pt-3 px-4 shrink-0 w-full">
-                {WEALTH_ASK_SUGGESTIONS.map(({ id, rotate, icon, iconBg, label, message }) => (
-                  <button
+                {WEALTH_ASK_SUGGESTIONS.map(({ id, rotate, icon, iconBg, label }) => (
+                  <div
                     key={id}
-                    onClick={() => setInputText(message)}
                     className="flex items-start justify-start shrink-0 text-left"
                     style={{ width: 135, height: 155, marginRight: -16 }}
                   >
@@ -915,7 +914,7 @@ function AskExpandScreen({ onClose, onOpenSearch, chatChips, onRemoveChip, onCon
                       </div>
                       <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{label}</p>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -1192,9 +1191,16 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
     if (!onTesterNoteChange) return
 
     if (askChatOpen) {
+      const hasTCB = chatChips.some(c => c.ticker === 'TCB')
+      const hasVIC = chatChips.some(c => c.ticker === 'VIC')
+      let note
+      if (chatChips.length === 2 && hasTCB && hasVIC) note = 'Tap the send arrow to submit the drafted question.'
+      else if (chatChips.length < 2 && hasTCB) note = 'Drag VIC too to trigger the conversation.'
+      else if (chatChips.length < 2 && hasVIC) note = 'Drag TCB too to trigger the conversation.'
+      else note = "The conversation is only being triggered if u drag both of TCB and VIC. Remove the other if it's in the chat input"
       onTesterNoteChange({
         title: 'Wealth AI Chat',
-        items: ['Tap the send arrow to submit the drafted question.'],
+        items: [note],
       })
       return
     }
@@ -1217,9 +1223,9 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
 
     onTesterNoteChange({
       title: 'My Wealth',
-      items: ['Tap Explore to switch tabs.', 'Tap the chart arrow to collapse or expand the chart.', 'Drag asset handles into Ask AI (For full context, let visit the Explore first.)', 'Tap Buy to open the invest panel.'],
+      items: ['Tap Explore to switch tabs.', 'Tap the chart arrow to collapse or expand the chart.', 'Drag both of TCB and VIC items into Ask AI to trigger AI chat', 'Tap Buy to open the invest panel.'],
     })
-  }, [askChatOpen, fabOpen, navTab, onTesterNoteChange])
+  }, [askChatOpen, fabOpen, navTab, onTesterNoteChange, chatChips])
 
   const investCornerShown = fabOpen || investCornerActive
 

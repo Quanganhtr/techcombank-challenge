@@ -1367,10 +1367,9 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
             </div>
 
             <div className="flex items-center pb-4 pt-3 px-4 shrink-0 w-full">
-              {TRI_ENTRY_SUGGESTIONS.map(({ id, rotate, icon, iconBg, label, message }) => (
-                <button
+              {TRI_ENTRY_SUGGESTIONS.map(({ id, rotate, icon, iconBg, label }) => (
+                <div
                   key={id}
-                  onClick={() => onOpenChat?.(message)}
                   className="flex items-start justify-start shrink-0 text-left"
                   style={{ width: 135, height: 155, marginRight: -16 }}
                 >
@@ -1385,7 +1384,7 @@ function TriScreen({ onClose, onOpenSearch, onOpenChat, light = false }) {
                     </div>
                     <p className={`t-label text-left w-full whitespace-normal ${light ? 'text-[#111111]' : 'text-[#d4d4d4]'}`}>{label}</p>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -2247,7 +2246,7 @@ export default function HomeScreen({
       }
       onTesterNoteChange({
         title: 'My Wealth',
-        items: ['Tap My wealth / Explore tabs.', 'Tap the chart arrow to collapse or expand the chart.', 'Drag asset handles into Ask AI (For full context, let visit the Explore first.)', 'Tap Buy to open the invest panel.'],
+        items: ['Tap My wealth / Explore tabs.', 'Tap the chart arrow to collapse or expand the chart.', 'Drag both of TCB and VIC items into Ask AI to trigger AI chat', 'Tap Buy to open the invest panel.'],
       })
       return
     }
