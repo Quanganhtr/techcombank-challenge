@@ -1406,7 +1406,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                     </div>
                   </div>
                   <div className="flex flex-col items-end justify-between self-stretch shrink-0">
-                    <img src="/wealth-balance-spark.svg" alt="" className="w-24 h-10 object-contain" />
+                    <img src={light ? '/wealth-balance-spark-light.svg' : '/wealth-balance-spark.svg'} alt="" className="w-24 h-10 object-contain" />
                     <button
                       onClick={() => setChartCollapsed(v => !v)}
                       className={`rounded-full p-0.5 flex items-center justify-center ${light ? 'bg-[#e5e5e5]' : 'bg-[#262626]'}`}
@@ -1558,7 +1558,7 @@ export default function WealthScreen({ onNavigate, embedded = false, onOpenSearc
                             </div>
                             <Icon name="drag_indicator" size={16} className={light ? 'text-[#d4d4d4]' : 'text-[#404040]'} />
                           </div>
-                          <img src={item.spark} alt="" className="w-full h-8 object-contain" />
+                          <img src={light ? item.spark.replace('.svg', '-light.svg') : item.spark} alt="" className="w-full h-8 object-contain" />
                         </div>
                       ))}
                     </div>
